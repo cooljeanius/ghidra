@@ -60,7 +60,7 @@ jobs:
 
     - name: Setup Java JDK
       uses: actions/setup-java@v3.13.0
-      if: matrix.language == 'java-kotlin'
+      if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
       with:
         distribution: 'temurin'
         # The Java version to set up. Takes a whole or semver Java version. See examples of supported syntax in README file
@@ -88,7 +88,8 @@ jobs:
       run: |
         sudo apt-get -qq update
         sudo apt-get -qq install gradle make gcc
-        if test -x "$(which gradle)" && test -w .; then \
+        env | uniq | sort | uniq
+        if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
           echo "initializing gradle ($(which gradle))..."; \
           gradle --info -I gradle/support/fetchDependencies.gradle init; \
           gradle prepdev eclipse buildNatives; \
