@@ -83,7 +83,7 @@ jobs:
         # queries: security-extended,security-and-quality
 
     - name: Additional dependencies
-      if: matrix.language == 'c-cpp' || matrix.language = 'java-kotlin'
+      if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
       run: |
         sudo apt-get update
         sudo apt-get install gradle make gcc
