@@ -90,9 +90,11 @@ jobs:
         sudo apt-get -qq install gradle make gcc
         env | uniq | sort | uniq
         if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
-          echo "initializing gradle ($(which gradle))..."; \
-          gradle --info -I gradle/support/fetchDependencies.gradle init; \
-          gradle prepdev eclipse buildNatives; \
+          if test -w "${HOME}work/ghidra/ghidra/.gradle/"; then \
+            echo "initializing gradle ($(which gradle))..."; \
+            gradle --debug -I gradle/support/fetchDependencies.gradle init; \
+            gradle prepdev eclipse buildNatives; \
+          fi; \
         fi
 
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
