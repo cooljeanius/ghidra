@@ -86,11 +86,11 @@ jobs:
     - name: Additional dependencies
       if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
       run: |
-        sudo apt-get update
+        sudo apt-get -q update
         sudo apt-get -qq install gradle make gcc
-        if test -x "$(which gradle)"; then \
+        if test -x "$(which gradle)" && test -w .; then \
           echo "initializing gradle ($(which gradle))..."; \
-          gradle -I gradle/support/fetchDependencies.gradle init; \
+          gradle --stacktrace -I gradle/support/fetchDependencies.gradle init; \
           gradle prepdev eclipse buildNatives; \
         fi
 
