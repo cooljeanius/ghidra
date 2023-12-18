@@ -93,7 +93,7 @@ jobs:
       if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
       run: |
         sudo apt-get -qq update
-        sudo apt-get -q install gradle dh-make libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java binutils binutils-dev binutils-multiarch-dev default-jre libasprintf-dev libgettextpo-dev ecj maven-debian-helper gdb gdbserver mingw-w64 wine wine64 libiberty-dev
+        sudo apt-get -qq install gradle dh-make libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java binutils binutils-dev binutils-multiarch-dev default-jre libasprintf-dev libgettextpo-dev ecj maven-debian-helper gdb gdbserver mingw-w64 wine wine64 libiberty-dev
         env | uniq | sort | uniq
         # shellcheck disable=SC2235
         if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
@@ -123,7 +123,7 @@ jobs:
         for cfile in $(find . -name '*.c' -type f); do \
           cobjfile="$(echo "${cfile}" | sed "s/\.c/.o/g")"; \
           if test ! -e "${cobjfile}"; then \
-            echo "gcc -c -w -Wno-error -I. \"${cfile}\""; \
+            echo "gcc -c -w -Wno-error -I. -iquote . \"${cfile}\""; \
             gcc -c -w -Wno-error -I. -I"$(dirname "${cfile}")" -iquote . -iquote "$(dirname "${cfile}")" "${cfile}" || stat -t "${cfile}" || echo "cfile is ${cfile}"; \
           else \
             echo "object file ${cobjfile} already exists for ${cfile}."; \
@@ -133,22 +133,23 @@ jobs:
         # shellcheck disable=SC2044
         for ccfile in $(find . -name '*.cc' -type f); do \
           echo "One last attempt at compiling ${ccfile}..."; \
-          g++ -c "${ccfile}" || g++ -w -c -I. "${ccfile}" || g++ -w -Wno-error -c -I. -I.. "${ccfile}" || stat -t "${ccfile}"; \
+          g++ -c "${ccfile}" || g++ -w -c -I. -iquote . "${ccfile}" || g++ -w -Wno-error -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${ccfile}" || stat -t "${ccfile}"; \
         done
         # shellcheck disable=SC2044
         for cppfile in $(find . -name '*.cpp' -type f); do \
           echo "One last attempt at compiling ${cppfile}..."; \
-          g++ -Wno-write-strings -Wfatal-errors -c "${cppfile}" || g++ -w -Wfatal-errors -c -I. "${cppfile}" || g++ -w -Wno-error -Wfatal-errors -fpermissive -c -I. -I.. "${cppfile}" || stat -t "${cppfile}"; \
+          g++ -Wno-write-strings -Wfatal-errors -c "${cppfile}" || g++ -w -Wfatal-errors -c -I. -iquote . "${cppfile}" || g++ -w -Wno-error -Wfatal-errors -fpermissive -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${cppfile}" || stat -t "${cppfile}"; \
         done
 
     - name: Manual build (Java)
       if: matrix.language == 'java-kotlin'
       run: |
         # shellcheck disable=SC2044
-        for javafile in $(find . -maxdepth 5 -name '*.java' -type f); do \
+        for javafile in $(find . -maxdepth 6 -name '*.java' -type f); do \
           echo "One last attempt at compiling ${javafile}..."; \
           javac -nowarn -Xdiags:compact -Xmaxerrs 1 "${javafile}" || stat -t "${javafile}"; \
         done; \
+        date
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
