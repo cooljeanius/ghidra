@@ -39,8 +39,8 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners
     # Consider using larger runners for possible analysis time improvements.
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
-    timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
+    runs-on: ${{ (matrix.language == 'c-cpp' && 'windows-latest') || 'ubuntu-latest' }}
+    timeout-minutes: 420
     permissions:
       actions: read
       contents: read
@@ -86,17 +86,21 @@ jobs:
         # queries: security-extended,security-and-quality
 
     - name: Additional dependencies
-      if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
+      if: matrix.language == 'java-kotlin'
       run: |
         sudo apt-get -qq update
-        sudo apt-get -qq install gradle make gcc
+        sudo apt-get -qq install gradle make gcc libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java
         env | uniq | sort | uniq
         if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
-          if test -w "${HOME}work/ghidra/ghidra/.gradle/"; then \
+          if test -w "${HOME}/work/ghidra/ghidra/.gradle/"; then \
             echo "initializing gradle ($(which gradle))..."; \
             gradle --debug -I gradle/support/fetchDependencies.gradle init; \
             gradle prepdev eclipse buildNatives; \
+          else \
+            echo "Skipping gradle initialization"; \
           fi; \
+        else \
+          echo "Conditions are wrong for initializing gradle"; \
         fi
 
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
