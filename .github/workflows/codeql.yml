@@ -99,8 +99,8 @@ jobs:
         if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
           if test -w "${HOME}/work/ghidra/ghidra/.gradle" || (test -n "${GRADLE_HOME}" && test -d "${GRADLE_HOME}" && test -w "${GRADLE_HOME}"); then \
             echo "initializing gradle ($(which gradle))..."; \
-            gradle --quiet --configuration-cache-problems warn --continue wrapper || find . -name '*/gradlew' -print || echo "whoami? $(whoami)"; \
-            gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || sudo gradle --quiet --configuration-cache-problems warn --continue -I gradle/support/fetchDependencies.gradle init || ls "gradle*" || pwd; \
+            gradle --quiet --continue wrapper || find . -name '*/gradlew' -print || echo "whoami? $(whoami)"; \
+            gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || sudo gradle --quiet --continue -I gradle/support/fetchDependencies.gradle init || ls "gradle*" || pwd; \
             gradle prepdev eclipse buildNatives || (if test -x ./gradlew; then ./gradlew prepdev eclipse buildNatives; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || find . -name '*.gradle' -print; \
           else \
             echo "Skipping gradle initialization due to missing or unwritable gradle locations"; \
@@ -132,12 +132,12 @@ jobs:
         # shellcheck disable=SC2044
         for ccfile in $(find . -name '*.cc' -type f); do \
           echo "One last attempt at compiling ${ccfile}..."; \
-          g++ -c "${ccfile}" || g++ -w -c -I. "${ccfile}" || g++ -w -Wno-error -c -I. -I.. "${ccfile}" || stat "${ccfile}"; \
+          g++ -c "${ccfile}" || g++ -w -c -I. "${ccfile}" || g++ -w -Wno-error -c -I. -I.. "${ccfile}" || stat -t "${ccfile}"; \
         done
         # shellcheck disable=SC2044
         for cppfile in $(find . -name '*.cpp' -type f); do \
           echo "One last attempt at compiling ${cppfile}..."; \
-          g++ -Wfatal-errors -c "${cppfile}" || g++ -w -Wfatal-errors -c -I. "${cppfile}" || g++ -w -Wno-error -Wfatal-errors -fpermissive -c -I. -I.. "${cppfile}" || stat "${cppfile}"; \
+          g++ -Wno-write-strings -Wfatal-errors -c "${cppfile}" || g++ -w -Wfatal-errors -c -I. "${cppfile}" || g++ -w -Wno-error -Wfatal-errors -fpermissive -c -I. -I.. "${cppfile}" || stat -t "${cppfile}"; \
         done
 
     - name: Manual build (Java)
@@ -148,7 +148,7 @@ jobs:
           echo "operating at depth ${deptharg}..."; \
           for javafile in $(find . -name '*.java' -type f -depth "${deptharg}"); do \
             echo "One last attempt at compiling ${javafile} (at depth ${deptharg})..."; \
-            javac -nowarn -Xdiags:compact -Xmaxerrs 1 "${javafile}" || stat "${javafile}"; \
+            javac -nowarn -Xdiags:compact -Xmaxerrs 1 "${javafile}" || stat -t "${javafile}"; \
           done; \
           date; \
         done
