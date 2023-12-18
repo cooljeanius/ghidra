@@ -18,6 +18,7 @@ on:
       - master
       - patch
       - stable
+      - additional_codeql_langs
       - dependabot/*
   pull_request:
     # The branches below must be a subset of the branches above
@@ -25,6 +26,7 @@ on:
       - master
       - patch
       - stable
+      - additional_codeql_langs
       - dependabot/*
   schedule:
     - cron: '43 20 * * 5'
@@ -37,8 +39,8 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners
     # Consider using larger runners for possible analysis time improvements.
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
-    timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 420
     permissions:
       actions: read
       contents: read
@@ -47,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript-typescript', 'python' ]
+        language: [ 'c-cpp', 'java-kotlin', 'javascript-typescript', 'python' ]
         # CodeQL supports [ 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift' ]
         # Use only 'java-kotlin' to analyze code written in Java, Kotlin or both
         # Use only 'javascript-typescript' to analyze code written in JavaScript, TypeScript or both
@@ -83,35 +85,71 @@ jobs:
         # https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
 
+    - name: Setup Gradle
+      if: matrix.language == 'java-kotlin'
+      uses: gradle/gradle-build-action@v2
+
     - name: Additional dependencies
       if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
       run: |
         sudo apt-get -qq update
-        sudo apt-get -qq install gradle make gcc
+        sudo apt-get -qq install gradle dh-make libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java binutils binutils-dev binutils-multiarch-dev default-jre libasprintf-dev libgettextpo-dev ecj maven-debian-helper gdb gdbserver mingw-w64 wine wine64 libiberty-dev
         env | uniq | sort | uniq
+        # shellcheck disable=SC2235
         if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
-          if test -w "${HOME}work/ghidra/ghidra/.gradle/"; then \
+          if test -w "${HOME}/work/ghidra/ghidra/.gradle" || (test -n "${GRADLE_HOME}" && test -d "${GRADLE_HOME}" && test -w "${GRADLE_HOME}"); then \
             echo "initializing gradle ($(which gradle))..."; \
-            gradle --debug -I gradle/support/fetchDependencies.gradle init; \
-            gradle prepdev eclipse buildNatives; \
+            gradle --quiet --continue wrapper || find . -name '*/gradlew' -print || echo "whoami? $(whoami)"; \
+            gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || sudo gradle --quiet --continue -I gradle/support/fetchDependencies.gradle init || ls "gradle*" || pwd; \
+            echo "one more gradle setup step..."; \
+            gradle --quiet prepdev eclipse buildNatives || (if test -x ./gradlew; then ./gradlew prepdev eclipse buildNatives; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || find . -name '*.gradle' -print; \
+          else \
+            echo "Skipping gradle initialization due to missing or unwritable gradle locations"; \
           fi; \
+        else \
+          echo "Conditions are wrong for initializing gradle"; \
         fi
 
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
+      if: matrix.language != 'c-cpp' && matrix.language != 'java-kotlin'
       uses: github/codeql-action/autobuild@v3
 
-    # Command-line programs to run using the OS shell.
-    # See:
-    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
+    - name: Manual build (C and C++)
+      if: matrix.language == 'c-cpp'
+      run: |
+        # shellcheck disable=SC2001,SC2044
+        for cfile in $(find . -name '*.c' -type f); do \
+          cobjfile="$(echo "${cfile}" | sed "s/\.c/.o/g")"; \
+          if test ! -e "${cobjfile}"; then \
+            echo "gcc -c -w -Wno-error -I. -iquote . \"${cfile}\""; \
+            gcc -c -w -Wno-error -I. -I"$(dirname "${cfile}")" -iquote . -iquote "$(dirname "${cfile}")" "${cfile}" || stat -t "${cfile}" || echo "cfile is ${cfile}"; \
+          else \
+            echo "object file ${cobjfile} already exists for ${cfile}."; \
+            cp -v "${cobjfile}" "$(dirname "${cfile}")" || cp -v "${cobjfile}" . || cp -v "${cobjfile}" .. || (if test -d /tmp && test -w /tmp; then cp -v "${cobjfile}" /tmp; fi) || stat -t "${cobjfile}"; \
+          fi; \
+        done
+        # shellcheck disable=SC2044
+        for ccfile in $(find . -name '*.cc' -type f); do \
+          echo "One last attempt at compiling ${ccfile}..."; \
+          g++ -c "${ccfile}" || g++ -w -c -I. -iquote . "${ccfile}" || g++ -w -Wno-error -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${ccfile}" || stat -t "${ccfile}"; \
+        done
+        # shellcheck disable=SC2044
+        for cppfile in $(find . -name '*.cpp' -type f); do \
+          echo "One last attempt at compiling ${cppfile}..."; \
+          g++ -Wno-write-strings -Wfatal-errors -c "${cppfile}" || g++ -w -Wfatal-errors -c -I. -iquote . "${cppfile}" || g++ -w -Wno-error -Wfatal-errors -fpermissive -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${cppfile}" || stat -t "${cppfile}"; \
+        done
 
-    #   If the Autobuild fails above, remove it and uncomment the following three lines.
-    #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
-
-    # - run: |
-    #     echo "Run, Build Application using script"
-    #     ./location_of_script_within_repo/buildscript.sh
+    - name: Manual build (Java)
+      if: matrix.language == 'java-kotlin'
+      run: |
+        # shellcheck disable=SC2044
+        for javafile in $(find . -maxdepth 6 -name '*.java' -type f); do \
+          echo "One last attempt at compiling ${javafile}..."; \
+          javac -nowarn -Xdiags:compact -Xmaxerrs 1 "${javafile}" || stat -t "${javafile}"; \
+        done; \
+        date
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
