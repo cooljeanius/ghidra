@@ -101,6 +101,7 @@ jobs:
             echo "initializing gradle ($(which gradle))..."; \
             gradle --quiet --continue wrapper || find . -name '*/gradlew' -print || echo "whoami? $(whoami)"; \
             gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || sudo gradle --quiet --continue -I gradle/support/fetchDependencies.gradle init || ls "gradle*" || pwd; \
+            echo "one more gradle setup step..."; \
             gradle --quiet prepdev eclipse buildNatives || (if test -x ./gradlew; then ./gradlew prepdev eclipse buildNatives; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || find . -name '*.gradle' -print; \
           else \
             echo "Skipping gradle initialization due to missing or unwritable gradle locations"; \
@@ -122,8 +123,8 @@ jobs:
         for cfile in $(find . -name '*.c' -type f); do \
           cobjfile="$(echo "${cfile}" | sed "s/\.c/.o/g")"; \
           if test ! -e "${cobjfile}"; then \
-            echo "gcc -c -w -Wno-error \"${cfile}\""; \
-            gcc -c -w -Wno-error "${cfile}" || stat -t "${cfile}" || echo "cfile is ${cfile}"; \
+            echo "gcc -c -w -Wno-error -I. \"${cfile}\""; \
+            gcc -c -w -Wno-error -I. -I"$(dirname "${cfile}")" -iquote . -iquote "$(dirname "${cfile}")" "${cfile}" || stat -t "${cfile}" || echo "cfile is ${cfile}"; \
           else \
             echo "object file ${cobjfile} already exists for ${cfile}."; \
             cp -v "${cobjfile}" "$(dirname "${cfile}")" || cp -v "${cobjfile}" . || cp -v "${cobjfile}" .. || (if test -d /tmp && test -w /tmp; then cp -v "${cobjfile}" /tmp; fi) || stat -t "${cobjfile}"; \
@@ -144,14 +145,10 @@ jobs:
       if: matrix.language == 'java-kotlin'
       run: |
         # shellcheck disable=SC2044
-        for deptharg in $(seq 5 16); do \
-          echo "operating at depth ${deptharg}..."; \
-          for javafile in $(find . -name '*.java' -type f -depth "${deptharg}"); do \
-            echo "One last attempt at compiling ${javafile} (at depth ${deptharg})..."; \
-            javac -nowarn -Xdiags:compact -Xmaxerrs 1 "${javafile}" || stat -t "${javafile}"; \
-          done; \
-          date; \
-        done
+        for javafile in $(find . -maxdepth 5 -name '*.java' -type f); do \
+          echo "One last attempt at compiling ${javafile}..."; \
+          javac -nowarn -Xdiags:compact -Xmaxerrs 1 "${javafile}" || stat -t "${javafile}"; \
+        done; \
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
