@@ -95,8 +95,8 @@ jobs:
         if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
           if test -w "${HOME}/work/ghidra/ghidra/.gradle" || (test -n "${GRADLE_HOME}" && test -d "${GRADLE_HOME}" && test -w "${GRADLE_HOME}"); then \
             echo "initializing gradle ($(which gradle))..."; \
-            gradle --debug -I gradle/support/fetchDependencies.gradle init || ./gradlew --debug -I gradle/support/fetchDependencies.gradle init || sudo gradle --stacktrace -I gradle/support/fetchDependencies.gradle init; \
-            gradle prepdev eclipse buildNatives || ./gradlew prepdev eclipse buildNatives; \
+            gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing gradle wrapper"; fi) || sudo gradle --stacktrace -I gradle/support/fetchDependencies.gradle init || ls "gradle*"; \
+            gradle prepdev eclipse buildNatives || (if test -x ./gradlew; then ./gradlew prepdev eclipse buildNatives; else echo "missing gradle wrapper"; fi) || find . -name '*.gradle' -print; \
           else \
             echo "Skipping gradle initialization due to missing or unwritable gradle locations"; \
           fi; \
