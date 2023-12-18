@@ -93,7 +93,7 @@ jobs:
       if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
       run: |
         sudo apt-get -qq update
-        sudo apt-get -q install gradle dh-make libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java binutils default-jre libasprintf-dev libgettextpo-dev ecj maven-debian-helper gdb gdbserver android-debian-helper mingw-w64 wine wine64
+        sudo apt-get -q install gradle dh-make libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java binutils default-jre libasprintf-dev libgettextpo-dev ecj maven-debian-helper gdb gdbserver mingw-w64 wine wine64
         env | uniq | sort | uniq
         # shellcheck disable=SC2235
         if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
