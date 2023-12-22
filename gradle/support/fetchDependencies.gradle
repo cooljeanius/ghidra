@@ -230,11 +230,11 @@ def download(url, file) {
 	while ((bytesRead = istream.read(dataBuffer, 0, 1024)) != -1) { 
 		ostream.write(dataBuffer, 0, bytesRead);
 		totalRead += bytesRead
-		print "\r"
-		print "   Downloading: " + totalRead + " of " + size
+		logger.debug("\r")
+		logger.debug("   Downloading: " + totalRead + " of " + size)
 		if (!size.equals("???")) {
 			int pctComplete = (totalRead / size) * 100
-			print " (" + pctComplete + "%)"
+			logger.debug(" (" + pctComplete + "%)")
 		}
 		print "                                               " // overwrite gradle timer output
 		System.out.flush()
