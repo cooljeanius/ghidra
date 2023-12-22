@@ -236,10 +236,10 @@ def download(url, file) {
 			int pctComplete = (totalRead / size) * 100
 			logger.debug(" (" + pctComplete + "%)")
 		}
-		print "                                               " // overwrite gradle timer output
+		logger.debug("                                               ") // overwrite gradle timer output
 		System.out.flush()
 	}
-	println()
+	println "   Downloaded."
 	istream.close();
 	ostream.close();
 }
@@ -255,7 +255,7 @@ def establishConnection(url, retries) {
 	for (int i = 0; i < retries; i++) {
 		try {
 			if (i == 0) {
-				println "   Connecting..." 
+				println "   Establishing connection..." 
 			}
 			else {
 				println "   Connecting (" + (i+1) + "/" + retries + ")..."
