@@ -95,12 +95,17 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get -qq install gradle dh-make libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java binutils binutils-dev binutils-multiarch-dev default-jre libasprintf-dev libgettextpo-dev ecj maven-debian-helper gdb gdbserver mingw-w64 wine wine64 libiberty-dev
         env | uniq | sort | uniq
+
+    - name: Manual Gradle init
+      if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
+      run: |
         # shellcheck disable=SC2235
         if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
           if test -w "${HOME}/work/ghidra/ghidra/.gradle" || (test -n "${GRADLE_HOME}" && test -d "${GRADLE_HOME}" && test -w "${GRADLE_HOME}"); then \
             echo "initializing gradle ($(which gradle))..."; \
             gradle --quiet --continue wrapper || find . -name '*/gradlew' -print || echo "whoami? $(whoami)"; \
-            gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || sudo gradle --quiet --continue -I gradle/support/fetchDependencies.gradle init || ls "gradle*" || pwd; \
+            echo "continuing with gradle initialization..."; \
+            gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || (sudo gradle --quiet --continue -I gradle/support/fetchDependencies.gradle init) > gradle_output.log || ls "gradle*" || pwd; \
             echo "one more gradle setup step..."; \
             gradle --quiet prepdev eclipse buildNatives || (if test -x ./gradlew; then ./gradlew prepdev eclipse buildNatives; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || find . -name '*.gradle' -print; \
           else \
