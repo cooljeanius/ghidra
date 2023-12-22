@@ -98,7 +98,7 @@ jobs:
         if test -x "$(which ecj)"; then \
           which -a ecj; \
           for myecj in $(which -a ecj); do \
-            "${myecj}" --version || stat -t "${myecj}"; \
+            "${myecj}" --help || "${myecj}" help || "${myecj}" --version || "${myecj}" version || stat -t "${myecj}"; \
           done; \
         else \
           echo "No usable ecj found; skipping..."; \
@@ -116,7 +116,7 @@ jobs:
             which -a gradle; \
             echo "version info for each of them:"; \
             for mygradle in $(which -a gradle); do \
-              if test -x "${mygradle}"; then \
+              if test -x "${mygradle}" && test -d "$(dirname "${mygradle}")/../share/gradle/bin/.."; then \
                 "${mygradle}" --version || sudo "${mygradle}" --version || stat -t "${mygradle}"; \
               else \
                 echo "warning: cannot use ${mygradle}"; \
