@@ -93,8 +93,16 @@ jobs:
       if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
       run: |
         sudo apt-get -qq update
-        sudo apt-get -qq install gradle dh-make libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java binutils binutils-dev binutils-multiarch-dev default-jre libasprintf-dev libgettextpo-dev ecj maven-debian-helper gdb gdbserver mingw-w64 wine wine64 libiberty-dev
+        sudo apt-get -qq install gradle dh-make libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java binutils binutils-dev binutils-multiarch-dev default-jre libasprintf-dev libgettextpo-dev ecj libecj-java maven-debian-helper gdb gdbserver mingw-w64 wine wine64 libiberty-dev
         env | uniq | sort | uniq
+        if test -x "$(which ecj)"; then \
+          which -a ecj; \
+          for myecj in $(which -a ecj); do \
+            ("${myecj}" --help && "${myecj}" --version) || stat -t "${myecj}"; \
+          done; \
+        else \
+          echo "No usable ecj found; skipping..."; \
+        fi
 
     - name: Manual Gradle init
       if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
@@ -104,10 +112,10 @@ jobs:
           if test -w "${HOME}/work/ghidra/ghidra/.gradle" || (test -n "${GRADLE_HOME}" && test -d "${GRADLE_HOME}" && test -w "${GRADLE_HOME}"); then \
             echo "initializing gradle ($(which gradle))..."; \
             gradle --quiet --continue wrapper || find . -name '*/gradlew' -print || echo "whoami? $(whoami)"; \
-            echo "gradle ($(which gradle)) has the following version info:"; \
-            gradle --version; \
             echo "full list of gradles found:"; \
             which -a gradle; \
+            echo "version info for each of them:"; \
+            for mygradle in $(which -a gradle); do "${mygradle}" --version; done; \
             echo "continuing with gradle initialization..."; \
             gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || (sudo gradle --quiet --continue -I gradle/support/fetchDependencies.gradle init) | tee gradle_output.log || ls "gradle*" 2>gradle_ls_err.txt || pwd; \
             echo "one more gradle setup step..."; \
