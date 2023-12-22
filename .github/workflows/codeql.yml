@@ -98,7 +98,7 @@ jobs:
         if test -x "$(which ecj)"; then \
           which -a ecj; \
           for myecj in $(which -a ecj); do \
-            ("${myecj}" --help && "${myecj}" --version) || stat -t "${myecj}"; \
+            "${myecj}" --version || stat -t "${myecj}"; \
           done; \
         else \
           echo "No usable ecj found; skipping..."; \
@@ -115,7 +115,13 @@ jobs:
             echo "full list of gradles found:"; \
             which -a gradle; \
             echo "version info for each of them:"; \
-            for mygradle in $(which -a gradle); do "${mygradle}" --version; done; \
+            for mygradle in $(which -a gradle); do \
+              if test -x "${mygradle}"; then \
+                "${mygradle}" --version || sudo "${mygradle}" --version || stat -t "${mygradle}"; \
+              else \
+                echo "warning: cannot use ${mygradle}"; \
+              fi; \
+            done; \
             echo "continuing with gradle initialization..."; \
             gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || (sudo gradle --quiet --continue -I gradle/support/fetchDependencies.gradle init) | tee gradle_output.log || ls "gradle*" 2>gradle_ls_err.txt || pwd; \
             echo "one more gradle setup step..."; \
