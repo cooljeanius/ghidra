@@ -98,7 +98,7 @@ jobs:
         if test -x "$(which ecj)"; then \
           which -a ecj; \
           for myecj in $(which -a ecj); do \
-            "${myecj}" --help || "${myecj}" help || "${myecj}" --version || "${myecj}" version || stat -t "${myecj}"; \
+            stat -t "${myecj}" || echo "figure out how to use ${myecj} yourself"; \
           done; \
         else \
           echo "No usable ecj found; skipping..."; \
