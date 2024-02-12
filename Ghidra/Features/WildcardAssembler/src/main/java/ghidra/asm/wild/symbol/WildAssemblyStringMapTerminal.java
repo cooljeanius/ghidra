@@ -13,8 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ghidra.trace.util;
+package ghidra.asm.wild.symbol;
 
-public interface TraceChangeType<T, U> {
-	TraceEventType getEventType();
+import org.apache.commons.collections4.MultiValuedMap;
+
+public class WildAssemblyStringMapTerminal extends WildAssemblyTerminal {
+	public final MultiValuedMap<String, Integer> map;
+
+	public WildAssemblyStringMapTerminal(String name, MultiValuedMap<String, Integer> map) {
+		super(name);
+		this.map = map;
+	}
+
+	@Override
+	public String toString() {
+		return "[wildlist:" + name + "]";
+	}
 }

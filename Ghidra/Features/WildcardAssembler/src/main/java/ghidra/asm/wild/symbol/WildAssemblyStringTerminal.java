@@ -13,16 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ghidra.app.util.bin.format.dwarf4;
+package ghidra.asm.wild.symbol;
 
-/**
- * Thrown when a precondition to successfully processing DWARF information is not
- * met.
- */
-public class DWARFPreconditionException extends DWARFException {
+public class WildAssemblyStringTerminal extends WildAssemblyTerminal {
+	public final String str;
 
-	public DWARFPreconditionException(String message) {
-		super(message);
+	public WildAssemblyStringTerminal(String str) {
+		super("\"" + str + "\"");
+		this.str = str;
 	}
 
+	@Override
+	public String toString() {
+		return "[wildstr:" + name + "]";
+	}
+
+	@Override
+	public boolean takesOperandIndex() {
+		return false;
+	}
 }
