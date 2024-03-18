@@ -65,8 +65,13 @@ public interface DomainFile extends Comparable<DomainFile> {
 	public boolean exists();
 
 	/**
-	 * Returns a unique file-ID 
-	 * @return the ID
+	 * Returns a unique file-ID if one has been established or null.  Examples which may result in 
+	 * null ID:
+	 * <ul>
+	 * <li>Very old project file which pre-dates introduction of file ID, or</li>
+	 * <li>Remote versioned file with lost connection</li> 
+	 * </ul>
+	 * @return the file-ID or null if failed to obtain ID.
 	 */
 	public String getFileID();
 
@@ -326,9 +331,12 @@ public interface DomainFile extends Comparable<DomainFile> {
 	public void setReadOnly(boolean state) throws IOException;
 
 	/**
-	 * Returns whether the object is read-only. From a framework point of view a read-only object 
-	 * can never be changed.
-	 * @return true if read-only
+	 * Returns whether this file is explicitly marked as read-only.  This method is only supported
+	 * by the local file system and does not apply to a versioned file that is not checked-out.
+	 * A versioned file that is not checked-out will always return false, while a 
+	 * {@link DomainFileProxy} will always return true.
+	 * From a framework point of view a read-only file can never be changed.
+	 * @return true if this file is marked read-only
 	 */
 	public boolean isReadOnly();
 
