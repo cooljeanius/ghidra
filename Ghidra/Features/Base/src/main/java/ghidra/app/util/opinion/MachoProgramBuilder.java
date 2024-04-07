@@ -134,7 +134,7 @@ public class MachoProgramBuilder {
 		processAbsoluteSymbols();
 		List<String> libraryPaths = processLibraries();
 		List<Address> chainedFixups = processChainedFixups(libraryPaths);
-		processBindings(false, libraryPaths);
+		processDyldInfo(false, libraryPaths);
 		processSectionRelocations();
 		processExternalRelocations();
 		processLocalRelocations();
@@ -824,10 +824,11 @@ public class MachoProgramBuilder {
 			log, monitor);
 	}
 
-	protected void processBindings(boolean doClassic, List<String> libraryPaths) throws Exception {
+	protected void processDyldInfo(boolean doClassic, List<String> libraryPaths) throws Exception {
 
 		List<DyldInfoCommand> commands = machoHeader.getLoadCommands(DyldInfoCommand.class);
 		for (DyldInfoCommand command : commands) {
+			processRebases(command.getRebaseTable());
 			processBindings(command.getBindingTable(), libraryPaths);
 			processBindings(command.getLazyBindingTable(), libraryPaths);
 			processBindings(command.getWeakBindingTable(), libraryPaths);
@@ -852,6 +853,10 @@ public class MachoProgramBuilder {
 				log.appendException(e);
 			}
 		}
+	}
+
+	private void processRebases(RebaseTable rebaseTable) throws Exception {
+		// If we ever support rebasing a Mach-O at load time, this should get implemented
 	}
 
 	private void processBindings(BindingTable bindingTable, List<String> libraryPaths)
@@ -1450,23 +1455,31 @@ public class MachoProgramBuilder {
 			if (address.compareTo(block.getEnd()) > 0) {
 				break;
 			}
-			int length;
 			try {
 				listing.createData(address, datatype);
-				length = listing.getDataAt(address).getLength();
+				if (datatype instanceof Pointer) {
+					fixupThumbPointers(address);
+				}
+				address = address.add(listing.getDataAt(address).getLength());
 			}
-			catch (Exception e) {
-				// don't worry about exceptions
-				// may have already been created, by relocation, or chain pointers
-				if (!(datatype instanceof Pointer)) {
+			catch (CodeUnitInsertionException e) {
+				if (datatype instanceof TerminatedStringDataType) {
+					// Sometimes there are huge strings, like JSON blobs
+					log.appendMsg("Skipping markup for large string at: " + address);
+				}
+				else if (!(datatype instanceof Pointer)) {
+					// May have already been created, by relocation, or chain pointers
+					log.appendMsg("Skipping markup for existing pointer at: " + address);
+				}
+				else {
 					log.appendException(e);
 				}
 				return;
 			}
-			if (datatype instanceof Pointer) {
-				fixupThumbPointers(address);
+			catch (Exception e) {
+				log.appendException(e);
+				return;
 			}
-			address = address.add(length);
 		}
 	}
 
