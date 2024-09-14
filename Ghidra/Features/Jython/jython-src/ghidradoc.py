@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import zipfile
 
 from ghidra.framework import Application
 from ghidra.util import SystemUtilities
+
 
 class _Helper:
     def __init__(self):
@@ -91,7 +92,8 @@ class _Helper:
         def get_jsondoc(class_name):
             jsondoc = None
             try:
-                root = Application.getApplicationRootDirectory().getFile(False).getParentFile().getAbsolutePath()
+                root = Application.getApplicationRootDirectory().getFile(
+                    False).getParentFile().getAbsolutePath()
                 javadoc_zip_name = "GhidraAPI_javadoc.zip"
                 if SystemUtilities.isInDevelopmentMode():
                     javadoc_zip = root + "/build/tmp/" + javadoc_zip_name
@@ -126,7 +128,8 @@ class _Helper:
             if field["constant_value"]:
                 sig += " = " + field["constant_value"]
             sig += "\n"
-            desc = "  %s\n" % (field["comment"]) if len(field["comment"]) > 0 else ""
+            desc = "  %s\n" % (field["comment"]) if len(
+                field["comment"]) > 0 else ""
             return sig + desc
 
         def format_method(method):
@@ -136,17 +139,22 @@ class _Helper:
                 if len(paramsig) > 0:
                     paramsig += ", "
                 paramsig += "%s %s" % (param["type_short"], param["name"])
-                args += "  @param %s (%s): %s\n" % (param["name"], param["type_long"], param["comment"])
+                args += "  @param %s (%s): %s\n" % (
+                    param["name"], param["type_long"], param["comment"])
             throws = ""
             for exception in method["throws"]:
-                throws += "  @throws %s: %s\n" % (exception["type_short"], exception["comment"])
-            sig = "%s %s(%s)\n" % (method["return"]["type_short"], method["name"], paramsig)
+                throws += "  @throws %s: %s\n" % (
+                    exception["type_short"], exception["comment"])
+            sig = "%s %s(%s)\n" % (
+                method["return"]["type_short"], method["name"], paramsig)
             if method["static"]:
                 sig = "static " + sig
-            desc = "  %s\n\n" % (method["comment"]) if len(method["comment"]) > 0 else ""
+            desc = "  %s\n\n" % (method["comment"]) if len(
+                method["comment"]) > 0 else ""
             ret = ""
             if method["return"]["type_short"] != "void":
-                ret = "  @return %s: %s\n" % (method["return"]["type_long"], method["return"]["comment"])
+                ret = "  @return %s: %s\n" % (method["return"]
+                                              ["type_long"], method["return"]["comment"])
             return sig + desc + args + ret + throws
 
         class_name, method_name = get_class_and_method(param)
@@ -186,5 +194,6 @@ class _Helper:
 
     def __repr__(self):
         return self.msg
+
 
 __builtin__.help = _Helper()

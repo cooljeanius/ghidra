@@ -14,7 +14,6 @@
 # limitations under the License.
 ##
 import functools
-import time
 import traceback
 
 import gdb
@@ -26,14 +25,14 @@ class GhidraHookPrefix(gdb.Command):
     """Commands for exporting data to a Ghidra trace"""
 
     def __init__(self):
-        super().__init__('hooks-ghidra', gdb.COMMAND_NONE, prefix=True)
+        super().__init__("hooks-ghidra", gdb.COMMAND_NONE, prefix=True)
 
 
 GhidraHookPrefix()
 
 
-class HookState(object):
-    __slots__ = ('installed', 'batch', 'skip_continue', 'in_break_w_cont')
+class HookState:
+    __slots__ = ("installed", "batch", "skip_continue", "in_break_w_cont")
 
     def __init__(self):
         self.installed = False
@@ -57,8 +56,8 @@ class HookState(object):
         return skip
 
 
-class InferiorState(object):
-    __slots__ = ('first', 'regions', 'modules', 'threads', 'breaks', 'visited')
+class InferiorState:
+    __slots__ = ("first", "regions", "modules", "threads", "breaks", "visited")
 
     def __init__(self):
         self.first = True
@@ -95,7 +94,8 @@ class InferiorState(object):
             hashable_frame = (thread, util.get_level(frame))
             if first or hashable_frame not in self.visited:
                 commands.putreg(
-                    frame, util.get_register_descs(frame.architecture(), 'general'))
+                    frame, util.get_register_descs(frame.architecture(), "general")
+                )
                 try:
                     commands.putmem("$pc", "1", from_tty=False)
                 except MemoryError as e:
@@ -124,12 +124,12 @@ class InferiorState(object):
         inf = gdb.selected_inferior()
         ipath = commands.INFERIOR_PATTERN.format(infnum=inf.num)
         infobj = commands.STATE.trace.proxy_object_path(ipath)
-        infobj.set_value('Exit Code', exit_code)
-        infobj.set_value('State', 'TERMINATED')
+        infobj.set_value("Exit Code", exit_code)
+        infobj.set_value("State", "TERMINATED")
 
 
-class BrkState(object):
-    __slots__ = ('break_loc_counts',)
+class BrkState:
+    __slots__ = ("break_loc_counts",)
 
     def __init__(self):
         self.break_loc_counts = {}
@@ -154,13 +154,13 @@ INF_STATES = {}
 
 
 def log_errors(func):
-    '''
+    """
     Wrap a function in a try-except that prints and reraises the
     exception.
 
     This is needed because pybag and/or the COM wrappers do not print
     exceptions that occur during event callbacks.
-    '''
+    """
 
     @functools.wraps(func)
     def _func(*args, **kwargs):
@@ -243,7 +243,9 @@ def on_frame_selected():
     if f is None:
         return
     HOOK_STATE.ensure_batch()
-    with trace.open_tx("Frame {}.{}.{} selected".format(inf.num, t.num, util.get_level(f))):
+    with trace.open_tx(
+        "Frame {}.{}.{} selected".format(inf.num, t.num, util.get_level(f))
+    ):
         INF_STATES[inf.num].record()
         commands.activate()
 
@@ -258,8 +260,13 @@ def on_memory_changed(event):
         return
     HOOK_STATE.ensure_batch()
     with trace.open_tx("Memory *0x{:08x} changed".format(event.address)):
-        commands.put_bytes(event.address, event.address + event.length,
-                           pages=False, is_mi=False, from_tty=False)
+        commands.put_bytes(
+            event.address,
+            event.address + event.length,
+            pages=False,
+            is_mi=False,
+            from_tty=False,
+        )
 
 
 @log_errors
@@ -275,13 +282,14 @@ def on_register_changed(event):
     # For now, just record the lot
     HOOK_STATE.ensure_batch()
     with trace.open_tx("Register {} changed".format(event.regnum)):
-        commands.putreg(event.frame, util.get_register_descs(
-            event.frame.architecture()))
+        commands.putreg(
+            event.frame, util.get_register_descs(event.frame.architecture())
+        )
 
 
 @log_errors
 def on_cont(event):
-    if (HOOK_STATE.check_skip_continue()):
+    if HOOK_STATE.check_skip_continue():
         return
     inf = gdb.selected_inferior()
     if inf.num not in INF_STATES:
@@ -296,13 +304,13 @@ def on_cont(event):
 
 
 def check_for_continue(event):
-    if hasattr(event, 'breakpoints'):
+    if hasattr(event, "breakpoints"):
         if HOOK_STATE.in_break_w_cont:
             return True
         for brk in event.breakpoints:
-            if hasattr(brk, 'commands') and brk.commands is not None:
+            if hasattr(brk, "commands") and brk.commands is not None:
                 for cmd in brk.commands:
-                    if cmd == 'c' or cmd.startswith('cont'):
+                    if cmd == "c" or cmd.startswith("cont"):
                         HOOK_STATE.in_break_w_cont = True
                         return True
     HOOK_STATE.in_break_w_cont = False
@@ -341,12 +349,12 @@ def on_exited(event):
     state = INF_STATES[inf.num]
     state.visited.clear()
     description = "Exited"
-    if hasattr(event, 'exit_code'):
+    if hasattr(event, "exit_code"):
         description += " with code {}".format(event.exit_code)
     HOOK_STATE.ensure_batch()
     with trace.open_tx(description):
         state.record(description)
-        if hasattr(event, 'exit_code'):
+        if hasattr(event, "exit_code"):
             state.record_exited(event.exit_code)
         commands.put_event_thread()
         commands.activate()
@@ -419,7 +427,8 @@ def on_breakpoint_modified(b):
         # NOTE: Location may not apply to inferior, but whatever.
         for i in range(new_count, old_count):
             ikey = commands.INF_BREAK_KEY_PATTERN.format(
-                breaknum=b.number, locnum=i + 1)
+                breaknum=b.number, locnum=i + 1
+            )
             ibobj.set_value(ikey, None)
 
 
@@ -434,14 +443,14 @@ def on_breakpoint_deleted(b):
     if trace is None:
         return
     bpath = commands.BREAKPOINT_PATTERN.format(breaknum=b.number)
-    ibobj = trace.proxy_object_path(
-        commands.INF_BREAKS_PATTERN.format(infnum=inf.num))
+    ibobj = trace.proxy_object_path(commands.INF_BREAKS_PATTERN.format(infnum=inf.num))
     HOOK_STATE.ensure_batch()
     with trace.open_tx("Breakpoint {} modified".format(b.number)):
         trace.proxy_object_path(bpath).remove(tree=True)
         for i in range(old_count):
             ikey = commands.INF_BREAK_KEY_PATTERN.format(
-                breaknum=b.number, locnum=i + 1)
+                breaknum=b.number, locnum=i + 1
+            )
             ibobj.set_value(ikey, None)
 
 
@@ -451,29 +460,30 @@ def on_before_prompt():
 
 
 def cmd_hook(name):
-
     def _cmd_hook(func):
-
         class _ActiveCommand(gdb.Command):
-
             def __init__(self):
                 # It seems we can't hook commands using the Python API....
                 super().__init__(f"hooks-ghidra def-{name}", gdb.COMMAND_USER)
-                gdb.execute(f"""
+                gdb.execute(
+                    f"""
                 define {name}
                   hooks-ghidra def-{name}
                 end
-                """)
+                """
+                )
 
             def invoke(self, argument, from_tty):
                 self.dont_repeat()
                 func()
 
         def _unhook_command():
-            gdb.execute(f"""
+            gdb.execute(
+                f"""
             define {name}
             end
-            """)
+            """
+            )
 
         func.hook = _ActiveCommand
         func.unhook = _unhook_command
@@ -482,27 +492,27 @@ def cmd_hook(name):
     return _cmd_hook
 
 
-@cmd_hook('hookpost-inferior')
+@cmd_hook("hookpost-inferior")
 def hook_inferior():
     on_inferior_selected()
 
 
-@cmd_hook('hookpost-thread')
+@cmd_hook("hookpost-thread")
 def hook_thread():
     on_thread_selected()
 
 
-@cmd_hook('hookpost-frame')
+@cmd_hook("hookpost-frame")
 def hook_frame():
     on_frame_selected()
 
 
-@cmd_hook('hookpost-up')
+@cmd_hook("hookpost-up")
 def hook_frame_up():
     on_frame_selected()
 
 
-@cmd_hook('hookpost-down')
+@cmd_hook("hookpost-down")
 def hook_frame_down():
     on_frame_selected()
 
@@ -532,7 +542,7 @@ def install_hooks():
     gdb.events.exited.connect(on_exited)  # Inferior exited
 
     gdb.events.clear_objfiles.connect(on_clear_objfiles)
-    if hasattr(gdb.events, 'free_objfile'):
+    if hasattr(gdb.events, "free_objfile"):
         gdb.events.free_objfile.connect(on_free_objfile)
     gdb.events.new_objfile.connect(on_new_objfile)
 
@@ -566,7 +576,7 @@ def remove_hooks():
     gdb.events.exited.disconnect(on_exited)  # Inferior exited
 
     gdb.events.clear_objfiles.disconnect(on_clear_objfiles)
-    if hasattr(gdb.events, 'free_objfile'):
+    if hasattr(gdb.events, "free_objfile"):
         gdb.events.free_objfile.disconnect(on_free_objfile)
     gdb.events.new_objfile.disconnect(on_new_objfile)
 

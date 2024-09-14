@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,10 +16,10 @@
 from ctypes import *
 from enum import Enum
 
-from comtypes import IUnknown, COMError
-from comtypes.automation import IID, VARIANT
+from comtypes import IUnknown
+from comtypes.automation import VARIANT
 from comtypes.gen import DbgMod
-from comtypes.hresult import S_OK, S_FALSE
+from comtypes.hresult import S_OK
 from pybag.dbgeng import exception
 
 from comtypes import BSTR
@@ -44,7 +44,7 @@ class ModelObjectKind(Enum):
     KEY_REFERENCE = 9
 
 
-class ModelObject(object):
+class ModelObject:
     def __init__(self, obj):
         self._obj = obj
         self.concept = None
@@ -221,10 +221,10 @@ class ModelObject(object):
                 return None
             self.dconcept = StringDisplayableConcept(dconcept)
         return self.dconcept.ToDisplayString(self)
-    
+
     # This does NOT work - returns a null pointer for value.  Why?
     # One possibility: casting is not a valid way to obtain an IModelMethod
-    # 
+    #
     # def ToDisplayString0(self):
     #     map = self.GetAttributes()
     #     method = map["ToDisplayString"]
@@ -287,11 +287,13 @@ class ModelObject(object):
         kind = self.GetKind()
         # print(f"GetAttributes: {kind}")
         if kind is not None and kind.value == ModelObjectKind.ERROR.value:
-            print(f"ERROR from GetAttributes")
+            print("ERROR from GetAttributes")
             return map
-        if kind.value == ModelObjectKind.INTRINSIC.value or \
-                kind.value == ModelObjectKind.TARGET_OBJECT.value or \
-                kind.value == ModelObjectKind.TARGET_OBJECT_REFERENCE.value:
+        if (
+            kind.value == ModelObjectKind.INTRINSIC.value
+            or kind.value == ModelObjectKind.TARGET_OBJECT.value
+            or kind.value == ModelObjectKind.TARGET_OBJECT_REFERENCE.value
+        ):
             return self.GetRawValueMap()
         return self.GetKeyValueMap()
 
@@ -326,7 +328,7 @@ class ModelObject(object):
                 return None
             kind = next.GetKind()
             if element.startswith("["):
-                idx = element[1:len(element)-1]
+                idx = element[1 : len(element) - 1]
                 if "x" not in idx:
                     idx = int(idx)
                 else:
@@ -338,16 +340,14 @@ class ModelObject(object):
                 next = map[element]
             else:
                 next = next.GetKeyValue(element)
-            #if next is None:
+            # if next is None:
             #    print(f"{element} not found")
         return next
-
 
     def GetValue(self):
         value = self.GetIntrinsicValue()
         if value is None:
             return None
-        if value.vt == 0xd:
+        if value.vt == 0xD:
             return None
         return value.value
-

@@ -18,7 +18,6 @@ from concurrent.futures import Future
 from contextlib import contextmanager
 from dataclasses import dataclass
 import inspect
-import sys
 from threading import Thread, Lock
 import traceback
 from typing import Any, List
@@ -30,15 +29,15 @@ from .util import send_delimited, recv_delimited
 # This need not be incremented every Ghidra release. When a breaking protocol
 # change is made, this should be updated to match the first Ghidra release that
 # includes the change.
-# 
+#
 # Other places to change:
 # * every pyproject.toml file (incl. deps)
 # * TraceRmiHandler.VERSION
-VERSION = '11.2'
+VERSION = "11.2"
 
 
 class RemoteResult(Future):
-    __slots__ = ('field_name', 'handler')
+    __slots__ = ("field_name", "handler")
 
     def __init__(self, field_name, handler):
         super().__init__()
@@ -47,7 +46,7 @@ class RemoteResult(Future):
 
 
 class Receiver(Thread):
-    __slots__ = ('client', 'req_queue', '_is_shutdown')
+    __slots__ = ("client", "req_queue", "_is_shutdown")
 
     def __init__(self, client):
         super().__init__(daemon=True)
@@ -63,8 +62,7 @@ class Receiver(Thread):
         reply = bufs.RootMessage()
         try:
             result = self.client._handle_invoke_method(request)
-            Client._write_value(
-                reply.xreply_invoke_method.return_value, result)
+            Client._write_value(reply.xreply_invoke_method.return_value, result)
         except BaseException as e:
             print("Error caused by front end")
             traceback.print_exc()
@@ -74,15 +72,19 @@ class Receiver(Thread):
     def _handle_reply(self, reply):
         with self.qlock:
             request = self.req_queue.popleft()
-        if reply.HasField('error'):
+        if reply.HasField("error"):
             request.set_exception(TraceRmiError(reply.error.message))
         elif not reply.HasField(request.field_name):
-            request.set_exception(ProtocolError('expected {}, but got {}'.format(
-                request.field_name, reply.WhichOneof('msg'))))
+            request.set_exception(
+                ProtocolError(
+                    "expected {}, but got {}".format(
+                        request.field_name, reply.WhichOneof("msg")
+                    )
+                )
+            )
         else:
             try:
-                result = request.handler(
-                    getattr(reply, request.field_name))
+                result = request.handler(getattr(reply, request.field_name))
                 request.set_result(result)
             except BaseException as e:
                 request.set_exception(e)
@@ -96,18 +98,19 @@ class Receiver(Thread):
     def run(self):
         dbg_seq = 0
         while not self._is_shutdown:
-            #print("Receiving message")
+            # print("Receiving message")
             try:
                 reply = recv_delimited(self.client.s, bufs.RootMessage(), dbg_seq)
-            except BaseException as e:
+            except BaseException:
                 self._is_shutdown = True
                 return
-            #print(f"Got one: {reply.WhichOneof('msg')}")
+            # print(f"Got one: {reply.WhichOneof('msg')}")
             dbg_seq += 1
             try:
-                if reply.HasField('xrequest_invoke_method'):
+                if reply.HasField("xrequest_invoke_method"):
                     self.client._method_registry._executor.submit(
-                        self._handle_invoke_method, reply.xrequest_invoke_method)
+                        self._handle_invoke_method, reply.xrequest_invoke_method
+                    )
                 else:
                     self._handle_reply(reply)
             except:
@@ -122,8 +125,7 @@ class ProtocolError(Exception):
     pass
 
 
-class Transaction(object):
-
+class Transaction:
     def __init__(self, trace, id):
         self.closed = False
         self.trace = trace
@@ -132,7 +134,8 @@ class Transaction(object):
 
     def __repr__(self):
         return "<Transaction id={} trace={} closed={}>".format(
-            self.id, self.trace, self.close)
+            self.id, self.trace, self.close
+        )
 
     def commit(self):
         with self.lock:
@@ -149,17 +152,15 @@ class Transaction(object):
         self.trace._end_tx(self.id, abort=True)
 
 
-RegVal = namedtuple('RegVal', ['name', 'value'])
+RegVal = namedtuple("RegVal", ["name", "value"])
 
 
-class Address(namedtuple('BaseAddress', ['space', 'offset'])):
-
+class Address(namedtuple("BaseAddress", ["space", "offset"])):
     def extend(self, length):
         return AddressRange.extend(self, length)
 
 
-class AddressRange(namedtuple('BaseAddressRange', ['space', 'min', 'max'])):
-
+class AddressRange(namedtuple("BaseAddressRange", ["space", "min", "max"])):
     @classmethod
     def extend(cls, min, length):
         return cls(min.space, min.offset, min.offset + length - 1)
@@ -168,8 +169,7 @@ class AddressRange(namedtuple('BaseAddressRange', ['space', 'min', 'max'])):
         return self.max - self.min + 1
 
 
-class Lifespan(namedtuple('BaseLifespan', ['min', 'max'])):
-
+class Lifespan(namedtuple("BaseLifespan", ["min", "max"])):
     def __new__(cls, min, max=None):
         if min is None:
             min = -1 << 63
@@ -185,21 +185,22 @@ class Lifespan(namedtuple('BaseLifespan', ['min', 'max'])):
     def __str__(self):
         if self.is_empty():
             return "(EMPTY)"
-        min = '(-inf' if self.min == -1 << 63 else '[{}'.format(self.min)
-        max = '+inf)' if self.max == (1 << 63) - 1 else '{}]'.format(self.max)
-        return '{},{}'.format(min, max)
+        min = "(-inf" if self.min == -1 << 63 else "[{}".format(self.min)
+        max = "+inf)" if self.max == (1 << 63) - 1 else "{}]".format(self.max)
+        return "{},{}".format(min, max)
 
     def __repr__(self):
-        return 'Lifespan' + self.__str__()
+        return "Lifespan" + self.__str__()
 
 
-DetachedObject = namedtuple('DetachedObject', ['id', 'path'])
+DetachedObject = namedtuple("DetachedObject", ["id", "path"])
 
 
-class TraceObject(namedtuple('BaseTraceObject', ['trace', 'id', 'path'])):
+class TraceObject(namedtuple("BaseTraceObject", ["trace", "id", "path"])):
     """
     A proxy for a TraceObject
     """
+
     __slots__ = ()
 
     @classmethod
@@ -210,7 +211,7 @@ class TraceObject(namedtuple('BaseTraceObject', ['trace', 'id', 'path'])):
     def from_path(cls, trace, path):
         return cls(trace=trace, id=None, path=path)
 
-    def insert(self, span=None, resolution='adjust'):
+    def insert(self, span=None, resolution="adjust"):
         if span is None:
             span = Lifespan(self.trace.snap())
         return self.trace._insert_object(self, span, resolution)
@@ -220,12 +221,12 @@ class TraceObject(namedtuple('BaseTraceObject', ['trace', 'id', 'path'])):
             span = Lifespan(self.trace.snap())
         return self.trace._remove_object(self, span, tree)
 
-    def set_value(self, key, value, schema=None, span=None, resolution='adjust'):
+    def set_value(self, key, value, schema=None, span=None, resolution="adjust"):
         if span is None:
             span = Lifespan(self.trace.snap())
         return self.trace._set_value(self, span, key, value, schema, resolution)
 
-    def retain_values(self, keys, span=None, kinds='elements'):
+    def retain_values(self, keys, span=None, kinds="elements"):
         if span is None:
             span = Lifespan(self.trace.snap())
         return self.trace._retain_values(self, span, kinds, keys)
@@ -234,16 +235,17 @@ class TraceObject(namedtuple('BaseTraceObject', ['trace', 'id', 'path'])):
         self.trace._activate_object(self)
 
 
-class TraceObjectValue(namedtuple('BaseTraceObjectValue', [
-        'parent', 'span', 'key', 'value', 'schema'])):
+class TraceObjectValue(
+    namedtuple("BaseTraceObjectValue", ["parent", "span", "key", "value", "schema"])
+):
     """
     A record of a TraceObjectValue
     """
+
     __slots__ = ()
 
 
-class Trace(object):
-
+class Trace:
     def __init__(self, client, id):
         self._next_tx = 0
         self._txlock = Lock()
@@ -328,7 +330,7 @@ class Trace(object):
 
     @staticmethod
     def validate_state(state):
-        if not state in ('unknown', 'known', 'error'):
+        if state not in ("unknown", "known", "error"):
             raise gdb.GdbError("Invalid memory state: {}".format(state))
 
     def set_memory_state(self, range, state, snap=None):
@@ -360,7 +362,9 @@ class Trace(object):
         return self.client._delete_registers(self.id, snap, space, names)
 
     def create_root_object(self, xml_context, schema):
-        return TraceObject(self, self.client._create_root_object(self.id, xml_context, schema), "")
+        return TraceObject(
+            self, self.client._create_root_object(self.id, xml_context, schema), ""
+        )
 
     def create_object(self, path):
         return TraceObject(self, self.client._create_object(self.id, path), path)
@@ -372,7 +376,9 @@ class Trace(object):
         return self.client._remove_object(self.id, object, span, tree)
 
     def _set_value(self, object, span, key, value, schema, resolution):
-        return self.client._set_value(self.id, object, span, key, value, schema, resolution)
+        return self.client._set_value(
+            self.id, object, span, key, value, schema, resolution
+        )
 
     def _retain_values(self, object, span, kinds, keys):
         return self.client._retain_values(self.id, object, span, kinds, keys)
@@ -400,8 +406,13 @@ class Trace(object):
 
     def _make_values(self, values):
         return [
-            TraceObjectValue(TraceObject(self, id, path),
-                             span, key, self._fix_value(value, schema), schema)
+            TraceObjectValue(
+                TraceObject(self, id, path),
+                span,
+                key,
+                self._fix_value(value, schema),
+                schema,
+            )
             for (id, path), span, key, (value, schema) in values
         ]
 
@@ -414,7 +425,9 @@ class Trace(object):
     def get_values_intersecting(self, rng, span=None, key=""):
         if span is None:
             span = Lifespan(self.snap(), self.snap())
-        return self._make_values(self.client._get_values_intersecting(self.id, span, rng, key))
+        return self._make_values(
+            self.client._get_values_intersecting(self.id, span, rng, key)
+        )
 
     def _activate_object(self, object):
         self.client._activate_object(self.id, object)
@@ -454,8 +467,7 @@ class RemoteMethod:
     callback: Any
 
 
-class MethodRegistry(object):
-
+class MethodRegistry:
     def __init__(self, executor):
         self._methods = {}
         self._executor = executor
@@ -490,25 +502,31 @@ class MethodRegistry(object):
     def _to_display(cls, annotation):
         if isinstance(annotation, ParamDesc):
             return annotation.display
-        return ''
+        return ""
 
     @classmethod
     def _to_description(cls, annotation):
         if isinstance(annotation, ParamDesc):
             return annotation.description
-        return ''
+        return ""
 
     @classmethod
     def _make_param(cls, p):
         schema = cls._to_schema(p, p.annotation)
         required = p.default is p.empty
         return RemoteParameter(
-            p.name, schema, required, None if required else p.default,
-            cls._to_display(p.annotation), cls._to_description(p.annotation))
+            p.name,
+            schema,
+            required,
+            None if required else p.default,
+            cls._to_display(p.annotation),
+            cls._to_description(p.annotation),
+        )
 
     @classmethod
-    def create_method(cls, function, name=None, action=None, display=None,
-                      description=None) -> RemoteMethod:
+    def create_method(
+        cls, function, name=None, action=None, display=None, description=None
+    ) -> RemoteMethod:
         if name is None:
             name = function.__name__
         if action is None:
@@ -516,22 +534,29 @@ class MethodRegistry(object):
         if display is None:
             display = name
         if description is None:
-            description = function.__doc__ or ''
+            description = function.__doc__ or ""
         sig = inspect.signature(function)
         params = []
         for p in sig.parameters.values():
             params.append(cls._make_param(p))
         return_schema = cls._to_schema(sig, sig.return_annotation)
-        return RemoteMethod(name, action, display, description, params,
-                            return_schema, function)
+        return RemoteMethod(
+            name, action, display, description, params, return_schema, function
+        )
 
-    def method(self, func=None, *, name=None, action=None, display=None,
-               description='', condition=True):
-
+    def method(
+        self,
+        func=None,
+        *,
+        name=None,
+        action=None,
+        display=None,
+        description="",
+        condition=True,
+    ):
         def _method(func):
             if condition:
-                method = self.create_method(func, name, action, display,
-                                            description)
+                method = self.create_method(func, name, action, display, description)
                 self.register_method(method)
             return func
 
@@ -540,8 +565,7 @@ class MethodRegistry(object):
         return _method
 
 
-class Batch(object):
-
+class Batch:
     def __init__(self):
         self.futures = []
         self.count = 0
@@ -569,8 +593,7 @@ class Batch(object):
         return [self._get_result(f, timeout) for f in self.futures]
 
 
-class Client(object):
-
+class Client:
     @staticmethod
     def _write_address(to, address):
         to.space = address.space
@@ -613,7 +636,8 @@ class Client(object):
             to.path.path = path_or_id.path
         else:
             raise ValueError(
-                "Object/proxy has neither id nor path!: {}".format(path_or_id))
+                "Object/proxy has neither id nor path!: {}".format(path_or_id)
+            )
 
     @staticmethod
     def _read_obj_desc(msg):
@@ -683,8 +707,7 @@ class Client(object):
         elif schema == sch.STRING_ARR:
             to.string_arr_value.arr[:] = value
             return
-        raise ValueError(
-            f"Cannot write Value: {schema}, {value}, {type(value)}")
+        raise ValueError(f"Cannot write Value: {schema}, {value}, {type(value)}")
 
     @staticmethod
     def _write_parameter(to, p):
@@ -718,42 +741,42 @@ class Client(object):
 
     @staticmethod
     def _read_value(msg):
-        name = msg.WhichOneof('value')
-        if name == 'null_value':
+        name = msg.WhichOneof("value")
+        if name == "null_value":
             return None, sch.VOID
-        if name == 'bool_value':
+        if name == "bool_value":
             return msg.bool_value, sch.BOOL
-        if name == 'byte_value':
+        if name == "byte_value":
             return msg.byte_value, sch.BYTE
-        if name == 'char_value':
+        if name == "char_value":
             return chr(msg.char_value), sch.CHAR
-        if name == 'short_value':
+        if name == "short_value":
             return msg.short_value, sch.SHORT
-        if name == 'int_value':
+        if name == "int_value":
             return msg.int_value, sch.INT
-        if name == 'long_value':
+        if name == "long_value":
             return msg.long_value, sch.LONG
-        if name == 'string_value':
+        if name == "string_value":
             return msg.string_value, sch.STRING
-        if name == 'bool_arr_value':
+        if name == "bool_arr_value":
             return list(msg.bool_arr_value.arr), sch.BOOL_ARR
-        if name == 'bytes_value':
+        if name == "bytes_value":
             return msg.bytes_value, sch.BYTE_ARR
-        if name == 'char_arr_value':
+        if name == "char_arr_value":
             return msg.char_arr_value, sch.CHAR_ARR
-        if name == 'short_arr_value':
+        if name == "short_arr_value":
             return list(msg.short_arr_value.arr), sch.SHORT_ARR
-        if name == 'int_arr_value':
+        if name == "int_arr_value":
             return list(msg.int_arr_value.arr), sch.INT_ARR
-        if name == 'long_arr_value':
+        if name == "long_arr_value":
             return list(msg.long_arr_value.arr), sch.LONG_ARR
-        if name == 'string_arr_value':
+        if name == "string_arr_value":
             return list(msg.string_arr_value.arr), sch.STRING_ARR
-        if name == 'address_value':
+        if name == "address_value":
             return Client._read_address(msg.address_value), sch.ADDRESS
-        if name == 'range_value':
+        if name == "range_value":
             return Client._read_range(msg.range_value), sch.RANGE
-        if name == 'child_desc':
+        if name == "child_desc":
             return Client._read_obj_desc(msg.child_desc), sch.OBJECT
         raise ValueError("Could not read value: {}".format(msg))
 
@@ -840,7 +863,7 @@ class Client(object):
     def _recv(self, name, handler):
         return self.receiver._recv(name, handler)
 
-    def create_trace(self, path, language, compiler='default'):
+    def create_trace(self, path, language, compiler="default"):
         root = bufs.RootMessage()
         root.request_create_trace.path.path = path
         root.request_create_trace.language.id = language
@@ -853,7 +876,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        self._batch_or_now(root, 'reply_create_trace', _handle)
+
+        self._batch_or_now(root, "reply_create_trace", _handle)
         return trace
 
     def _close_trace(self, id):
@@ -863,7 +887,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_close_trace', _handle)
+
+        return self._batch_or_now(root, "reply_close_trace", _handle)
 
     def _save_trace(self, id):
         root = bufs.RootMessage()
@@ -871,7 +896,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_save_trace', _handle)
+
+        return self._batch_or_now(root, "reply_save_trace", _handle)
 
     def _start_tx(self, id, description, undoable, txid):
         root = bufs.RootMessage()
@@ -882,7 +908,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_start_tx', _handle)
+
+        return self._batch_or_now(root, "reply_start_tx", _handle)
 
     def _end_tx(self, id, txid, abort):
         root = bufs.RootMessage()
@@ -892,7 +919,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_end_tx', _handle)
+
+        return self._batch_or_now(root, "reply_end_tx", _handle)
 
     def _snapshot(self, id, description, datetime, snap):
         root = bufs.RootMessage()
@@ -903,7 +931,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_snapshot', _handle)
+
+        return self._batch_or_now(root, "reply_snapshot", _handle)
 
     def _create_overlay_space(self, id, base, name):
         root = bufs.RootMessage()
@@ -913,7 +942,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_create_overlay', _handle)
+
+        return self._batch_or_now(root, "reply_create_overlay", _handle)
 
     def _put_bytes(self, id, snap, start, data):
         root = bufs.RootMessage()
@@ -924,19 +954,20 @@ class Client(object):
 
         def _handle(reply):
             return reply.written
-        return self._batch_or_now(root, 'reply_put_bytes', _handle)
+
+        return self._batch_or_now(root, "reply_put_bytes", _handle)
 
     def _set_memory_state(self, id, snap, range, state):
         root = bufs.RootMessage()
         root.request_set_memory_state.oid.id = id
         root.request_set_memory_state.snap.snap = snap
         self._write_range(root.request_set_memory_state.range, range)
-        root.request_set_memory_state.state = getattr(
-            bufs, 'MS_' + state.upper())
+        root.request_set_memory_state.state = getattr(bufs, "MS_" + state.upper())
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_set_memory_state', _handle)
+
+        return self._batch_or_now(root, "reply_set_memory_state", _handle)
 
     def _delete_bytes(self, id, snap, range):
         root = bufs.RootMessage()
@@ -946,7 +977,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_delete_bytes', _handle)
+
+        return self._batch_or_now(root, "reply_delete_bytes", _handle)
 
     def _put_registers(self, id, snap, space, values):
         root = bufs.RootMessage()
@@ -961,7 +993,8 @@ class Client(object):
 
         def _handle(reply):
             return list(reply.skipped_names)
-        return self._batch_or_now(root, 'reply_put_register_value', _handle)
+
+        return self._batch_or_now(root, "reply_put_register_value", _handle)
 
     def _delete_registers(self, id, snap, space, names):
         root = bufs.RootMessage()
@@ -972,7 +1005,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_delete_register_value', _handle)
+
+        return self._batch_or_now(root, "reply_delete_register_value", _handle)
 
     def _create_root_object(self, id, xml_context, schema):
         # TODO: An actual SchemaContext class?
@@ -983,7 +1017,8 @@ class Client(object):
 
         def _handle(reply):
             return reply.object.id
-        return self._batch_or_now(root, 'reply_create_object', _handle)
+
+        return self._batch_or_now(root, "reply_create_object", _handle)
 
     def _create_object(self, id, path):
         root = bufs.RootMessage()
@@ -992,7 +1027,8 @@ class Client(object):
 
         def _handle(reply):
             return reply.object.id
-        return self._batch_or_now(root, 'reply_create_object', _handle)
+
+        return self._batch_or_now(root, "reply_create_object", _handle)
 
     def _insert_object(self, id, object, span, resolution):
         root = bufs.RootMessage()
@@ -1000,11 +1036,13 @@ class Client(object):
         self._write_obj_spec(root.request_insert_object.object, object)
         self._write_span(root.request_insert_object.span, span)
         root.request_insert_object.resolution = getattr(
-            bufs, 'CR_' + resolution.upper())
+            bufs, "CR_" + resolution.upper()
+        )
 
         def _handle(reply):
             return self._read_span(reply.span)
-        return self._batch_or_now(root, 'reply_insert_object', _handle)
+
+        return self._batch_or_now(root, "reply_insert_object", _handle)
 
     def _remove_object(self, id, object, span, tree):
         root = bufs.RootMessage()
@@ -1015,7 +1053,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_remove_object', _handle)
+
+        return self._batch_or_now(root, "reply_remove_object", _handle)
 
     def _set_value(self, id, object, span, key, value, schema, resolution):
         root = bufs.RootMessage()
@@ -1024,25 +1063,25 @@ class Client(object):
         self._write_span(root.request_set_value.value.span, span)
         root.request_set_value.value.key = key
         self._write_value(root.request_set_value.value.value, value, schema)
-        root.request_set_value.resolution = getattr(
-            bufs, 'CR_' + resolution.upper())
+        root.request_set_value.resolution = getattr(bufs, "CR_" + resolution.upper())
 
         def _handle(reply):
             return Lifespan(reply.span.min, reply.span.max)
-        return self._batch_or_now(root, 'reply_set_value', _handle)
+
+        return self._batch_or_now(root, "reply_set_value", _handle)
 
     def _retain_values(self, id, object, span, kinds, keys):
         root = bufs.RootMessage()
         root.request_retain_values.oid.id = id
         self._write_obj_spec(root.request_retain_values.object, object)
         self._write_span(root.request_retain_values.span, span)
-        root.request_retain_values.kinds = getattr(
-            bufs, 'VK_' + kinds.upper())
+        root.request_retain_values.kinds = getattr(bufs, "VK_" + kinds.upper())
         root.request_retain_values.keys[:] = keys
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_retain_values', _handle)
+
+        return self._batch_or_now(root, "reply_retain_values", _handle)
 
     def _get_object(self, id, path_or_id):
         root = bufs.RootMessage()
@@ -1051,13 +1090,18 @@ class Client(object):
 
         def _handle(reply):
             return self._read_obj_desc(reply.object)
-        return self._batch_or_now(root, 'reply_get_object', _handle)
+
+        return self._batch_or_now(root, "reply_get_object", _handle)
 
     @staticmethod
     def _read_values(reply):
         return [
-            (Client._read_obj_desc(v.parent), Client._read_span(v.span),
-             v.key, Client._read_value(v.value))
+            (
+                Client._read_obj_desc(v.parent),
+                Client._read_span(v.span),
+                v.key,
+                Client._read_value(v.value),
+            )
             for v in reply.values
         ]
 
@@ -1088,7 +1132,8 @@ class Client(object):
 
         def _handle(reply):
             return self._read_values(reply)
-        return self._batch_or_now(root, 'reply_get_values', _handle)
+
+        return self._batch_or_now(root, "reply_get_values", _handle)
 
     def _get_values_intersecting(self, id, span, rng, key):
         root = bufs.RootMessage()
@@ -1099,7 +1144,8 @@ class Client(object):
 
         def _handle(reply):
             return self._read_values(reply)
-        return self._batch_or_now(root, 'reply_get_values', _handle)
+
+        return self._batch_or_now(root, "reply_get_values", _handle)
 
     def _activate_object(self, id, object):
         root = bufs.RootMessage()
@@ -1108,7 +1154,8 @@ class Client(object):
 
         def _handle(reply):
             pass
-        return self._batch_or_now(root, 'reply_activate', _handle)
+
+        return self._batch_or_now(root, "reply_activate", _handle)
 
     def _disassemble(self, id, snap, start):
         root = bufs.RootMessage()
@@ -1118,28 +1165,31 @@ class Client(object):
 
         def _handle(reply):
             return reply.length
-        return self._batch_or_now(root, 'reply_disassemble', _handle)
+
+        return self._batch_or_now(root, "reply_disassemble", _handle)
 
     def _negotiate(self, description: str):
         root = bufs.RootMessage()
         root.request_negotiate.version = VERSION
         root.request_negotiate.description = description
-        self._write_methods(root.request_negotiate.methods,
-                            self._method_registry._methods.values())
+        self._write_methods(
+            root.request_negotiate.methods, self._method_registry._methods.values()
+        )
 
         def _handle(reply):
             return reply.description
-        return self._now(root, 'reply_negotiate', _handle)
+
+        return self._now(root, "reply_negotiate", _handle)
 
     def _handle_invoke_method(self, request):
-        if request.HasField('oid'):
+        if request.HasField("oid"):
             if request.oid.id not in self._traces:
                 raise KeyError(f"Invalid domain object id: {request.oid.id}")
             trace = self._traces[request.oid.id]
         else:
             trace = None
         name = request.name
-        if not name in self._method_registry._methods:
+        if name not in self._method_registry._methods:
             raise KeyError(f"Invalid method name: {name}")
         method = self._method_registry._methods[name]
         kwargs = self._read_arguments(request.arguments, trace)

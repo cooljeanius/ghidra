@@ -23,7 +23,6 @@ import jpype
 # pylint: disable=no-member, too-few-public-methods
 @jpype.JImplementationFor("java.lang.Object")
 class _JavaObject:
-
     def __jclass_init__(self: jpype.JClass):
         try:
             if isinstance(self, jpype.JException):
@@ -36,7 +35,7 @@ class _JavaObject:
             for prop in utils.getProperties(self.class_):
                 field = prop.field
                 if keyword.iskeyword(field):
-                    field += '_'
+                    field += "_"
                 if field == "class_":
                     continue
                 # check for existing inherited properties
@@ -58,7 +57,9 @@ class _JavaObject:
         # pylint: disable=bare-except
         except:
             logger = logging.getLogger(__name__)
-            logger.error("Failed to add property customizations for %s", self, exc_info=1)
+            logger.error(
+                "Failed to add property customizations for %s", self, exc_info=1
+            )
 
     def __repr__(self):
         return str(self)

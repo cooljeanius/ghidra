@@ -14,7 +14,7 @@
 # limitations under the License.
 ##
 from pathlib import Path
-from typing import List, Tuple
+from typing import Tuple
 
 import pytest
 from pyghidra.__main__ import _get_parser, PyGhidraArgs
@@ -34,7 +34,6 @@ def exe_file(shared_datadir: Path):
 
 
 class TestArgParser:
-
     def parse(self, *args) -> PyGhidraArgs:
         parser = _get_parser()
         parser_args = PyGhidraArgs(parser)
@@ -128,10 +127,7 @@ class TestArgParser:
 
     def test_script_with_positional_args(self):
         args = self.parse(
-            self.example_script,
-            self.test_root,
-            self.example_script,
-            self.ghost_script
+            self.example_script, self.test_root, self.example_script, self.ghost_script
         )
         assert args.valid
         assert args.verbose is False
@@ -149,16 +145,17 @@ class TestArgParser:
             "-v",
             self.test_root,
             "--project-path",
-            self.ghost_exe
+            self.ghost_exe,
         )
         assert args.valid
         assert args.verbose is False
         assert args.script_path == self.example_script
         script_args = [
             str(self.example_exe),
-            "-v", str(self.test_root),
+            "-v",
+            str(self.test_root),
             "--project-path",
-            str(self.ghost_exe)
+            str(self.ghost_exe),
         ]
         assert args.script_args == script_args
 
@@ -172,7 +169,7 @@ class TestArgParser:
             "-v",
             self.test_root,
             "--project-name",
-            self.ghost_exe
+            self.ghost_exe,
         )
         assert args.valid
         assert args.verbose is False
@@ -184,14 +181,12 @@ class TestArgParser:
             "-v",
             str(self.test_root),
             "--project-name",
-            str(self.ghost_exe)
+            str(self.ghost_exe),
         ]
         assert args.script_args == script_args
 
     def test_skip_analysis(self):
-        args = self.parse(
-            "--skip-analysis"
-        )
+        args = self.parse("--skip-analysis")
         assert args.skip_analysis
 
     def test_default_analysis(self):
@@ -209,33 +204,44 @@ class TestArgParser:
 
 
 class TestGhidraLaunchParser:
-
     def parse(self, *args) -> Tuple[ParsedArgs, str]:
         parser = get_ghidra_launcher_parser()
 
         parser_args = ParsedArgs()
         _, remaining = parser.parse_known_args(args, namespace=parser_args)
         return parser_args, remaining
-    
+
     def test_class_name(self):
         CLASS_ARG = "ghidra.GhidraRun"
         args, _ = self.parse("-g", CLASS_ARG, "arg1", "arg2", "--arg3", "value3")
         assert args.class_name == CLASS_ARG
-    
+
     def test_gui_mode(self):
-        args, _ = self.parse("ghidra.GhidraRun", "arg1", "-g", "arg2", "--arg3", "value3")
+        args, _ = self.parse(
+            "ghidra.GhidraRun", "arg1", "-g", "arg2", "--arg3", "value3"
+        )
         assert args.gui
-    
+
     def test_jvm_args(self):
         JVM_ARG1 = "-Duser.variant="
         JVM_ARG2 = "-Xmx1M"
-        args, _ = self.parse("ghidra.GhidraRun", "arg1", JVM_ARG1, "arg2", "--arg3", "value3", JVM_ARG2)
+        args, _ = self.parse(
+            "ghidra.GhidraRun", "arg1", JVM_ARG1, "arg2", "--arg3", "value3", JVM_ARG2
+        )
         jvm_args = args.jvm_args
         assert jvm_args
         assert JVM_ARG1 in jvm_args
         assert JVM_ARG2 in jvm_args
-    
+
     def test_remaining(self):
-        _, remaining = self.parse("ghidra.GhidraRun", "arg1", "-Duser.variant=", "arg2", "--arg3", "value3", "-Xmx1M")
+        _, remaining = self.parse(
+            "ghidra.GhidraRun",
+            "arg1",
+            "-Duser.variant=",
+            "arg2",
+            "--arg3",
+            "value3",
+            "-Xmx1M",
+        )
         assert remaining
         assert remaining == ["arg1", "arg2", "--arg3", "value3"]

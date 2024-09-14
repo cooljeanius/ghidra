@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,8 @@
 # DISCLAIMER: This is a recreation of a Java Ghidra script for example
 # use only. Please run the Java version in a production environment.
 
-#@category Examples.Python
-#@runtime Jython
+# @category Examples.Python
+# @runtime Jython
 
 from ghidra.framework.model import DomainFile
 from ghidra.framework.model import DomainFolder
@@ -34,12 +34,12 @@ from ghidra.util import Msg
 from java.lang import IllegalArgumentException
 from ghidra.util.exception import CancelledException
 
-# The presence of the AskScript.properties file in the same location (as AskScript.java) 
+# The presence of the AskScript.properties file in the same location (as AskScript.java)
 # allows for the following behavior:
-#		- GUI: if applicable, auto-populates the input field with the value in the 
-#			.properties file (the first	time that input	field appears)
+# - GUI: if applicable, auto-populates the input field with the value in the
+# .properties file (the first	time that input	field appears)
 #   	- Headless: uses the value in the .properties file for the variable assigned to the
-#			corresponding askXxx() method in the GhidraScript.
+# corresponding askXxx() method in the GhidraScript.
 try:
     file1 = askFile("FILE", "Choose file:")
     print "file was: " + str(file1)
@@ -65,10 +65,10 @@ try:
     address2 = askAddress("address 2", "enter address 2")
     print "address1 + address2 = " + address1.add(address2.getOffset()).toString()
 
-    #bytes = askBytes("bytes", "enter byte pattern")
-    #for b in bytes: 
+    # bytes = askBytes("bytes", "enter byte pattern")
+    # for b in bytes:
     #   print "b = " + str(b & 0xff)
-			
+
     try:
         prog = askProgram("Please choose a program to open.")
         print "Program picked: " + prog.getName()
@@ -84,23 +84,26 @@ try:
     print "d1 + d2 = " + str(d1 + d2)
 
     myStr = askString("String Specification", "Please type a string: ")
-    myOtherStr = askString("Another String Specification", "Please type another string: ", "replace me!")
+    myOtherStr = askString("Another String Specification",
+                           "Please type another string: ", "replace me!")
     print "You typed: " + myStr + " and " + myOtherStr
 
-    choice = askChoice("Choice", "Please choose one", [ "grumpy", "dopey", "sleepy", "doc", "bashful" ], "bashful")
+    choice = askChoice("Choice", "Please choose one", [
+                       "grumpy", "dopey", "sleepy", "doc", "bashful"], "bashful")
     print "Choice? " + choice
 
-    choices1 = askChoices("Choices 1", "Please choose one or more numbers.", [ 1, 2, 3, 4, 5, 6 ])
+    choices1 = askChoices(
+        "Choices 1", "Please choose one or more numbers.", [1, 2, 3, 4, 5, 6])
     print "Choices 1: "
-    for intChoice in choices1: 
+    for intChoice in choices1:
         print str(intChoice) + " "
     print ""
 
-    choices2 = askChoices("Choices 2", "Please choose one or more of the following.", 
-        [ 1.1, 2.2, 3.3, 4.4, 5.5, 6.6 ], ["Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6" ])
+    choices2 = askChoices("Choices 2", "Please choose one or more of the following.",
+                          [1.1, 2.2, 3.3, 4.4, 5.5, 6.6], ["Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6"])
     print "Choices 2: "
     for intChoice in choices2:
-        print str(intChoice) + " "	
+        print str(intChoice) + " "
     print ""
 
     yesOrNo = askYesNo("yes or no", "is this a yes/no question?")
@@ -110,4 +113,3 @@ except IllegalArgumentException as error:
     Msg.warn(self, "Error during headless processing: " + error.toString())
 except CancelledException:
     print "Cancelled"
-	

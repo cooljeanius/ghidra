@@ -44,14 +44,15 @@ def _to_jar_(jar_path: Path, root: Path):
 
 @JImplements("javax.tools.DiagnosticListener", deferred=True)
 class _CompilerDiagnosticListener:
-
     def __init__(self):
         from javax.tools import Diagnostic
+
         self.errors: List[Diagnostic] = []
 
     @JOverride
     def report(self, diagnostic):
         from javax.tools import Diagnostic
+
         diagnostic: Diagnostic = diagnostic
 
         kind = diagnostic.getKind()
@@ -80,10 +81,15 @@ def java_compile(src_path: Path, jar_path: Path):
         outdir = Path(out).resolve()
         compiler = ToolProvider.getSystemJavaCompiler()
         fman = compiler.getStandardFileManager(None, None, None)
-        cp = [JPath @ (Path(p)) for p in System.getProperty("java.class.path").split(pathsep)]
+        cp = [
+            JPath @ (Path(p))
+            for p in System.getProperty("java.class.path").split(pathsep)
+        ]
         fman.setLocationFromPaths(StandardLocation.CLASS_PATH, cp)
         if src_path.is_dir():
-            fman.setLocationFromPaths(StandardLocation.SOURCE_PATH, [JPath @ (src_path.resolve())])
+            fman.setLocationFromPaths(
+                StandardLocation.SOURCE_PATH, [JPath @ (src_path.resolve())]
+            )
         fman.setLocationFromPaths(StandardLocation.CLASS_OUTPUT, [JPath @ (outdir)])
         sources = None
         if src_path.is_file():
@@ -93,13 +99,15 @@ def java_compile(src_path: Path, jar_path: Path):
             sources = fman.getJavaFileObjectsFromPaths([JPath @ (p) for p in glob])
 
         diagnostics = _CompilerDiagnosticListener()
-        task = compiler.getTask(Writer.nullWriter(), fman, diagnostics, COMPILER_OPTIONS, None, sources)
+        task = compiler.getTask(
+            Writer.nullWriter(), fman, diagnostics, COMPILER_OPTIONS, None, sources
+        )
 
         if not task.call():
             msg = "\n".join([str(error) for error in diagnostics.errors])
             raise ValueError(msg)
 
-        if jar_path.suffix == '.jar':
+        if jar_path.suffix == ".jar":
             jar_path.parent.mkdir(exist_ok=True, parents=True)
             _to_jar_(jar_path, outdir)
         else:

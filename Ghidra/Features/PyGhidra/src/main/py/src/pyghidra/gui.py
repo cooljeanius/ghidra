@@ -27,13 +27,13 @@ import pyghidra
 
 
 class _GuiOutput(io.StringIO):
-
     def __init__(self, title: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.title = title
 
     def close(self):
         import tkinter.messagebox
+
         tkinter.messagebox.showinfo(self.title, self.getvalue())
         super().close()
 
@@ -62,7 +62,11 @@ def _gui_mac() -> NoReturn:
         argv = [sys.executable, "-m", "pyghidra", "-g"]
         if install_dir is not None:
             argv += ["--install-dir", str(install_dir)]
-        actions = ((os.POSIX_SPAWN_CLOSE, 0), (os.POSIX_SPAWN_CLOSE, 1), (os.POSIX_SPAWN_CLOSE, 2))
+        actions = (
+            (os.POSIX_SPAWN_CLOSE, 0),
+            (os.POSIX_SPAWN_CLOSE, 1),
+            (os.POSIX_SPAWN_CLOSE, 2),
+        )
         os.posix_spawn(str(path), argv, os.environ, file_actions=actions)
     else:
         print("could not find the Python.app path, launch failed")
@@ -77,8 +81,8 @@ def _parse_args():
         default=None,
         dest="install_dir",
         metavar="",
-        help="Path to Ghidra installation. "\
-            "(defaults to the GHIDRA_INSTALL_DIR environment variable)"
+        help="Path to Ghidra installation. "
+        "(defaults to the GHIDRA_INSTALL_DIR environment variable)",
     )
     return parser.parse_args()
 
@@ -117,6 +121,7 @@ def _gui():
         if platform.system() == "Windows":
             # there is no console/terminal to report the error
             import ctypes
+
             MessageBox = ctypes.windll.user32.MessageBoxW
             MessageBox(None, str(e), "Import Error", 0)
             sys.exit(1)
@@ -129,11 +134,12 @@ def _gui():
         install_dir = args.install_dir
     except Exception as e:
         import tkinter.messagebox
+
         msg = "".join(traceback.format_exception(type(e), value=e, tb=e.__traceback__))
         tkinter.messagebox.showerror(type(e), msg)
         sys.exit(1)
 
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         # gui_script works like it is supposed to on windows
         gui(install_dir)
     else:
@@ -157,7 +163,6 @@ def gui(install_dir: Path = None, vm_args: List[str] = None):
 def get_current_interpreter():
     warnings.warn(
         "get_current_interpreter has been moved. Please use pyghidra.get_current_interpreter",
-        DeprecationWarning
+        DeprecationWarning,
     )
     return pyghidra.get_current_interpreter()
-

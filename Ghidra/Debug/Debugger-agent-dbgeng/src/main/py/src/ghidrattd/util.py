@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,18 +14,15 @@
 #  limitations under the License.
 ##
 from collections import namedtuple
-import os
-import re
-import sys
 
 from ctypes import *
 
 from pyttd import pyTTD
 
-#from pybag import pydbg
-#from pybag.dbgeng import core as DbgEng
-#from pybag.dbgeng import exception
-#from pybag.dbgeng import util as DbgUtil
+# from pybag import pydbg
+# from pybag.dbgeng import core as DbgEng
+# from pybag.dbgeng import exception
+# from pybag.dbgeng import util as DbgUtil
 
 base = False
 eng = False
@@ -37,10 +34,10 @@ evttypes = {}
 starts = {}
 stops = {}
 lastpos = False
-DbgVersion = namedtuple('DbgVersion', ['full', 'major', 'minor'])
+DbgVersion = namedtuple("DbgVersion", ["full", "major", "minor"])
 
 
-class Watchpoint(object):
+class Watchpoint:
     def __init__(self, addr, size, flags, id, bp):
         self.addr = addr
         self.size = size
@@ -51,7 +48,7 @@ class Watchpoint(object):
 
 
 def _compute_pydbg_ver():
-    blurb = "" #get_debugger()._control.GetActualProcessorType()
+    blurb = ""  # get_debugger()._control.GetActualProcessorType()
     full = ""
     major = 0
     minor = 0
@@ -71,15 +68,13 @@ def get_target():
 
 def get_inst(addr):
     dbg = get_debugger()
-    ins = DbgUtil.disassemble_instruction(
-        dbg.bitness(), addr, dbg.read_mem(addr, 15))
+    ins = DbgUtil.disassemble_instruction(dbg.bitness(), addr, dbg.read_mem(addr, 15))
     return str(ins)
 
 
 def get_inst_sz(addr):
     dbg = get_debugger()
-    ins = DbgUtil.disassemble_instruction(
-        dbg.bitness(), addr, dbg.read_mem(addr, 15))
+    ins = DbgUtil.disassemble_instruction(dbg.bitness(), addr, dbg.read_mem(addr, 15))
     return str(ins.size)
 
 
@@ -137,8 +132,12 @@ def get_eval(expr, type=None):
     index = c_ulong()
     if type == None:
         type = DbgEng.DEBUG_VALUE_INT64
-    hr = ctrl.Evaluate(Expression="{}".format(expr).encode(
-    ), DesiredType=type, Value=byref(value), RemainderIndex=byref(index))
+    hr = ctrl.Evaluate(
+        Expression="{}".format(expr).encode(),
+        DesiredType=type,
+        Value=byref(value),
+        RemainderIndex=byref(index),
+    )
     exception.check_err(hr)
     if type == DbgEng.DEBUG_VALUE_INT8:
         return value.u.I8
@@ -182,7 +181,7 @@ conv_map = {}
 
 
 def get_convenience_variable(id):
-    #val = get_target().GetEnvironment().Get(id)
+    # val = get_target().GetEnvironment().Get(id)
     if id not in conv_map:
         return "auto"
     val = conv_map[id]
@@ -192,7 +191,7 @@ def get_convenience_variable(id):
 
 
 def set_convenience_variable(id, value):
-    #env = get_target().GetEnvironment()
+    # env = get_target().GetEnvironment()
     # return env.Set(id, value, True)
     conv_map[id] = value
 
@@ -200,5 +199,5 @@ def set_convenience_variable(id, value):
 def pos2snap(pos: int):
     index = int(pos.major)
     if index < 0 or index >= pyTTD.MAX_STEP:
-        return int(last.major)*1000
-    return index*1000+int(pos.minor)
+        return int(last.major) * 1000
+    return index * 1000 + int(pos.minor)

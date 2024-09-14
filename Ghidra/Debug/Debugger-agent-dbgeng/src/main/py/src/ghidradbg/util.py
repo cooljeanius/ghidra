@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,6 @@ import io
 import os
 import queue
 import re
-import sys
 import threading
 import traceback
 
@@ -34,13 +33,12 @@ from pybag import pydbg, userdbg, kerneldbg, crashdbg
 from pybag.dbgeng import core as DbgEng
 from pybag.dbgeng import exception
 from pybag.dbgeng import util as DbgUtil
-from pybag.dbgeng.callbacks import DbgEngCallbacks
 
 from ghidradbg.dbgmodel.ihostdatamodelaccess import HostDataModelAccess
 from _winapi import STILL_ACTIVE
 
 
-DbgVersion = namedtuple('DbgVersion', ['full', 'name', 'dotted', 'arch'])
+DbgVersion = namedtuple("DbgVersion", ["full", "name", "dotted", "arch"])
 
 
 class StdInputCallbacks(CoClass):
@@ -54,10 +52,12 @@ class StdInputCallbacks(CoClass):
     _reg_desc_ = "InputCallbacks"
     _reg_clsctx_ = comtypes.CLSCTX_INPROC_SERVER
 
-    _com_interfaces_ = [DbgEng.IDebugInputCallbacks,
-                        comtypes.typeinfo.IProvideClassInfo2,
-                        comtypes.errorinfo.ISupportErrorInfo,
-                        comtypes.connectionpoints.IConnectionPointContainer]
+    _com_interfaces_ = [
+        DbgEng.IDebugInputCallbacks,
+        comtypes.typeinfo.IProvideClassInfo2,
+        comtypes.errorinfo.ISupportErrorInfo,
+        comtypes.connectionpoints.IConnectionPointContainer,
+    ]
 
     def __init__(self, ghidra_dbg):
         self.ghidra_dbg = ghidra_dbg
@@ -67,7 +67,7 @@ class StdInputCallbacks(CoClass):
         try:
             self.expecting_input = True
             self.buffer_size = buffer_size
-            print('Input>', end=' ')
+            print("Input>", end=" ")
             line = input()
             self.ghidra_dbg.return_input(line)
             return S_OK
@@ -81,7 +81,7 @@ class StdInputCallbacks(CoClass):
 
 class _Worker(threading.Thread):
     def __init__(self, new_base, work_queue, dispatch):
-        super().__init__(name='DbgWorker', daemon=True)
+        super().__init__(name="DbgWorker", daemon=True)
         self.new_base = new_base
         self.work_queue = work_queue
         self.dispatch = dispatch
@@ -107,7 +107,7 @@ class _Worker(threading.Thread):
 # Derived from Python core library
 # https://github.com/python/cpython/blob/main/Lib/concurrent/futures/thread.py
 # accessed 9 Jan 2024
-class _WorkItem(object):
+class _WorkItem:
     def __init__(self, future, fn, args, kwargs):
         self.future = future
         self.fn = fn
@@ -129,12 +129,13 @@ class DebuggeeRunningException(BaseException):
     pass
 
 
-class DbgExecutor(object):
+class DbgExecutor:
     def __init__(self, ghidra_dbg):
         self._ghidra_dbg = ghidra_dbg
         self._work_queue = queue.SimpleQueue()
-        self._thread = _Worker(ghidra_dbg._new_base,
-                               self._work_queue, ghidra_dbg._dispatch_events)
+        self._thread = _Worker(
+            ghidra_dbg._new_base, self._work_queue, ghidra_dbg._dispatch_events
+        )
         self._thread.start()
         self._executing = False
 
@@ -159,7 +160,8 @@ class DbgExecutor(object):
             except queue.Empty:
                 return
             work_item.future.set_exception(
-                DebuggeeRunningException("Debuggee is Running"))
+                DebuggeeRunningException("Debuggee is Running")
+            )
 
     def _state_execute(self):
         self._executing = True
@@ -196,46 +198,95 @@ class AllDbg(pydbg.DebuggerBase):
     load_dump = crashdbg.CrashDbg.load_dump
 
 
-class GhidraDbg(object):
+class GhidraDbg:
     def __init__(self):
         self._queue = DbgExecutor(self)
         self._thread = self._queue._thread
         # Wait for the executor to be operational before getting base
         self._queue._submit_no_exit(lambda: None).result()
         self._install_stdin()
-        self.use_generics = os.getenv('OPT_USE_DBGMODEL') == "true"
+        self.use_generics = os.getenv("OPT_USE_DBGMODEL") == "true"
 
         base = self._protected_base
-        for name in ['set_output_mask', 'get_output_mask',
-                     'exec_status', 'go', 'goto', 'go_handled', 'go_nothandled',
-                     'stepi', 'stepo', 'stepbr', 'stepto', 'stepout',
-                     'trace', 'traceto',
-                     'wait',
-                     'bitness',
-                     'read', 'readstr', 'readptr', 'poi',
-                     'write', 'writeptr',
-                     'memory_list', 'address',
-                     'instruction_at', 'disasm',
-                     'pc', 'r', 'registers',
-                     'get_name_by_offset', 'symbol', 'find_symbol',
-                     'whereami',
-                     'dd', 'dp', 'ds',
-                     'bl', 'bc', 'bd', 'be', 'bp', 'ba',
-                     'handle_list', 'handles',
-                     'get_thread', 'set_thread', 'apply_threads', 'thread_list', 'threads',
-                     'teb_addr', 'teb', 'peb_addr', 'peb',
-                     'backtrace_list', 'backtrace',
-                     'module_list', 'lm', 'exports', 'imports',
-                     # User-mode
-                     'proc_list', 'ps', 'pids_by_name',
-                     'create_proc', 'attach_proc', 'reattach_proc',
-                     'detach_proc', 'abandon_proc', 'terminate_proc', 'handoff_proc',
-                     'connect_proc', 'disconnect_proc',
-                     # Kernel-model
-                     'attach_kernel', 'detach_kernel',
-                     # Crash dump
-                     'load_dump'
-                     ]:
+        for name in [
+            "set_output_mask",
+            "get_output_mask",
+            "exec_status",
+            "go",
+            "goto",
+            "go_handled",
+            "go_nothandled",
+            "stepi",
+            "stepo",
+            "stepbr",
+            "stepto",
+            "stepout",
+            "trace",
+            "traceto",
+            "wait",
+            "bitness",
+            "read",
+            "readstr",
+            "readptr",
+            "poi",
+            "write",
+            "writeptr",
+            "memory_list",
+            "address",
+            "instruction_at",
+            "disasm",
+            "pc",
+            "r",
+            "registers",
+            "get_name_by_offset",
+            "symbol",
+            "find_symbol",
+            "whereami",
+            "dd",
+            "dp",
+            "ds",
+            "bl",
+            "bc",
+            "bd",
+            "be",
+            "bp",
+            "ba",
+            "handle_list",
+            "handles",
+            "get_thread",
+            "set_thread",
+            "apply_threads",
+            "thread_list",
+            "threads",
+            "teb_addr",
+            "teb",
+            "peb_addr",
+            "peb",
+            "backtrace_list",
+            "backtrace",
+            "module_list",
+            "lm",
+            "exports",
+            "imports",
+            # User-mode
+            "proc_list",
+            "ps",
+            "pids_by_name",
+            "create_proc",
+            "attach_proc",
+            "reattach_proc",
+            "detach_proc",
+            "abandon_proc",
+            "terminate_proc",
+            "handoff_proc",
+            "connect_proc",
+            "disconnect_proc",
+            # Kernel-model
+            "attach_kernel",
+            "detach_kernel",
+            # Crash dump
+            "load_dump",
+        ]:
             setattr(self, name, self.eng_thread(getattr(base, name)))
             self.IS_KERNEL = False
 
@@ -245,13 +296,14 @@ class GhidraDbg(object):
     @property
     def _base(self):
         if threading.current_thread() is not self._thread:
-            raise WrongThreadException("Was {}. Want {}".format(
-                threading.current_thread(), self._thread))
+            raise WrongThreadException(
+                "Was {}. Want {}".format(threading.current_thread(), self._thread)
+            )
         return self._protected_base
 
     def run(self, fn, *args, **kwargs):
         # TODO: Remove this check?
-        if hasattr(self, '_thread') and threading.current_thread() is self._thread:
+        if hasattr(self, "_thread") and threading.current_thread() is self._thread:
             raise WrongThreadException()
         future = self._queue.submit(fn, *args, **kwargs)
         # https://stackoverflow.com/questions/72621731/is-there-any-graceful-way-to-interrupt-a-python-concurrent-future-result-call gives an alternative
@@ -266,33 +318,37 @@ class GhidraDbg(object):
 
     @staticmethod
     def check_thread(func):
-        '''
+        """
         For methods inside of GhidraDbg, ensure it runs on the dbgeng
         thread
-        '''
+        """
+
         @functools.wraps(func)
         def _func(self, *args, **kwargs):
             if threading.current_thread() is self._thread:
                 return func(self, *args, **kwargs)
             else:
                 return self.run(func, self, *args, **kwargs)
+
         return _func
 
     def eng_thread(self, func):
-        '''
+        """
         For methods and functions outside of GhidraDbg, ensure it
         runs on this GhidraDbg's dbgeng thread
-        '''
+        """
+
         @functools.wraps(func)
         def _func(*args, **kwargs):
             if threading.current_thread() is self._thread:
                 return func(*args, **kwargs)
             else:
                 return self.run(func, *args, **kwargs)
+
         return _func
 
     def _ces_exec_status(self, argument):
-        if argument & 0xfffffff == DbgEng.DEBUG_STATUS_BREAK:
+        if argument & 0xFFFFFFF == DbgEng.DEBUG_STATUS_BREAK:
             self._queue._state_break()
         else:
             self._queue._state_execute()
@@ -306,6 +362,7 @@ class GhidraDbg(object):
     def _dispatch_events(self, timeout=DbgEng.WAIT_INFINITE):
         # NB: pybag's impl doesn't heed standalone
         self._protected_base._client.DispatchCallbacks(timeout)
+
     dispatch_events = check_thread(_dispatch_events)
 
     # no check_thread. Must allow reentry
@@ -338,8 +395,7 @@ class GhidraDbg(object):
     def interrupt(self):
         # Contribute upstream?
         # NOTE: This can be called from any thread
-        self._protected_base._control.SetInterrupt(
-            DbgEng.DEBUG_INTERRUPT_ACTIVE)
+        self._protected_base._control.SetInterrupt(DbgEng.DEBUG_INTERRUPT_ACTIVE)
 
     @check_thread
     def get_current_system_id(self):
@@ -380,14 +436,15 @@ dbg = GhidraDbg()
 @dbg.eng_thread
 def compute_pydbg_ver():
     pat = re.compile(
-        '(?P<name>.*Debugger.*) Version (?P<dotted>[\\d\\.]*) (?P<arch>\\w*)')
-    blurb = dbg.cmd('version')
+        "(?P<name>.*Debugger.*) Version (?P<dotted>[\\d\\.]*) (?P<arch>\\w*)"
+    )
+    blurb = dbg.cmd("version")
     matches = [pat.match(l) for l in blurb.splitlines() if pat.match(l)]
     if len(matches) == 0:
-        return DbgVersion('Unknown', 'Unknown', '0', 'Unknown')
+        return DbgVersion("Unknown", "Unknown", "0", "Unknown")
     m = matches[0]
     return DbgVersion(full=m.group(), **m.groupdict())
-    name, dotted_and_arch = full.split(' Version ')
+    name, dotted_and_arch = full.split(" Version ")
 
 
 DBG_VERSION = compute_pydbg_ver()
@@ -399,7 +456,9 @@ def get_target():
 
 @dbg.eng_thread
 def disassemble1(addr):
-    return DbgUtil.disassemble_instruction(dbg._base.bitness(), addr, dbg.read(addr, 15))
+    return DbgUtil.disassemble_instruction(
+        dbg._base.bitness(), addr, dbg.read(addr, 15)
+    )
 
 
 def get_inst(addr):
@@ -433,16 +492,16 @@ def get_breakpoints():
 
         if bp.GetType()[0] == DbgEng.DEBUG_BREAKPOINT_DATA:
             width, prot = bp.GetDataParameters()
-            width = ' sz={}'.format(str(width))
-            prot = {4: 'type=x', 3: 'type=rw', 2: 'type=w', 1: 'type=r'}[prot]
+            width = " sz={}".format(str(width))
+            prot = {4: "type=x", 3: "type=rw", 2: "type=w", 1: "type=r"}[prot]
         else:
-            width = ''
-            prot = ''
+            width = ""
+            prot = ""
 
         if bp.GetFlags() & DbgEng.DEBUG_BREAKPOINT_ENABLED:
-            status = 'enabled'
+            status = "enabled"
         else:
-            status = 'disabled'
+            status = "disabled"
 
         offset_set.append(offset)
         expr_set.append(expr)
@@ -464,7 +523,7 @@ def selected_process():
         if dbg.use_generics:
             return dbg._base._systems.GetCurrentProcessSystemId()
         return dbg._base._systems.GetCurrentProcessId()
-    except (exception.E_UNEXPECTED_Error, exception.E_NOTIMPL_Error) as e:
+    except (exception.E_UNEXPECTED_Error, exception.E_NOTIMPL_Error):
         # NB: we're intentionally returning 0 instead of None
         return 0
 
@@ -475,7 +534,7 @@ def selected_process_space():
         if is_kernel():
             return dbg._base._systems.GetCurrentProcessDataOffset()
         return selected_process()
-    except (exception.E_UNEXPECTED_Error, exception.E_NOTIMPL_Error) as e:
+    except (exception.E_UNEXPECTED_Error, exception.E_NOTIMPL_Error):
         # NB: we're intentionally returning 0 instead of None
         return 0
 
@@ -488,14 +547,14 @@ def selected_thread():
         if dbg.use_generics:
             return dbg._base._systems.GetCurrentThreadSystemId()
         return dbg._base._systems.GetCurrentThreadId()
-    except (exception.E_UNEXPECTED_Error, exception.E_NOTIMPL_Error) as e:
+    except (exception.E_UNEXPECTED_Error, exception.E_NOTIMPL_Error):
         return None
 
 
 @dbg.eng_thread
 def selected_frame():
     try:
-        line = dbg.cmd('.frame').strip()
+        line = dbg.cmd(".frame").strip()
         if not line:
             return None
         num_str = line.split(sep=None, maxsplit=1)[0]
@@ -530,7 +589,7 @@ def select_thread(id: int):
 
 @dbg.eng_thread
 def select_frame(id: int):
-    return dbg.cmd('.frame 0x{:x}'.format(id))
+    return dbg.cmd(".frame 0x{:x}".format(id))
 
 
 @dbg.eng_thread
@@ -544,8 +603,12 @@ def parse_and_eval(expr, type=None):
     index = c_ulong()
     if type == None:
         type = DbgEng.DEBUG_VALUE_INT64
-    hr = ctrl.Evaluate(Expression=expr.encode(), DesiredType=type,
-                       Value=byref(value), RemainderIndex=byref(index))
+    hr = ctrl.Evaluate(
+        Expression=expr.encode(),
+        DesiredType=type,
+        Value=byref(value),
+        RemainderIndex=byref(index),
+    )
     exception.check_err(hr)
     if type == DbgEng.DEBUG_VALUE_INT8:
         return value.u.I8
@@ -588,8 +651,7 @@ def GetProcessIdsByIndex(count=0):
     ids = (c_ulong * count)()
     sysids = (c_ulong * count)()
     if count != 0:
-        hr = dbg._base._systems._sys.GetProcessIdsByIndex(
-            0, count, ids, sysids)
+        hr = dbg._base._systems._sys.GetProcessIdsByIndex(0, count, ids, sysids)
         exception.check_err(hr)
     return (tuple(ids), tuple(sysids))
 
@@ -600,15 +662,14 @@ def GetCurrentProcessExecutableName():
     _dbg = dbg._base
     size = c_ulong()
     exesize = c_ulong()
-    hr = _dbg._systems._sys.GetCurrentProcessExecutableName(
-        None, size, byref(exesize))
+    hr = _dbg._systems._sys.GetCurrentProcessExecutableName(None, size, byref(exesize))
     exception.check_err(hr)
     buffer = create_string_buffer(exesize.value)
     size = exesize
     hr = _dbg._systems._sys.GetCurrentProcessExecutableName(buffer, size, None)
     exception.check_err(hr)
-    buffer = buffer[:size.value]
-    buffer = buffer.rstrip(b'\x00')
+    buffer = buffer[: size.value]
+    buffer = buffer.rstrip(b"\x00")
     return buffer
 
 
@@ -719,18 +780,19 @@ def get_proc_id(pid):
 
 
 def full_mem():
-    sizeptr = 64; #int(gdb.parse_and_eval('sizeof(void*)')) * 8
+    sizeptr = 64
+    # int(gdb.parse_and_eval('sizeof(void*)')) * 8
     infoLow = DbgEng._MEMORY_BASIC_INFORMATION64()
     infoLow.BaseAddress = 0
-    infoLow.RegionSize = (1 << (sizeptr-1))
+    infoLow.RegionSize = 1 << (sizeptr - 1)
     infoLow.Protect = 0xFFF
     infoLow.Name = "UMEM"
     infoHigh = DbgEng._MEMORY_BASIC_INFORMATION64()
-    infoHigh.BaseAddress = 1 << (sizeptr-1)
-    infoHigh.RegionSize = (1 << (sizeptr-1))
+    infoHigh.BaseAddress = 1 << (sizeptr - 1)
+    infoHigh.RegionSize = 1 << (sizeptr - 1)
     infoHigh.Protect = 0xFFF
     infoHigh.Name = "KMEM"
-    return [ infoLow, infoHigh ]
+    return [infoLow, infoHigh]
 
 
 @dbg.eng_thread
@@ -764,20 +826,22 @@ def split_path(pathString):
 
 def IHostDataModelAccess():
     return HostDataModelAccess(
-        dbg._base._client._cli.QueryInterface(interface=DbgMod.IHostDataModelAccess))
+        dbg._base._client._cli.QueryInterface(interface=DbgMod.IHostDataModelAccess)
+    )
 
 
 @dbg.eng_thread
 def get_object(relpath):
     """Get the list of all threads"""
     _cli = dbg._base._client._cli
-    access = HostDataModelAccess(_cli.QueryInterface(
-        interface=DbgMod.IHostDataModelAccess))
+    access = HostDataModelAccess(
+        _cli.QueryInterface(interface=DbgMod.IHostDataModelAccess)
+    )
     (mgr, host) = access.GetDataModel()
     root = mgr.GetRootNamespace()
     pathstr = "Debugger"
-    if relpath != '':
-        pathstr += "."+relpath
+    if relpath != "":
+        pathstr += "." + relpath
     path = split_path(pathstr)
     # print(f"PATH: {pathstr}")
     return root.GetOffspring(path)
@@ -894,11 +958,11 @@ def get_convenience_variable(id):
 
 def set_convenience_variable(id, value):
     conv_map[id] = value
-    
-    
+
+
 def set_kernel(value):
     dbg.IS_KERNEL = value
-    
-    
+
+
 def is_kernel():
     return dbg.IS_KERNEL

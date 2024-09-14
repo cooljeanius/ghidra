@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,9 @@
 # @runtime Jython
 
 # Get info about the current program
+import time
+from ghidra.util.data.DataTypeParser import AllowedDataTypes
+from ghidra.app.util.datatype import DataTypeSelectionDialog
 print
 print "Program Info:"
 program_name = currentProgram.getName()
@@ -59,20 +62,19 @@ codeUnit = listing.getCodeUnitAt(minAddress)
 codeUnit.setComment(codeUnit.PLATE_COMMENT, "This is an added comment!")
 
 # Get a data type from the user
-from ghidra.app.util.datatype import DataTypeSelectionDialog
-from ghidra.util.data.DataTypeParser import AllowedDataTypes
 tool = state.getTool()
 dtm = currentProgram.getDataTypeManager()
-selectionDialog = DataTypeSelectionDialog(tool, dtm, -1, AllowedDataTypes.FIXED_LENGTH)
+selectionDialog = DataTypeSelectionDialog(
+    tool, dtm, -1, AllowedDataTypes.FIXED_LENGTH)
 tool.showDialog(selectionDialog)
 dataType = selectionDialog.getUserChosenDataType()
-if dataType != None: print "Chosen data type: " + str(dataType)
+if dataType != None:
+    print "Chosen data type: " + str(dataType)
 
 # Report progress to the GUI.  Do this in all script loops!
-import time
 monitor.initialize(10)
 for i in range(10):
-    monitor.checkCanceled() # check to see if the user clicked cancel
-    time.sleep(1) # pause a bit so we can see progress
-    monitor.incrementProgress(1) # update the progress
-    monitor.setMessage("Working on " + str(i)) # update the status message
+    monitor.checkCanceled()  # check to see if the user clicked cancel
+    time.sleep(1)  # pause a bit so we can see progress
+    monitor.incrementProgress(1)  # update the progress
+    monitor.setMessage("Working on " + str(i))  # update the status message

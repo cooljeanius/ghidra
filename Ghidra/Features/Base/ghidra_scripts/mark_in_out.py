@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,8 +14,8 @@
 #  limitations under the License.
 ##
 # Sets up IOPORT IN/OUT references for the Program
-#@category Instructions
-#@runtime Jython
+# @category Instructions
+# @runtime Jython
 # Before running this script, you should have created an OVERLAY memory
 # space called IOMEM, starting at address 0, size 0x10000.
 #
@@ -53,7 +53,7 @@ instructions = currentProgram.listing.getInstructions(True)
 
 for instruction in instructions:
     if instruction.mnemonicString == "IN":
-        #print "IN @", instruction.address
+        # print "IN @", instruction.address
         if (instruction.getOperandType(1) & SCALAR) != 0:
             add_io_reference(instruction, 1, READ)
         # no absolute address?  okay, let's see if it was set above
@@ -73,7 +73,7 @@ for instruction in instructions:
                         # hooray!
                         add_io_reference(prevInstruction, 1, READ)
     elif instruction.mnemonicString == "OUT":
-        #print "OUT @", instruction.address
+        # print "OUT @", instruction.address
         if (instruction.getOperandType(0) & SCALAR) != 0:
             add_io_reference(instruction, 0, WRITE)
         # no absolute address?  okay, let's see if it was set above
@@ -96,20 +96,21 @@ for instruction in instructions:
                         # d'oh, we were writing to EAX (the value to write to
                         # the port)!  one more try...
                         try:
-                            prevInstr = getInstructionAt(prevInstruction.fallFrom)
+                            prevInstr = getInstructionAt(
+                                prevInstruction.fallFrom)
                             if prevInstr.mnemonicString == "MOV":
                                 # did we move an absolute address into EDX?
                                 if (prevInstr.getOperandType(1) & SCALAR) != 0:
                                     # we moved a scalar...
                                     if (prevInstr.getOperandType(0) &
-                                        REGISTER) != 0:
+                                            REGISTER) != 0:
                                         # okay, we moved into a register...
                                         register = prevInstr.getOpObjects(0)[0]
                                         if register.getBaseRegister().name == \
-                                               "EDX":
+                                                "EDX":
                                             # hooray!
-                                            add_io_reference(prevInstr, 1, WRITE)
+                                            add_io_reference(
+                                                prevInstr, 1, WRITE)
                         except:
                             # oh well
                             pass
-

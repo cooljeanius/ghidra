@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@
 #  limitations under the License.
 ##
 # Example of performing a BSim query on a single function
-# @category BSim.python  
+# @category BSim.python
 # @runtime Jython
 
 import ghidra.features.bsim.query.BSimClientFactory as BSimClientFactory
@@ -25,17 +25,18 @@ MATCHES_PER_FUNC = 100
 SIMILARITY_BOUND = 0.7
 CONFIDENCE_BOUND = 0.0
 
+
 def query(func):
     DATABASE_URL = askString("Enter Database URL", "URL")
     url = BSimClientFactory.deriveBSimURL(DATABASE_URL)
-    database = BSimClientFactory.buildClient(url,False)
+    database = BSimClientFactory.buildClient(url, False)
     if not database.initialize():
         print database.getLastError().message
         return
     gensig = GenSignatures(False)
     gensig.setVectorFactory(database.getLSHVectorFactory())
-    gensig.openProgram(currentProgram,None,None,None,None,None)
-    
+    gensig.openProgram(currentProgram, None, None, None, None, None)
+
     gensig.scanFunction(func)
 
     query = QueryNearest()
@@ -53,7 +54,7 @@ def query(func):
         sim = simIter.next()
         base = sim.getBase()
         exe = base.getExecutableRecord()
-        print "Source executable: %s; source function: %s" % (exe.getNameExec(),base.getFunctionName())
+        print "Source executable: %s; source function: %s" % (exe.getNameExec(), base.getFunctionName())
         subIter = sim.iterator()
         while subIter.hasNext():
             note = subIter.next()
@@ -65,7 +66,8 @@ def query(func):
             print "  Significance: %f\n" % note.getSignificance()
     gensig.dispose()
     database.close()
-    return;
+    return
+
 
 if currentProgram is None:
     popup("currentProgram is None!")
@@ -75,5 +77,3 @@ else:
         popup("Cursor must be in a function!")
     else:
         query(func)
-
-

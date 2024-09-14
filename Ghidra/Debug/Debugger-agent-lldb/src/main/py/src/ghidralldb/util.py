@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,24 +14,23 @@
 #  limitations under the License.
 ##
 from collections import namedtuple
-import os
 import re
 import sys
 
 import lldb
 
 
-LldbVersion = namedtuple('LldbVersion', ['display', 'full', 'major', 'minor'])
+LldbVersion = namedtuple("LldbVersion", ["display", "full", "major", "minor"])
 
 
 def _compute_lldb_ver():
     blurb = lldb.debugger.GetVersionString()
-    top = blurb.split('\n')[0]
-    if ' version ' in top:
-        full = top.split(' ')[2]    # "lldb version x.y.z"
+    top = blurb.split("\n")[0]
+    if " version " in top:
+        full = top.split(" ")[2]  # "lldb version x.y.z"
     else:
-        full = top.split('-')[1]    # "lldb-x.y.z"
-    major, minor = full.split('.')[:2]
+        full = top.split("-")[1]  # "lldb-x.y.z"
+    major, minor = full.split(".")[:2]
     return LldbVersion(top, full, int(major), int(minor))
 
 
@@ -40,11 +39,11 @@ LLDB_VERSION = _compute_lldb_ver()
 GNU_DEBUGDATA_PREFIX = ".gnu_debugdata for "
 
 
-class Module(namedtuple('BaseModule', ['name', 'base', 'max', 'sections'])):
+class Module(namedtuple("BaseModule", ["name", "base", "max", "sections"])):
     pass
 
 
-class Section(namedtuple('BaseSection', ['name', 'start', 'end', 'offset', 'attrs'])):
+class Section(namedtuple("BaseSection", ["name", "start", "end", "offset", "attrs"])):
     def better(self, other):
         start = self.start if self.start != 0 else other.start
         end = self.end if self.end != 0 else other.end
@@ -55,19 +54,19 @@ class Section(namedtuple('BaseSection', ['name', 'start', 'end', 'offset', 'attr
 
 
 # AFAICT, Objfile does not give info about load addresses :(
-class ModuleInfoReader(object):
+class ModuleInfoReader:
     def name_from_line(self, line):
         mat = self.objfile_pattern.fullmatch(line)
         if mat is None:
             return None
-        n = mat['name']
+        n = mat["name"]
         if n.startswith(GNU_DEBUGDATA_PREFIX):
             return None
-        return None if mat is None else mat['name']
+        return None if mat is None else mat["name"]
 
     def section_from_sbsection(self, s):
         start = s.GetLoadAddress(get_target())
-        if start >= sys.maxsize*2:
+        if start >= sys.maxsize * 2:
             start = 0
         end = start + s.GetFileByteSize()
         offset = s.GetFileOffset()
@@ -115,11 +114,11 @@ def _choose_module_info_reader():
 MODULE_INFO_READER = _choose_module_info_reader()
 
 
-class Region(namedtuple('BaseRegion', ['start', 'end', 'offset', 'perms', 'objfile'])):
+class Region(namedtuple("BaseRegion", ["start", "end", "offset", "perms", "objfile"])):
     pass
 
 
-class RegionInfoReader(object):
+class RegionInfoReader:
     def region_from_sbmemreg(self, info):
         start = info.GetRegionBase()
         end = info.GetRegionEnd()
@@ -128,11 +127,11 @@ class RegionInfoReader(object):
             offset = 0
         perms = ""
         if info.IsReadable():
-            perms += 'r'
+            perms += "r"
         if info.IsWritable():
-            perms += 'w'
+            perms += "w"
         if info.IsExecutable():
-            perms += 'x'
+            perms += "x"
         objfile = info.GetName()
         return Region(start, end, offset, perms, objfile)
 
@@ -151,10 +150,10 @@ class RegionInfoReader(object):
     def full_mem(self):
         # TODO: This may not work for Harvard architectures
         try:
-            sizeptr = int(parse_and_eval('sizeof(void*)')) * 8
-            return Region(0, 1 << sizeptr, 0, None, 'full memory')
+            sizeptr = int(parse_and_eval("sizeof(void*)")) * 8
+            return Region(0, 1 << sizeptr, 0, None, "full memory")
         except ValueError:
-            return Region(0, 1 << 64, 0, None, 'full memory')
+            return Region(0, 1 << 64, 0, None, "full memory")
 
 
 def _choose_region_info_reader():
@@ -164,16 +163,18 @@ def _choose_region_info_reader():
 REGION_INFO_READER = _choose_region_info_reader()
 
 
-BREAK_LOCS_CMD = 'breakpoint list {}'
-BREAK_PATTERN = re.compile('')
-BREAK_LOC_PATTERN = re.compile('')
+BREAK_LOCS_CMD = "breakpoint list {}"
+BREAK_PATTERN = re.compile("")
+BREAK_LOC_PATTERN = re.compile("")
 
 
-class BreakpointLocation(namedtuple('BaseBreakpointLocation', ['address', 'enabled', 'thread_groups'])):
+class BreakpointLocation(
+    namedtuple("BaseBreakpointLocation", ["address", "enabled", "thread_groups"])
+):
     pass
 
 
-class BreakpointLocationInfoReader(object):
+class BreakpointLocationInfoReader:
     def get_locations(self, breakpoint):
         return breakpoint.locations
 
@@ -231,7 +232,7 @@ conv_map = {}
 
 
 def get_convenience_variable(id):
-    #val = get_target().GetEnvironment().Get(id)
+    # val = get_target().GetEnvironment().Get(id)
     if id not in conv_map:
         return "auto"
     val = conv_map[id]
@@ -241,14 +242,14 @@ def get_convenience_variable(id):
 
 
 def set_convenience_variable(id, value):
-    #env = get_target().GetEnvironment()
+    # env = get_target().GetEnvironment()
     # return env.Set(id, value, True)
     conv_map[id] = value
 
 
 def escape_ansi(line):
-    ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
-    return ansi_escape.sub('', line)
+    ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
+    return ansi_escape.sub("", line)
 
 
 def debracket(init):

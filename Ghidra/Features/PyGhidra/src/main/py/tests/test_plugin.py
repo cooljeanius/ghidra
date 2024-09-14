@@ -34,29 +34,26 @@ NAME_KEY = "names"
 
 
 plugin_registry: typing.Dict[str, typing.List["EntryPoint"]] = {
-   SETUP_KEY: [],
-   PRE_LAUNCH_KEY: [],
-   NAME_KEY: []
+    SETUP_KEY: [],
+    PRE_LAUNCH_KEY: [],
+    NAME_KEY: [],
 }
 
 
 class PluginTest:
-    
     ran_setup = False
     ran_prelaunch = False
-    
+
     details: pyghidra.ExtensionDetails = None
-    
+
     def __init_subclass__(cls) -> None:
         cls.details = pyghidra.ExtensionDetails(
-            name=cls.__name__,
-            description="Test Plugin",
-            author=""
+            name=cls.__name__, description="Test Plugin", author=""
         )
 
         _setup = cls.setup
         _prelaunch = cls.prelaunch
-        
+
         @functools.wraps(_setup)
         def setup(launcher: pyghidra.HeadlessPyGhidraLauncher):
             _setup(launcher)
@@ -66,20 +63,20 @@ class PluginTest:
         def prelaunch():
             _prelaunch()
             cls.ran_prelaunch = True
-        
+
         cls.setup = setup
         cls.prelaunch = prelaunch
-        
+
         name = cls.__name__
         plugin_registry[SETUP_KEY].append(EntryPoint(name, cls.setup))
         plugin_registry[PRE_LAUNCH_KEY].append(EntryPoint(name, cls.prelaunch))
         plugin_registry[NAME_KEY].append(name)
-    
+
     @classmethod
     @abc.abstractmethod
     def setup(cls, launcher: pyghidra.HeadlessPyGhidraLauncher):
         ...
-    
+
     @classmethod
     @abc.abstractmethod
     def prelaunch(cls):
@@ -95,7 +92,6 @@ class PluginTest:
 
 
 class EntryPoint:
-
     def __init__(self, name, callback):
         self.name = name
         self.callback = callback
@@ -127,10 +123,11 @@ def with_ghidra():
     try:
         launcher = pyghidra.HeadlessPyGhidraLauncher()
         launcher.start()
-        yield # can't yield None
+        yield  # can't yield None
     finally:
         # we need to close the GhidraClassLoader so we can delete the extension
         from java.lang import ClassLoader
+
         ClassLoader.getSystemClassLoader().close()
         jpype.shutdownJVM()
         for plugin in plugin_registry["names"]:
@@ -141,39 +138,38 @@ def with_ghidra():
 
 
 class TestValidPlugin(PluginTest):
-    
     @classmethod
     def setup(cls, launcher: pyghidra.HeadlessPyGhidraLauncher):
         source_path = Path(__file__).parent / "data" / "good_plugin"
         launcher.install_plugin(source_path, cls.details)
-    
+
     @classmethod
     def prelaunch(cls):
         DummyTestRecognizer = jpype.JClass("ghidra.pyghidra.test.DummyTestRecognizer")
         DummyTestRecognizer.preLaunchInitialized = True
-    
+
     @classmethod
     def test_extension_point(cls):
         from ghidra.app.util.recognizer import Recognizer
         from ghidra.util.classfinder import ClassSearcher
+
         DummyTestRecognizer = jpype.JClass("ghidra.pyghidra.test.DummyTestRecognizer")
         assert DummyTestRecognizer in ClassSearcher.getClasses(Recognizer)
 
 
 class TestBadPlugin(PluginTest):
-    
     launcher: pyghidra.HeadlessPyGhidraLauncher = None
-    
+
     @classmethod
     def setup(cls, launcher: pyghidra.HeadlessPyGhidraLauncher):
         source_path = Path(__file__).parent / "data" / "bad_plugin"
         launcher.install_plugin(source_path, cls.details)
         cls.launcher = launcher
-    
+
     @classmethod
     def prelaunch(cls):
         pass
-    
+
     @classmethod
     def test_no_plugin(cls):
         # ensures there is no plugin

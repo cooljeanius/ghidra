@@ -30,7 +30,11 @@ TEST_COMPILER = "default"
 def class_file(shared_datadir: Path):
     path = shared_datadir / EXE_NAME
     # creates a java class file of `public class Main {}`
-    path.write_bytes(bytes.fromhex("CAFEBABE00000041000A0A000200030700040C000500060100106A6176612F6C616E672F4F626A6563740100063C696E69743E0100032829560700080100044D61696E010004436F6465002100070002000000000001000100050006000100090000001100010001000000052AB70001B1000000000000"))
+    path.write_bytes(
+        bytes.fromhex(
+            "CAFEBABE00000041000A0A000200030700040C000500060100106A6176612F6C616E672F4F626A6563740100063C696E69743E0100032829560700080100044D61696E010004436F6465002100070002000000000001000100050006000100090000001100010001000000052AB70001B1000000000000"
+        )
+    )
     yield path
 
 
@@ -40,37 +44,45 @@ def test_invalid_jpype_keyword_arg():
     launcher = pyghidra.launcher.HeadlessPyGhidraLauncher()
     with pytest.raises(TypeError) as ex:
         launcher.start(someBogusKeywordArg=True)
-    assert "startJVM() got an unexpected keyword argument 'someBogusKeywordArg'" in str(ex.value)
+    assert "startJVM() got an unexpected keyword argument 'someBogusKeywordArg'" in str(
+        ex.value
+    )
 
 
 def test_invalid_vm_arg_succeed():
     assert not jpype.isJVMStarted()
 
     launcher = pyghidra.launcher.HeadlessPyGhidraLauncher()
-    launcher.add_vmargs('-XX:SomeBogusJvmArg')
+    launcher.add_vmargs("-XX:SomeBogusJvmArg")
     launcher.start(ignoreUnrecognized=True)
 
 
 def test_run_script(capsys, shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
     script_path = shared_datadir / "example_script.py"
-    pyghidra.run_script(strings_exe, script_path, script_args=["my", "--commands"], analyze=False)
+    pyghidra.run_script(
+        strings_exe, script_path, script_args=["my", "--commands"], analyze=False
+    )
     captured = capsys.readouterr()
-    
+
     assert captured.err == ""
 
-    expected = textwrap.dedent(f"""\
+    expected = textwrap.dedent(
+        f"""\
         {script_path} my --commands
         my --commands
         {EXE_NAME} - .ProgramDB
-    """)
+    """
+    )
 
     assert captured.out == expected
 
 
 def test_open_program(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
-    with pyghidra.open_program(strings_exe, analyze=False, language=TEST_LANGUAGE, compiler=TEST_COMPILER) as flat_api:
+    with pyghidra.open_program(
+        strings_exe, analyze=False, language=TEST_LANGUAGE, compiler=TEST_COMPILER
+    ) as flat_api:
         assert flat_api.currentProgram.name == strings_exe.name
         assert flat_api.getCurrentProgram().listing
         assert flat_api.getCurrentProgram().changeable
@@ -79,11 +91,7 @@ def test_open_program(shared_datadir: Path):
 def test_bad_language(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
     with pytest.raises(ValueError):
-        with pyghidra.open_program(
-            strings_exe,
-            analyze=False,
-            language="invalid"
-        ) as _:
+        with pyghidra.open_program(strings_exe, analyze=False, language="invalid") as _:
             pass
 
 
@@ -91,62 +99,63 @@ def test_bad_compiler(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
     with pytest.raises(ValueError):
         with pyghidra.open_program(
-            strings_exe,
-            analyze=False,
-            language=TEST_LANGUAGE,
-            compiler="invalid"
+            strings_exe, analyze=False, language=TEST_LANGUAGE, compiler="invalid"
         ) as _:
             pass
 
 
 def test_no_compiler(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
-    with pyghidra.open_program(strings_exe, analyze=False, language=TEST_LANGUAGE) as flat_api:
+    with pyghidra.open_program(
+        strings_exe, analyze=False, language=TEST_LANGUAGE
+    ) as flat_api:
         pass
 
 
 def test_no_language_with_compiler(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
-    with pyghidra.open_program(strings_exe, analyze=False, compiler=TEST_COMPILER) as flat_api:
+    with pyghidra.open_program(
+        strings_exe, analyze=False, compiler=TEST_COMPILER
+    ) as flat_api:
         pass
 
 
 def test_loader(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
     with pyghidra.open_program(
-            strings_exe,
-            analyze=False,
-            language="DATA:LE:64:default",
-            compiler="pointer32",
-            loader="ghidra.app.util.opinion.BinaryLoader"
-        ) as flat_api:
-            assert bytes(flat_api.getBytes(flat_api.toAddr(0), 4)) == b"\xCA\xFE\xBA\xBE"
+        strings_exe,
+        analyze=False,
+        language="DATA:LE:64:default",
+        compiler="pointer32",
+        loader="ghidra.app.util.opinion.BinaryLoader",
+    ) as flat_api:
+        assert bytes(flat_api.getBytes(flat_api.toAddr(0), 4)) == b"\xCA\xFE\xBA\xBE"
 
 
 def test_invalid_loader(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
     with pytest.raises(ValueError):
         with pyghidra.open_program(
-                strings_exe,
-                analyze=False,
-                language="DATA:LE:64:default",
-                compiler="pointer32",
-                loader="notaclass"
-            ) as _:
-                pass
+            strings_exe,
+            analyze=False,
+            language="DATA:LE:64:default",
+            compiler="pointer32",
+            loader="notaclass",
+        ) as _:
+            pass
 
 
 def test_invalid_loader_type(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
     with pytest.raises(TypeError):
         with pyghidra.open_program(
-                strings_exe,
-                analyze=False,
-                language="DATA:LE:64:default",
-                compiler="pointer32",
-                loader="ghidra.app.util.demangler.gnu.GnuDemangler"
-            ) as _:
-                pass
+            strings_exe,
+            analyze=False,
+            language="DATA:LE:64:default",
+            compiler="pointer32",
+            loader="ghidra.app.util.demangler.gnu.GnuDemangler",
+        ) as _:
+            pass
 
 
 def test_no_project(capsys, shared_datadir: Path):
@@ -172,7 +181,6 @@ def test_import_script(capsys, shared_datadir: Path):
 
 
 def test_import_ghidra_base_java_packages():
-
     def get_runtime_top_level_java_packages(launcher) -> set:
         from java.lang import Package
 
@@ -180,15 +188,14 @@ def test_import_ghidra_base_java_packages():
 
         # Applicaiton needs to fully intialize to find all Ghidra packages
         if launcher.has_launched():
-
             for package in Package.getPackages():
                 # capture base packages only
-                packages.add(package.getName().split('.')[0])
+                packages.add(package.getName().split(".")[0])
 
         return packages
 
     def wrap_mod(mod):
-        return mod + '_'
+        return mod + "_"
 
     launcher = pyghidra.start()
 
@@ -209,7 +216,8 @@ def test_import_ghidra_base_java_packages():
 
         assert spec is not None
         assert isinstance(spec.loader, jpype.imports._JImportLoader) or isinstance(
-            spec.loader, pyghidra.launcher._PyGhidraImportLoader)
+            spec.loader, pyghidra.launcher._PyGhidraImportLoader
+        )
 
     # Test all Java base packages are available with '_'
     for mod in packages:
@@ -219,15 +227,15 @@ def test_import_ghidra_base_java_packages():
 
     # Test standard import
     import ghidra
+
     assert isinstance(ghidra.__loader__, jpype.imports._JImportLoader)
 
     # Test import with conflict
     import pdb_
+
     assert isinstance(pdb_.__loader__, pyghidra.launcher._PyGhidraImportLoader)
 
     # Test "from" import with conflict
-    from pdb_ import PdbPlugin
-    from pdb_.symbolserver import LocalSymbolStore
 
     # Test _Jpackage handles import that doesn't exist
     try:

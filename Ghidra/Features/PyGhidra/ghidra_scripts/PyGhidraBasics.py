@@ -19,14 +19,16 @@
 
 
 # we can import java libraries just as if they were python libraries
+import jpype
+from ghidra.program.flatapi import FlatProgramAPI
 from java.util import LinkedList
 
 # and then use them like they are natural classes
-java_list = LinkedList([1,2,3])
+java_list = LinkedList([1, 2, 3])
 print(f"linked list object class: {java_list.__class__}")
 
 # importing and using Ghidra modules is the same
-from ghidra.program.flatapi import FlatProgramAPI
+
 print(f"max references to a flat program api: {FlatProgramAPI.MAX_REFERENCES_TO}")
 
 # we can also do normal python-ish things on our Java objects, like:
@@ -41,10 +43,11 @@ java_list_double = [i * 2 for i in java_list]
 print(f"list comprehension result: {java_list_double}")
 
 # automatic calls to getters
-print(f"current program name: {currentProgram.name}") # calls currentProgram.getName()
+# calls currentProgram.getName()
+print(f"current program name: {currentProgram.name}")
 
 # here's an example of how this stuff might come in handy with Ghidra:
-print('current program memory blocks:\n')
+print("current program memory blocks:\n")
 for block in currentProgram.memory.blocks:
     print(block.name)
 
@@ -55,10 +58,9 @@ for block in currentProgram.memory.blocks:
 # the first 10 bytes of memory from the .text section
 
 # we need this import to get at the helper classes
-import jpype
 
 # get the block we need
-block = currentProgram.memory.getBlock('.text')
+block = currentProgram.memory.getBlock(".text")
 if block:
     # the verbose way of getting the array
     byte_array_maker = jpype.JArray(jpype.JByte)
@@ -79,14 +81,14 @@ if block:
     # after the call, we can get the bytes out as desired
     # we just put them in a list comprehension here
     print(f"first 10 bytes of .text: {['%#x' % ((b+256)%256) for b in byte_array]}")
-    
+
     # if the data isn't being changed, a bytes-like objct may be used
     data = b"Hello"
     clearListing(block.start, block.start.add(len(data) - 1))
     block.putBytes(block.start, data)
 
 else:
-    print('no block named .text in this program.')
+    print("no block named .text in this program.")
 
 # see the user manual of JPype for more details on interoperability:
 # https://jpype.readthedocs.io/en/latest/userguide.html

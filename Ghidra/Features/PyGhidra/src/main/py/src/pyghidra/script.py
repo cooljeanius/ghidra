@@ -37,7 +37,7 @@ _headless_interpreter = None
 class _StaticMap(dict):
     # this is a special view of the PyGhidraScript for use with rlcompleter
 
-    __slots__ = ('script',)
+    __slots__ = ("script",)
 
     def __init__(self, script: "PyGhidraScript"):
         super().__init__()
@@ -72,7 +72,6 @@ class _StaticMap(dict):
 
 
 class _JavaProperty(property):
-
     def __init__(self, field):
         super().__init__()
         self._field = field
@@ -84,11 +83,10 @@ class _JavaProperty(property):
         self._field.fset(obj, value)
 
 
-#pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods
 @JImplementationFor("ghidra.pyghidra.PythonFieldExposer")
 class _PythonFieldExposer:
-
-    #pylint: disable=no-member
+    # pylint: disable=no-member
     def __jclass_init__(self):
         exposer = JClass("ghidra.pyghidra.PythonFieldExposer")
         if self.class_ == exposer:
@@ -99,11 +97,12 @@ class _PythonFieldExposer:
         # pylint: disable=bare-except
         except:
             logger = logging.getLogger(__name__)
-            logger.error("Failed to add property customizations for %s", self, exc_info=1)
+            logger.error(
+                "Failed to add property customizations for %s", self, exc_info=1
+            )
 
 
 class _GhidraScriptModule:
-
     def __init__(self, spec: ModuleSpec):
         super().__setattr__("__dict__", spec.loader_state["script"])
 
@@ -114,14 +113,13 @@ class _GhidraScriptModule:
 
 
 class _GhidraScriptLoader(SourceFileLoader):
-
     def __init__(self, script: "PyGhidraScript", spec: ModuleSpec):
         super().__init__(spec.name, spec.origin)
         spec.loader_state = {"script": script}
 
     def create_module(self, spec: ModuleSpec):
         return _GhidraScriptModule(spec)
-    
+
     # this will make debugging "just work" if a debugger attaches to the process
     @debug_callback
     def exec_module(self, module):
@@ -130,14 +128,15 @@ class _GhidraScriptLoader(SourceFileLoader):
 
 def _build_script_print(stdout):
     @functools.wraps(print)
-    def wrapper(*objects, sep=' ', end='\n', file=None, flush=False):
+    def wrapper(*objects, sep=" ", end="\n", file=None, flush=False):
         # ensure we get the same behavior if the file is closed
         if file is None:
             file = stdout
             # since write will be used, it won't flush on a line ending
             # force it for stdout in a GhidraScript
-            flush = flush or end == '\n'
+            flush = flush or end == "\n"
         return print(*objects, sep=sep, end=end, file=file, flush=flush)
+
     return wrapper
 
 
@@ -151,6 +150,7 @@ class PyGhidraScript(dict):
         super().__init__()
         if jobj is None:
             from ghidra.pyghidra import PyGhidraScriptProvider
+
             jobj = PyGhidraScriptProvider().getScriptInstance(None, None)
         self._script = jobj
 
@@ -169,12 +169,12 @@ class PyGhidraScript(dict):
 
         # this is injected since Ghidra commit e66e72577ded1aeae53bcc3f361dfce1ecf6e24a
         super().__setitem__("this", self._script)
-        
+
         # overwrite the builtin print so it will always work
         # the global redirection of stdout/stderr works on a best-effort basis
         printer = _build_script_print(self._script.writer)
         super().__setitem__("print", printer)
-        
+
         super().__setitem__("help", _Helper(self._script.writer))
 
     def __missing__(self, k):
@@ -245,7 +245,7 @@ class PyGhidraScript(dict):
                 # this provides the same import behavior as if the script was run normally
                 sys.path.insert(0, script_root)
 
-            spec = importlib.util.spec_from_file_location('__main__', script_path)
+            spec = importlib.util.spec_from_file_location("__main__", script_path)
             spec.loader = _GhidraScriptLoader(self, spec)
             m = importlib.util.module_from_spec(spec)
             try:
@@ -263,7 +263,7 @@ class PyGhidraScript(dict):
                 ss = traceback.StackSummary.from_list(tb[i:])
                 e = traceback.TracebackException(exc_type, exc_value, exc_tb)
                 e.stack = ss
-                self._script.printerr(''.join(e.format()))
+                self._script.printerr("".join(e.format()))
         finally:
             sys.argv = orig_argv
 
@@ -289,7 +289,9 @@ def get_current_interpreter():
         if SystemUtilities.isInHeadlessMode():
             if _headless_interpreter is None:
                 # one hasn't been created yet so make one now
-                PyGhidraScriptProvider = JClass("ghidra.pyghidra.PyGhidraScriptProvider")
+                PyGhidraScriptProvider = JClass(
+                    "ghidra.pyghidra.PyGhidraScriptProvider"
+                )
                 _headless_interpreter = PyGhidraScriptProvider.PyGhidraHeadlessScript()
             return _headless_interpreter
 
@@ -308,7 +310,7 @@ def get_current_interpreter():
             return None
 
         for plugin in tool.getManagedPlugins():
-            if plugin.name == 'PyGhidraPlugin':
+            if plugin.name == "PyGhidraPlugin":
                 return plugin.script
 
     except ImportError:

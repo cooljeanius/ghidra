@@ -22,23 +22,24 @@ import java    # needed for java.lang.Class
 try:
     True
 except NameError:
-    True = 1==1
-    False = 1==0
+    True = 1 == 1
+    False = 1 == 0
 
-#from java.lang.System.out import println
-    
+# from java.lang.System.out import println
+
+
 def getAutoCompleteList(command='', locals=None, includeMagic=1,
                         includeSingle=1, includeDouble=1):
     """Return list of auto-completion tuples for command.
-    
+
     First entry is the possible completions, and second entry is the
     of actual string that should be added to do the completion.
-    
+
     The list of options will be based on the locals namespace."""
     attributes = []
     object = None
     # Get the proper chunk of code from the command.
-    #root = getRoot(command, terminator='.')
+    # root = getRoot(command, terminator='.')
     # and get the part of the completion we should filter on
     (root, filter) = getRootAndFilter(command, terminator='.')
     if root:
@@ -46,9 +47,9 @@ def getAutoCompleteList(command='', locals=None, includeMagic=1,
     else:
         jump_past_period = 0
 
-    #println("root='" + root + "'")
-    #println("filter='" + filter + "'")
-    
+    # println("root='" + root + "'")
+    # println("filter='" + filter + "'")
+
     if not root:
         # top-level?
         attributes = locals
@@ -59,7 +60,7 @@ def getAutoCompleteList(command='', locals=None, includeMagic=1,
             else:
                 object = eval(root)
         except:
-            #print "could not eval(", root, "):", sys.exc_info()[0]
+            # print "could not eval(", root, "):", sys.exc_info()[0]
             pass
         else:
             attributes = getAttributeNames(object, includeMagic,
@@ -74,7 +75,7 @@ def getAutoCompleteList(command='', locals=None, includeMagic=1,
                     pyObj = locals[attribute]
                 completion_list.append(JythonCodeCompletionFactory.
                                        newCodeCompletion(attribute,
-                                                         attribute, 
+                                                         attribute,
                                                          pyObj,
                                                          filter))
             except:
@@ -85,9 +86,11 @@ def getAutoCompleteList(command='', locals=None, includeMagic=1,
     completion_list.sort(compare_completions)
     return completion_list
 
+
 def compare_completions(comp1, comp2):
     return cmp(comp1.description, comp2.description)
-                       
+
+
 def getAttributeNames(object, includeMagic=1, includeSingle=1,
                       includeDouble=1):
     """Return list of unique attributes, including inherited, for object."""
@@ -100,8 +103,10 @@ def getAttributeNames(object, includeMagic=1, includeSingle=1,
                        'func_closure', 'func_code', 'func_defaults',
                        'func_dict', 'func_doc', 'func_globals', 'func_name']
     if includeMagic:
-        try: attributes += object._getAttributeNames()
-        except: pass
+        try:
+            attributes += object._getAttributeNames()
+        except:
+            pass
     # Get all attribute names.
     attrdict = getAllAttributeNames(object)
     for attrlist in attrdict.values():
@@ -112,17 +117,17 @@ def getAttributeNames(object, includeMagic=1, includeSingle=1,
     attributes = dict.keys()
     attributes.sort(lambda x, y: cmp(x.upper(), y.upper()))
     if not includeSingle:
-        attributes = filter(lambda item: item[0]!='_' \
-                            or item[1]=='_', attributes)
+        attributes = filter(lambda item: item[0] != '_'
+                            or item[1] == '_', attributes)
     if not includeDouble:
-        attributes = filter(lambda item: item[:2]!='__', attributes)
-    #print "attributes currently", attributes
+        attributes = filter(lambda item: item[:2] != '__', attributes)
+    # print "attributes currently", attributes
     # Make sure we haven't picked up any bogus attributes somehow.
-    #attributes = [attribute for attribute in attributes \
+    # attributes = [attribute for attribute in attributes \
     #              if hasattr(object, attribute)]
     retval = []
     for attribute in attributes:
-        #print "checking", attribute
+        # print "checking", attribute
         try:
             if hasattr(object, attribute):
                 retval += [attribute]
@@ -132,12 +137,14 @@ def getAttributeNames(object, includeMagic=1, includeSingle=1,
             pass
     return retval
 
+
 def hasattrAlwaysReturnsTrue(object):
     return hasattr(object, 'bogu5_123_aTTri8ute')
 
+
 def getAllAttributeNames(object):
     """Return dict of all attributes, including inherited, for an object.
-    
+
     Recursively walk through a class and all base classes.
     """
     attrdict = {}  # (object, technique, count): [list of attributes]
@@ -183,7 +190,7 @@ def getAllAttributeNames(object):
         if klass is object:
             # Break a circular reference.  This happens with extension
             # classes.
-            #print "breaking circular reference to self"
+            # print "breaking circular reference to self"
             pass
         # this extra check added for Jython 2.2.1 to break circular recursion
         elif klass is not java.lang.Class:
@@ -200,18 +207,19 @@ def getAllAttributeNames(object):
             halt_type = type(types.TypeType)
             for base in bases:
                 if type(base) is types.TypeType \
-                    or type(base) is halt_type:
+                        or type(base) is halt_type:
                     # Break a circular reference.  Happens in Python 2.2.
-                    #print "breaking TypeType circular reference"
+                    # print "breaking TypeType circular reference"
                     pass
                 else:
                     # print "calling update (better not be 'type') with", base
                     attrdict.update(getAllAttributeNames(base))
     return attrdict
 
+
 def getCallTip(command='', locals=None):
     """For a command, return a tuple of object name, argspec, tip text.
-    
+
     The call tip information will be based on the locals namespace."""
     calltip = ('', '', '')  # object name, argspec, tip text.
     # Get the proper chunk of code from the command.
@@ -222,7 +230,7 @@ def getCallTip(command='', locals=None):
         else:
             object = eval(root)
     except:
-        #print "could not eval(", root, "):", sys.exc_info()[0]
+        # print "could not eval(", root, "):", sys.exc_info()[0]
         return calltip
     name = ''
     object, dropSelf = getBaseObject(object)
@@ -274,9 +282,10 @@ def getCallTip(command='', locals=None):
     calltip = (name, argspec[1:-1], tip.strip())
     return calltip
 
+
 def getRoot(command, terminator=None):
     """Return the rightmost root portion of an arbitrary Python command.
-    
+
     Return only the root portion that can be eval()ed without side
     effect.  The command would normally terminate with a '(' or
     '.'.  The terminator and anything after the terminator will be
@@ -295,7 +304,7 @@ def getRoot(command, terminator=None):
     if not tokens:
         return ''
     if terminator == '.' and \
-    (tokens[-1][1] <> '.' or tokens[-1][0] is not tokenize.OP):
+            (tokens[-1][1] < > '.' or tokens[-1][0] is not tokenize.OP):
         # Trap decimals in numbers, versus the dot operator
         return ''
     else:
@@ -318,14 +327,14 @@ def getRoot(command, terminator=None):
         if tokentype is tokenize.ENDMARKER:
             continue
         if tokentype in (tokenize.NAME, tokenize.STRING, tokenize.NUMBER) \
-        and laststring != '.':
+                and laststring != '.':
             # We've reached something that's not part of the root.
             if prefix and line[token[3][1]] != ' ':
                 # If it doesn't have a space after it, remove the prefix.
                 prefix = ''
             break
         if tokentype in (tokenize.NAME, tokenize.STRING, tokenize.NUMBER) \
-        or (tokentype is tokenize.OP and tokenstring == '.'):
+                or (tokentype is tokenize.OP and tokenstring == '.'):
             if prefix:
                 # The prefix isn't valid because it comes after a dot.
                 prefix = ''
@@ -346,7 +355,7 @@ def getRoot(command, terminator=None):
         else:
             # We've reached something that's not part of the root
             break
-        laststring= tokenstring
+        laststring = tokenstring
     if start is None:
         start = len(line)
     root = line[start:]
@@ -355,11 +364,12 @@ def getRoot(command, terminator=None):
         root = prefix + root
     return root
 
+
 def getRootAndFilter(command, terminator=None):
     """Return the rightmost root portion of an arbitrary Python command.
     Also returns the filter, which is the fragment after the root and
     terminator.
-    
+
     Return only the root portion that can be eval()ed without side
     effect.  The command would normally terminate with a '(' or
     '.'.  The terminator and anything after the terminator will be
@@ -388,43 +398,43 @@ def getRootAndFilter(command, terminator=None):
         tokenstring = token[1]
         line = token[4]
         if tokentype is tokenize.ENDMARKER:
-            
-            #println("Hit end marker; continuing")
-            
+
+            # println("Hit end marker; continuing")
+
             continue
         if not terminator_seen:
             if not filter and tokentype in (tokenize.NAME, tokenize.STRING):
                 # okay, we think we've found our filter string
                 filter = tokenstring
-                
-                #println("hit filter string '" + filter + "'")
-                
+
+                # println("hit filter string '" + filter + "'")
+
             elif tokenstring == terminator:
                 # hooray, our terminator!
                 terminator_seen = True
             else:
                 # either we found another token before our already-set
                 # filter string, or we just found a bad token
-                
-                #println("No valid tokens found after terminator (at '" +
+
+                # println("No valid tokens found after terminator (at '" +
                 #        tokenstring + "'")
-                
+
                 break
         else:
             # we've seen the terminator -- continue adding valid tokens
             # until we hit a token that stops us
             if tokentype in (tokenize.NAME, tokenize.STRING, tokenize.NUMBER):
                 root = tokenstring + root
-                
-                #println("Added to root: '" + root + "'")
-            
+
+                # println("Added to root: '" + root + "'")
+
             elif tokentype is tokenize.OP:
                 if tokenstring in op_mate.keys():
                     # found a closing bracket/paren
                     op_stack.append(tokenstring)
                 elif tokenstring in op_mate.values():
                     if len(op_stack) < 1 or \
-                        tokenstring != op_mate[op_stack.pop()]:
+                            tokenstring != op_mate[op_stack.pop()]:
                         # uh-oh, non-matching brackets/parens!
                         break
                 elif len(op_stack) > 0:
@@ -435,14 +445,15 @@ def getRootAndFilter(command, terminator=None):
                     pass
                 else:
                     break
-                
+
                 root = tokenstring + root
-                
-                #println("Added to root: '" + root + "'")
+
+                # println("Added to root: '" + root + "'")
             else:
                 # hit a terminating token
                 break
     return (root, filter)
+
 
 def getTokens(command):
     """Return list of token tuples for command."""
@@ -465,6 +476,7 @@ def getTokens(command):
         pass
     return tokens
 
+
 def rtrimTerminus(command, terminator=None):
     """Return command minus anything that follows the final terminator."""
     if terminator:
@@ -472,6 +484,7 @@ def rtrimTerminus(command, terminator=None):
         if len(pieces) > 1:
             command = terminator.join(pieces[:-1]) + terminator
     return command
+
 
 def getBaseObject(object):
     """Return base object and dropSelf indicator for an object."""
@@ -517,6 +530,7 @@ def getBaseObject(object):
     else:
         dropSelf = 0
     return object, dropSelf
+
 
 def getConstructor(object):
     """Return constructor for class object, or None if there isn't one."""

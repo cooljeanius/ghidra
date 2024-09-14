@@ -22,10 +22,10 @@ import time
 try:
     import psutil
 except ImportError:
-    print(f"Unable to import 'psutil' - check that it has been installed")
+    print("Unable to import 'psutil' - check that it has been installed")
 
 from ghidratrace import sch
-from ghidratrace.client import Client, Address, AddressRange, TraceObject
+from ghidratrace.client import Client, Address, TraceObject
 
 import gdb
 
@@ -34,42 +34,41 @@ from . import arch, hooks, methods, util
 
 PAGE_SIZE = 4096
 
-AVAILABLES_PATH = 'Available'
-AVAILABLE_KEY_PATTERN = '[{pid}]'
+AVAILABLES_PATH = "Available"
+AVAILABLE_KEY_PATTERN = "[{pid}]"
 AVAILABLE_PATTERN = AVAILABLES_PATH + AVAILABLE_KEY_PATTERN
-BREAKPOINTS_PATH = 'Breakpoints'
-BREAKPOINT_KEY_PATTERN = '[{breaknum}]'
+BREAKPOINTS_PATH = "Breakpoints"
+BREAKPOINT_KEY_PATTERN = "[{breaknum}]"
 BREAKPOINT_PATTERN = BREAKPOINTS_PATH + BREAKPOINT_KEY_PATTERN
-BREAK_LOC_KEY_PATTERN = '[{locnum}]'
-INFERIORS_PATH = 'Inferiors'
-INFERIOR_KEY_PATTERN = '[{infnum}]'
+BREAK_LOC_KEY_PATTERN = "[{locnum}]"
+INFERIORS_PATH = "Inferiors"
+INFERIOR_KEY_PATTERN = "[{infnum}]"
 INFERIOR_PATTERN = INFERIORS_PATH + INFERIOR_KEY_PATTERN
-INF_BREAKS_PATTERN = INFERIOR_PATTERN + '.Breakpoints'
-INF_BREAK_KEY_PATTERN = '[{breaknum}.{locnum}]'
-ENV_PATTERN = INFERIOR_PATTERN + '.Environment'
-THREADS_PATTERN = INFERIOR_PATTERN + '.Threads'
-THREAD_KEY_PATTERN = '[{tnum}]'
+INF_BREAKS_PATTERN = INFERIOR_PATTERN + ".Breakpoints"
+INF_BREAK_KEY_PATTERN = "[{breaknum}.{locnum}]"
+ENV_PATTERN = INFERIOR_PATTERN + ".Environment"
+THREADS_PATTERN = INFERIOR_PATTERN + ".Threads"
+THREAD_KEY_PATTERN = "[{tnum}]"
 THREAD_PATTERN = THREADS_PATTERN + THREAD_KEY_PATTERN
-STACK_PATTERN = THREAD_PATTERN + '.Stack'
-FRAME_KEY_PATTERN = '[{level}]'
+STACK_PATTERN = THREAD_PATTERN + ".Stack"
+FRAME_KEY_PATTERN = "[{level}]"
 FRAME_PATTERN = STACK_PATTERN + FRAME_KEY_PATTERN
-REGS_PATTERN = FRAME_PATTERN + '.Registers'
-MEMORY_PATTERN = INFERIOR_PATTERN + '.Memory'
-REGION_KEY_PATTERN = '[{start:08x}]'
+REGS_PATTERN = FRAME_PATTERN + ".Registers"
+MEMORY_PATTERN = INFERIOR_PATTERN + ".Memory"
+REGION_KEY_PATTERN = "[{start:08x}]"
 REGION_PATTERN = MEMORY_PATTERN + REGION_KEY_PATTERN
-MODULES_PATTERN = INFERIOR_PATTERN + '.Modules'
-MODULE_KEY_PATTERN = '[{modpath}]'
+MODULES_PATTERN = INFERIOR_PATTERN + ".Modules"
+MODULE_KEY_PATTERN = "[{modpath}]"
 MODULE_PATTERN = MODULES_PATTERN + MODULE_KEY_PATTERN
-SECTIONS_ADD_PATTERN = '.Sections'
-SECTION_KEY_PATTERN = '[{secname}]'
+SECTIONS_ADD_PATTERN = ".Sections"
+SECTION_KEY_PATTERN = "[{secname}]"
 SECTION_ADD_PATTERN = SECTIONS_ADD_PATTERN + SECTION_KEY_PATTERN
 
 
 # TODO: Symbols
 
 
-class State(object):
-
+class State:
     def __init__(self):
         self.reset_client()
 
@@ -97,7 +96,7 @@ class State(object):
 
     def reset_trace(self):
         self.trace = None
-        gdb.set_convenience_variable('_ghidra_tracing', False)
+        gdb.set_convenience_variable("_ghidra_tracing", False)
         self.reset_tx()
 
     def require_tx(self):
@@ -125,7 +124,7 @@ class GhidraPrefix(gdb.Command):
     """Commands for connecting to Ghidra"""
 
     def __init__(self):
-        super().__init__('ghidra', gdb.COMMAND_SUPPORT, prefix=True)
+        super().__init__("ghidra", gdb.COMMAND_SUPPORT, prefix=True)
 
 
 @install
@@ -133,7 +132,7 @@ class GhidraTracePrefix(gdb.Command):
     """Commands for exporting data to a Ghidra trace"""
 
     def __init__(self):
-        super().__init__('ghidra trace', gdb.COMMAND_DATA, prefix=True)
+        super().__init__("ghidra trace", gdb.COMMAND_DATA, prefix=True)
 
 
 @install
@@ -141,15 +140,12 @@ class GhidraUtilPrefix(gdb.Command):
     """Utility commands for testing with Ghidra"""
 
     def __init__(self):
-        super().__init__('ghidra util', gdb.COMMAND_NONE, prefix=True)
+        super().__init__("ghidra util", gdb.COMMAND_NONE, prefix=True)
 
 
 def cmd(cli_name, mi_name, cli_class, cli_repeat):
-
     def _cmd(func):
-
         class _CLICmd(gdb.Command):
-
             def __init__(self):
                 super().__init__(cli_name, cli_class)
 
@@ -162,14 +158,15 @@ def cmd(cli_name, mi_name, cli_class, cli_repeat):
                 except TypeError as e:
                     # TODO: This is a bit of a hack, but it works nicely
                     raise gdb.GdbError(
-                        e.args[0].replace(func.__name__ + "()", "'" + cli_name + "'"))
+                        e.args[0].replace(func.__name__ + "()", "'" + cli_name + "'")
+                    )
 
         _CLICmd.__doc__ = func.__doc__
         _CLICmd()
 
-        if hasattr(gdb, 'MICommand'):
-            class _MICmd(gdb.MICommand):
+        if hasattr(gdb, "MICommand"):
 
+            class _MICmd(gdb.MICommand):
                 def __init__(self):
                     super().__init__(mi_name)
 
@@ -177,8 +174,9 @@ def cmd(cli_name, mi_name, cli_class, cli_repeat):
                     try:
                         return func(*argv, is_mi=True)
                     except TypeError as e:
-                        raise gdb.GdbError(e.args[0].replace(func.__name__ + "()",
-                                           mi_name))
+                        raise gdb.GdbError(
+                            e.args[0].replace(func.__name__ + "()", mi_name)
+                        )
 
             _MICmd.__doc__ = func.__doc__
             _MICmd()
@@ -187,8 +185,7 @@ def cmd(cli_name, mi_name, cli_class, cli_repeat):
     return _cmd
 
 
-@cmd('ghidra trace connect', '-ghidra-trace-connect', gdb.COMMAND_SUPPORT,
-     False)
+@cmd("ghidra trace connect", "-ghidra-trace-connect", gdb.COMMAND_SUPPORT, False)
 def ghidra_trace_connect(address, *, is_mi, **kwargs):
     """
     Connect GDB to Ghidra for tracing
@@ -197,21 +194,20 @@ def ghidra_trace_connect(address, *, is_mi, **kwargs):
     """
 
     STATE.require_no_client()
-    parts = address.split(':')
+    parts = address.split(":")
     if len(parts) != 2:
         raise gdb.GdbError("address must be in the form 'host:port'")
     host, port = parts
     try:
         c = socket.socket()
         c.connect((host, int(port)))
-        STATE.client = Client(
-            c, "gdb-" + util.GDB_VERSION.full, methods.REGISTRY)
+        STATE.client = Client(c, "gdb-" + util.GDB_VERSION.full, methods.REGISTRY)
         print(f"Connected to {STATE.client.description} at {address}")
     except ValueError:
         raise gdb.GdbError("port must be numeric")
 
 
-@cmd('ghidra trace listen', '-ghidra-trace-listen', gdb.COMMAND_SUPPORT, False)
+@cmd("ghidra trace listen", "-ghidra-trace-listen", gdb.COMMAND_SUPPORT, False)
 def ghidra_trace_listen(address=None, *, is_mi, **kwargs):
     """
     Listen for Ghidra to connect for tracing
@@ -225,15 +221,15 @@ def ghidra_trace_listen(address=None, *, is_mi, **kwargs):
 
     STATE.require_no_client()
     if address is not None:
-        parts = address.split(':')
+        parts = address.split(":")
         if len(parts) == 1:
-            host, port = '0.0.0.0', parts[0]
+            host, port = "0.0.0.0", parts[0]
         elif len(parts) == 2:
             host, port = parts
         else:
             raise gdb.GdbError("address must be 'port' or 'host:port'")
     else:
-        host, port = '0.0.0.0', 0
+        host, port = "0.0.0.0", 0
     try:
         s = socket.socket()
         s.bind((host, int(port)))
@@ -243,14 +239,12 @@ def ghidra_trace_listen(address=None, *, is_mi, **kwargs):
         c, (chost, cport) = s.accept()
         s.close()
         gdb.write("Connection from {}:{}\n".format(chost, cport))
-        STATE.client = Client(
-            c, "gdb-" + util.GDB_VERSION.full, methods.REGISTRY)
+        STATE.client = Client(c, "gdb-" + util.GDB_VERSION.full, methods.REGISTRY)
     except ValueError:
         raise gdb.GdbError("port must be numeric")
 
 
-@cmd('ghidra trace disconnect', '-ghidra-trace-disconnect', gdb.COMMAND_SUPPORT,
-     False)
+@cmd("ghidra trace disconnect", "-ghidra-trace-disconnect", gdb.COMMAND_SUPPORT, False)
 def ghidra_trace_disconnect(*, is_mi, **kwargs):
     """Disconnect GDB from Ghidra for tracing"""
 
@@ -261,9 +255,9 @@ def ghidra_trace_disconnect(*, is_mi, **kwargs):
 def compute_name():
     progname = gdb.selected_inferior().progspace.filename
     if progname is None:
-        return 'gdb/noname'
+        return "gdb/noname"
     else:
-        return 'gdb/' + progname.split('/')[-1]
+        return "gdb/" + progname.split("/")[-1]
 
 
 def start_trace(name):
@@ -274,19 +268,19 @@ def start_trace(name):
     STATE.trace.register_mapper = arch.compute_register_mapper(language)
 
     parent = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_fn = os.path.join(parent, 'schema.xml')
-    with open(schema_fn, 'r') as schema_file:
+    schema_fn = os.path.join(parent, "schema.xml")
+    with open(schema_fn) as schema_file:
         schema_xml = schema_file.read()
     with STATE.trace.open_tx("Create Root Object"):
-        root = STATE.trace.create_root_object(schema_xml, 'GdbSession')
-        root.set_value('_display', 'GNU gdb ' + util.GDB_VERSION.full)
+        root = STATE.trace.create_root_object(schema_xml, "GdbSession")
+        root.set_value("_display", "GNU gdb " + util.GDB_VERSION.full)
         STATE.trace.create_object(AVAILABLES_PATH).insert()
         STATE.trace.create_object(BREAKPOINTS_PATH).insert()
         STATE.trace.create_object(INFERIORS_PATH).insert()
-    gdb.set_convenience_variable('_ghidra_tracing', True)
+    gdb.set_convenience_variable("_ghidra_tracing", True)
 
 
-@cmd('ghidra trace start', '-ghidra-trace-start', gdb.COMMAND_DATA, False)
+@cmd("ghidra trace start", "-ghidra-trace-start", gdb.COMMAND_DATA, False)
 def ghidra_trace_start(name=None, *, is_mi, **kwargs):
     """Start a Trace in Ghidra"""
 
@@ -297,7 +291,7 @@ def ghidra_trace_start(name=None, *, is_mi, **kwargs):
     start_trace(name)
 
 
-@cmd('ghidra trace stop', '-ghidra-trace-stop', gdb.COMMAND_DATA, False)
+@cmd("ghidra trace stop", "-ghidra-trace-stop", gdb.COMMAND_DATA, False)
 def ghidra_trace_stop(*, is_mi, **kwargs):
     """Stop the Trace in Ghidra"""
 
@@ -305,7 +299,7 @@ def ghidra_trace_stop(*, is_mi, **kwargs):
     STATE.reset_trace()
 
 
-@cmd('ghidra trace restart', '-ghidra-trace-restart', gdb.COMMAND_DATA, False)
+@cmd("ghidra trace restart", "-ghidra-trace-restart", gdb.COMMAND_DATA, False)
 def ghidra_trace_restart(name=None, *, is_mi, **kwargs):
     """Restart or start the Trace in Ghidra"""
 
@@ -318,7 +312,7 @@ def ghidra_trace_restart(name=None, *, is_mi, **kwargs):
     start_trace(name)
 
 
-@cmd('ghidra trace info', '-ghidra-trace-info', gdb.COMMAND_STATUS, True)
+@cmd("ghidra trace info", "-ghidra-trace-info", gdb.COMMAND_STATUS, True)
 def ghidra_trace_info(*, is_mi, **kwargs):
     """Get info about the Ghidra connection"""
 
@@ -329,25 +323,24 @@ def ghidra_trace_info(*, is_mi, **kwargs):
         return
     host, port = STATE.client.s.getpeername()
     if is_mi:
-        result['description'] = STATE.client.description
-        result['address'] = f"{host}:{port}"
+        result["description"] = STATE.client.description
+        result["address"] = f"{host}:{port}"
     else:
-        gdb.write(
-            f"Connected to {STATE.client.description} at {host}:{port}\n")
+        gdb.write(f"Connected to {STATE.client.description} at {host}:{port}\n")
     if STATE.trace is None:
         if is_mi:
-            result['tracing'] = False
+            result["tracing"] = False
         else:
             gdb.write("No trace\n")
         return
     if is_mi:
-        result['tracing'] = True
+        result["tracing"] = True
     else:
         gdb.write("Trace active\n")
     return result
 
 
-@cmd('ghidra trace lcsp', '-ghidra-trace-lcsp', gdb.COMMAND_STATUS, True)
+@cmd("ghidra trace lcsp", "-ghidra-trace-lcsp", gdb.COMMAND_STATUS, True)
 def ghidra_trace_info_lcsp(*, is_mi, **kwargs):
     """
     Get the selected Ghidra language-compiler-spec pair. Even when
@@ -357,13 +350,13 @@ def ghidra_trace_info_lcsp(*, is_mi, **kwargs):
 
     language, compiler = arch.compute_ghidra_lcsp()
     if is_mi:
-        return {'language': language, 'compiler': compiler}
+        return {"language": language, "compiler": compiler}
     else:
         gdb.write("Selected Ghidra language: {}\n".format(language))
         gdb.write("Selected Ghidra compiler: {}\n".format(compiler))
 
 
-@cmd('ghidra trace tx-start', '-ghidra-trace-tx-start', gdb.COMMAND_DATA, False)
+@cmd("ghidra trace tx-start", "-ghidra-trace-tx-start", gdb.COMMAND_DATA, False)
 def ghidra_trace_txstart(description, *, is_mi, **kwargs):
     """
     Start a transaction on the trace
@@ -373,8 +366,7 @@ def ghidra_trace_txstart(description, *, is_mi, **kwargs):
     STATE.tx = STATE.require_trace().start_tx(description, undoable=False)
 
 
-@cmd('ghidra trace tx-commit', '-ghidra-trace-tx-commit', gdb.COMMAND_DATA,
-     False)
+@cmd("ghidra trace tx-commit", "-ghidra-trace-tx-commit", gdb.COMMAND_DATA, False)
 def ghidra_trace_txcommit(*, is_mi, **kwargs):
     """
     Commit the current transaction
@@ -384,7 +376,7 @@ def ghidra_trace_txcommit(*, is_mi, **kwargs):
     STATE.reset_tx()
 
 
-@cmd('ghidra trace tx-abort', '-ghidra-trace-tx-abort', gdb.COMMAND_DATA, False)
+@cmd("ghidra trace tx-abort", "-ghidra-trace-tx-abort", gdb.COMMAND_DATA, False)
 def ghidra_trace_txabort(*, is_mi, **kwargs):
     """
     Abort the current transaction
@@ -406,7 +398,7 @@ def open_tracked_tx(description):
     STATE.reset_tx()
 
 
-@cmd('ghidra trace tx-open', '-ghidra-trace-tx-open', gdb.COMMAND_DATA, False)
+@cmd("ghidra trace tx-open", "-ghidra-trace-tx-open", gdb.COMMAND_DATA, False)
 def ghidra_trace_tx(description, command, *, is_mi, **kwargs):
     """
     Run a command with an open transaction
@@ -435,7 +427,7 @@ def ghidra_trace_tx(description, command, *, is_mi, **kwargs):
         gdb.execute(command)
 
 
-@cmd('ghidra trace save', '-ghidra-trace-save', gdb.COMMAND_DATA, False)
+@cmd("ghidra trace save", "-ghidra-trace-save", gdb.COMMAND_DATA, False)
 def ghidra_trace_save(*, is_mi, **kwargs):
     """
     Save the current trace
@@ -444,7 +436,7 @@ def ghidra_trace_save(*, is_mi, **kwargs):
     STATE.require_trace().save()
 
 
-@cmd('ghidra trace new-snap', '-ghidra-trace-new-snap', gdb.COMMAND_DATA, False)
+@cmd("ghidra trace new-snap", "-ghidra-trace-new-snap", gdb.COMMAND_DATA, False)
 def ghidra_trace_new_snap(description, *, is_mi, **kwargs):
     """
     Create a new snapshot
@@ -453,7 +445,8 @@ def ghidra_trace_new_snap(description, *, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    return {'snap': STATE.require_trace().snapshot(description)}
+    return {"snap": STATE.require_trace().snapshot(description)}
+
 
 # TODO: A convenience var for the current snapshot
 # Will need to update it on:
@@ -462,7 +455,7 @@ def ghidra_trace_new_snap(description, *, is_mi, **kwargs):
 #     ghidra trace trace start/stop/restart
 
 
-@cmd('ghidra trace set-snap', '-ghidra-trace-set-snap', gdb.COMMAND_DATA, False)
+@cmd("ghidra trace set-snap", "-ghidra-trace-set-snap", gdb.COMMAND_DATA, False)
 def ghidra_trace_set_snap(snap, *, is_mi, **kwargs):
     """
     Go to a snapshot
@@ -474,7 +467,10 @@ def ghidra_trace_set_snap(snap, *, is_mi, **kwargs):
 
 
 def quantize_pages(start, end):
-    return (start // PAGE_SIZE * PAGE_SIZE, (end+PAGE_SIZE-1) // PAGE_SIZE*PAGE_SIZE)
+    return (
+        start // PAGE_SIZE * PAGE_SIZE,
+        (end + PAGE_SIZE - 1) // PAGE_SIZE * PAGE_SIZE,
+    )
 
 
 def put_bytes(start, end, pages, is_mi, from_tty):
@@ -491,7 +487,7 @@ def put_bytes(start, end, pages, is_mi, from_tty):
     count = trace.put_bytes(addr, buf)
     if from_tty and not is_mi:
         gdb.write("Wrote {} bytes\n".format(count))
-    return {'count': count}
+    return {"count": count}
 
 
 def eval_address(address):
@@ -499,7 +495,7 @@ def eval_address(address):
         return address
     try:
         return int(gdb.parse_and_eval(address))
-    except gdb.error as e:
+    except gdb.error:
         raise gdb.GdbError("Cannot convert '{}' to address".format(address))
 
 
@@ -510,7 +506,7 @@ def eval_range(address, length):
     else:
         try:
             end = start + int(gdb.parse_and_eval(length))
-        except gdb.error as e:
+        except gdb.error:
             raise gdb.GdbError("Cannot convert '{}' to length".format(length))
     return start, end
 
@@ -520,7 +516,7 @@ def putmem(address, length, pages=True, is_mi=False, from_tty=True):
     return put_bytes(start, end, pages, is_mi, from_tty)
 
 
-@cmd('ghidra trace putmem', '-ghidra-trace-putmem', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace putmem", "-ghidra-trace-putmem", gdb.COMMAND_DATA, True)
 def ghidra_trace_putmem(address, length, pages=True, *, is_mi, from_tty=True, **kwargs):
     """
     Record the given block of memory into the Ghidra trace.
@@ -530,7 +526,7 @@ def ghidra_trace_putmem(address, length, pages=True, *, is_mi, from_tty=True, **
     return putmem(address, length, pages, is_mi, from_tty)
 
 
-@cmd('ghidra trace putval', '-ghidra-trace-putval', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace putval", "-ghidra-trace-putval", gdb.COMMAND_DATA, True)
 def ghidra_trace_putval(value, pages=True, *, is_mi, from_tty=True, **kwargs):
     """
     Record the given value into the Ghidra trace, if it's in memory.
@@ -540,7 +536,7 @@ def ghidra_trace_putval(value, pages=True, *, is_mi, from_tty=True, **kwargs):
     val = gdb.parse_and_eval(value)
     try:
         start = int(val.address)
-    except gdb.error as e:
+    except gdb.error:
         raise gdb.GdbError("Value '{}' has no address".format(value))
     end = start + int(val.dynamic_type.sizeof)
     return put_bytes(start, end, pages, is_mi, from_tty)
@@ -558,7 +554,7 @@ def putmem_state(address, length, state, pages=True):
     STATE.trace.set_memory_state(addr.extend(end - start), state)
 
 
-@cmd('ghidra trace putmem-state', '-ghidra-trace-putmem-state', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace putmem-state", "-ghidra-trace-putmem-state", gdb.COMMAND_DATA, True)
 def ghidra_trace_putmem_state(address, length, state, *, is_mi, **kwargs):
     """
     Set the state of the given range of memory in the Ghidra trace.
@@ -568,7 +564,7 @@ def ghidra_trace_putmem_state(address, length, state, *, is_mi, **kwargs):
     putmem_state(address, length, state, True)
 
 
-@cmd('ghidra trace delmem', '-ghidra-trace-delmem', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace delmem", "-ghidra-trace-delmem", gdb.COMMAND_DATA, True)
 def ghidra_trace_delmem(address, length, *, is_mi, **kwargs):
     """
     Delete the given range of memory from the Ghidra trace.
@@ -588,9 +584,10 @@ def ghidra_trace_delmem(address, length, *, is_mi, **kwargs):
 
 def putreg(frame, reg_descs):
     inf = gdb.selected_inferior()
-    space = REGS_PATTERN.format(infnum=inf.num, tnum=gdb.selected_thread().num,
-                                level=util.get_level(frame))
-    STATE.trace.create_overlay_space('register', space)
+    space = REGS_PATTERN.format(
+        infnum=inf.num, tnum=gdb.selected_thread().num, level=util.get_level(frame)
+    )
+    STATE.trace.create_overlay_space("register", space)
     cobj = STATE.trace.create_object(space)
     cobj.insert()
     mapper = STATE.trace.register_mapper
@@ -605,11 +602,11 @@ def putreg(frame, reg_descs):
         cobj.set_value(desc.name, str(value))
     # TODO: Memorize registers that failed for this arch, and omit later.
     missing = STATE.trace.put_registers(space, values)
-    return {'missing': missing}
+    return {"missing": missing}
 
 
-@cmd('ghidra trace putreg', '-ghidra-trace-putreg', gdb.COMMAND_DATA, True)
-def ghidra_trace_putreg(group='all', *, is_mi, **kwargs):
+@cmd("ghidra trace putreg", "-ghidra-trace-putreg", gdb.COMMAND_DATA, True)
+def ghidra_trace_putreg(group="all", *, is_mi, **kwargs):
     """
     Record the given register group for the current frame into the Ghidra trace.
 
@@ -622,8 +619,8 @@ def ghidra_trace_putreg(group='all', *, is_mi, **kwargs):
         return putreg(frame, util.get_register_descs(frame.architecture(), group))
 
 
-@cmd('ghidra trace delreg', '-ghidra-trace-delreg', gdb.COMMAND_DATA, True)
-def ghidra_trace_delreg(group='all', *, is_mi, **kwargs):
+@cmd("ghidra trace delreg", "-ghidra-trace-delreg", gdb.COMMAND_DATA, True)
+def ghidra_trace_delreg(group="all", *, is_mi, **kwargs):
     """
     Delete the given register group for the curent frame from the Ghidra trace.
 
@@ -633,7 +630,7 @@ def ghidra_trace_delreg(group='all', *, is_mi, **kwargs):
     STATE.require_tx()
     inf = gdb.selected_inferior()
     frame = util.selected_frame()
-    space = 'Inferiors[{}].Threads[{}].Stack[{}].Registers'.format(
+    space = "Inferiors[{}].Threads[{}].Stack[{}].Registers".format(
         inf.num, gdb.selected_thread().num, util.get_level(frame)
     )
     mapper = STATE.trace.register_mapper
@@ -643,8 +640,7 @@ def ghidra_trace_delreg(group='all', *, is_mi, **kwargs):
     return STATE.trace.delete_registers(space, names)
 
 
-@cmd('ghidra trace create-obj', '-ghidra-trace-create-obj', gdb.COMMAND_DATA,
-     False)
+@cmd("ghidra trace create-obj", "-ghidra-trace-create-obj", gdb.COMMAND_DATA, False)
 def ghidra_trace_create_obj(path, *, is_mi, from_tty=True, **kwargs):
     """
     Create an object in the Ghidra trace.
@@ -658,11 +654,10 @@ def ghidra_trace_create_obj(path, *, is_mi, from_tty=True, **kwargs):
     obj = STATE.trace.create_object(path)
     if from_tty and not is_mi:
         gdb.write("Created object: id={}, path='{}'\n".format(obj.id, obj.path))
-    return {'id': obj.id, 'path': obj.path}
+    return {"id": obj.id, "path": obj.path}
 
 
-@cmd('ghidra trace insert-obj', '-ghidra-trace-insert-obj', gdb.COMMAND_DATA,
-     True)
+@cmd("ghidra trace insert-obj", "-ghidra-trace-insert-obj", gdb.COMMAND_DATA, True)
 def ghidra_trace_insert_obj(path, *, is_mi, from_tty=True, **kwargs):
     """
     Insert an object into the Ghidra trace.
@@ -674,11 +669,10 @@ def ghidra_trace_insert_obj(path, *, is_mi, from_tty=True, **kwargs):
     span = STATE.trace.proxy_object_path(path).insert()
     if from_tty and not is_mi:
         gdb.write("Inserted object: lifespan={}\n".format(span))
-    return {'lifespan': span}
+    return {"lifespan": span}
 
 
-@cmd('ghidra trace remove-obj', '-ghidra-trace-remove-obj', gdb.COMMAND_DATA,
-     True)
+@cmd("ghidra trace remove-obj", "-ghidra-trace-remove-obj", gdb.COMMAND_DATA, True)
 def ghidra_trace_remove_obj(path, *, is_mi, from_tty=True, **kwargs):
     """
     Remove an object from the Ghidra trace.
@@ -749,23 +743,23 @@ def eval_value(value, schema=None):
                 if schema == sch.BYTE_ARR:
                     return to_bytes(val, type), schema
                 elif schema == sch.CHAR_ARR:
-                    return to_string(val, type, 'utf-8', full=True), schema
-                return to_string(val, type, 'utf-8', full=False), sch.STRING
+                    return to_string(val, type, "utf-8", full=True), schema
+                return to_string(val, type, "utf-8", full=False), sch.STRING
             elif etype.sizeof == 2:
                 if schema is None:
-                    if etype.name == 'wchar_t':
-                        return to_string(val, type, 'utf-16', full=False), sch.STRING
+                    if etype.name == "wchar_t":
+                        return to_string(val, type, "utf-16", full=False), sch.STRING
                     schema = sch.SHORT_ARR
                 elif schema == sch.CHAR_ARR:
-                    return to_string(val, type, 'utf-16', full=True), schema
+                    return to_string(val, type, "utf-16", full=True), schema
                 return to_int_list(val, type), schema
             elif etype.sizeof == 4:
                 if schema is None:
-                    if etype.name == 'wchar_t':
-                        return to_string(val, type, 'utf-32', full=False), sch.STRING
+                    if etype.name == "wchar_t":
+                        return to_string(val, type, "utf-32", full=False), sch.STRING
                     schema = sch.INT_ARR
                 elif schema == sch.CHAR_ARR:
-                    return to_string(val, type, 'utf-32', full=True), schema
+                    return to_string(val, type, "utf-32", full=True), schema
                 return to_int_list(val, type), schema
             elif schema is not None:
                 return to_int_list(val, type), schema
@@ -781,11 +775,10 @@ def eval_value(value, schema=None):
         inf = gdb.selected_inferior()
         base, addr = STATE.trace.memory_mapper.map(inf, offset)
         return (base, addr), sch.ADDRESS
-    raise ValueError(
-        "Cannot convert ({}): '{}', value='{}'".format(schema, value, val))
+    raise ValueError("Cannot convert ({}): '{}', value='{}'".format(schema, value, val))
 
 
-@cmd('ghidra trace set-value', '-ghidra-trace-set-value', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace set-value", "-ghidra-trace-set-value", gdb.COMMAND_DATA, True)
 def ghidra_trace_set_value(path, key, value, schema=None, *, is_mi, **kwargs):
     """
     Set a value (attribute or element) in the Ghidra trace's object tree.
@@ -816,8 +809,9 @@ def ghidra_trace_set_value(path, key, value, schema=None, *, is_mi, **kwargs):
     STATE.trace.proxy_object_path(path).set_value(key, val, schema)
 
 
-@cmd('ghidra trace retain-values', '-ghidra-trace-retain-values',
-     gdb.COMMAND_DATA, True)
+@cmd(
+    "ghidra trace retain-values", "-ghidra-trace-retain-values", gdb.COMMAND_DATA, True
+)
 def ghidra_trace_retain_values(path, *keys, is_mi, **kwargs):
     """
     Retain only those keys listed, settings all others to null.
@@ -835,22 +829,22 @@ def ghidra_trace_retain_values(path, *keys, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    kinds = 'elements'
-    if keys[0] == '--elements':
-        kinds = 'elements'
+    kinds = "elements"
+    if keys[0] == "--elements":
+        kinds = "elements"
         keys = keys[1:]
-    elif keys[0] == '--attributes':
-        kinds = 'attributes'
+    elif keys[0] == "--attributes":
+        kinds = "attributes"
         keys = keys[1:]
-    elif keys[0] == '--both':
-        kinds = 'both'
+    elif keys[0] == "--both":
+        kinds = "both"
         keys = keys[1:]
-    elif keys[0].startswith('--'):
+    elif keys[0].startswith("--"):
         raise gdb.GdbError("Invalid argument: " + keys[0])
     STATE.trace.proxy_object_path(path).retain_values(keys, kinds=kinds)
 
 
-@cmd('ghidra trace get-obj', '-ghidra-trace-get-obj', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace get-obj", "-ghidra-trace-get-obj", gdb.COMMAND_DATA, True)
 def ghidra_trace_get_obj(path, *, is_mi, **kwargs):
     """
     Get an object descriptor by its canonical path.
@@ -866,7 +860,7 @@ def ghidra_trace_get_obj(path, *, is_mi, **kwargs):
     return object
 
 
-class TableColumn(object):
+class TableColumn:
     def __init__(self, head):
         self.head = head
         self.contents = [head]
@@ -880,10 +874,11 @@ class TableColumn(object):
 
     def print_cell(self, i):
         gdb.write(
-            self.contents[i] if self.is_last else self.contents[i].ljust(self.width))
+            self.contents[i] if self.is_last else self.contents[i].ljust(self.width)
+        )
 
 
-class Tabular(object):
+class Tabular:
     def __init__(self, heads):
         self.columns = [TableColumn(h) for h in heads]
         self.columns[-1].is_last = True
@@ -900,26 +895,25 @@ class Tabular(object):
         for rn in range(self.num_rows):
             for c in self.columns:
                 c.print_cell(rn)
-            gdb.write('\n')
+            gdb.write("\n")
 
 
 def val_repr(value):
     if isinstance(value, TraceObject):
         return value.path
     elif isinstance(value, Address):
-        return '{}:{:08x}'.format(value.space, value.offset)
+        return "{}:{:08x}".format(value.space, value.offset)
     return repr(value)
 
 
 def print_values(values):
-    table = Tabular(['Parent', 'Key', 'Span', 'Value', 'Type'])
+    table = Tabular(["Parent", "Key", "Span", "Value", "Type"])
     for v in values:
-        table.add_row(
-            [v.parent.path, v.key, v.span, val_repr(v.value), v.schema])
+        table.add_row([v.parent.path, v.key, v.span, val_repr(v.value), v.schema])
     table.print_table()
 
 
-@cmd('ghidra trace get-values', '-ghidra-trace-get-values', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace get-values", "-ghidra-trace-get-values", gdb.COMMAND_DATA, True)
 def ghidra_trace_get_values(pattern, *, is_mi, **kwargs):
     """
     List all values matching a given path pattern.
@@ -932,8 +926,12 @@ def ghidra_trace_get_values(pattern, *, is_mi, **kwargs):
     return values
 
 
-@cmd('ghidra trace get-values-rng', '-ghidra-trace-get-values-rng',
-     gdb.COMMAND_DATA, True)
+@cmd(
+    "ghidra trace get-values-rng",
+    "-ghidra-trace-get-values-rng",
+    gdb.COMMAND_DATA,
+    True,
+)
 def ghidra_trace_get_values_rng(address, length, *, is_mi, **kwargs):
     """
     List all values intersecting a given address range.
@@ -961,12 +959,12 @@ def activate(path=None):
             frame = util.selected_frame()
             if frame is not None:
                 path = FRAME_PATTERN.format(
-                    infnum=inf.num, tnum=t.num, level=util.get_level(frame))
+                    infnum=inf.num, tnum=t.num, level=util.get_level(frame)
+                )
     trace.proxy_object_path(path).activate()
 
 
-@cmd('ghidra trace activate', '-ghidra-trace-activate', gdb.COMMAND_STATUS,
-     True)
+@cmd("ghidra trace activate", "-ghidra-trace-activate", gdb.COMMAND_STATUS, True)
 def ghidra_trace_activate(path=None, *, is_mi, **kwargs):
     """
     Activate an object in Ghidra's GUI.
@@ -978,8 +976,7 @@ def ghidra_trace_activate(path=None, *, is_mi, **kwargs):
     activate(path)
 
 
-@cmd('ghidra trace disassemble', '-ghidra-trace-disassemble', gdb.COMMAND_DATA,
-     True)
+@cmd("ghidra trace disassemble", "-ghidra-trace-disassemble", gdb.COMMAND_DATA, True)
 def ghidra_trace_disassemble(address, *, is_mi, from_tty=True, **kwargs):
     """
     Disassemble starting at the given seed.
@@ -998,29 +995,29 @@ def ghidra_trace_disassemble(address, *, is_mi, from_tty=True, **kwargs):
     length = STATE.trace.disassemble(addr)
     if from_tty and not is_mi:
         gdb.write("Disassembled {} bytes\n".format(length))
-    return {'length': length}
+    return {"length": length}
 
 
 def compute_inf_state(inf):
     threads = inf.threads()
     if not threads:
         # TODO: Distinguish INACTIVE from TERMINATED
-        return 'INACTIVE'
+        return "INACTIVE"
     for t in threads:
         if t.is_running():
-            return 'RUNNING'
-    return 'STOPPED'
+            return "RUNNING"
+    return "STOPPED"
 
 
 def put_inferior_state(inf):
     ipath = INFERIOR_PATTERN.format(infnum=inf.num)
     infobj = STATE.trace.proxy_object_path(ipath)
     istate = compute_inf_state(inf)
-    infobj.set_value('State', istate)
+    infobj.set_value("State", istate)
     for t in inf.threads():
         tpath = THREAD_PATTERN.format(infnum=inf.num, tnum=t.num)
         tobj = STATE.trace.proxy_object_path(tpath)
-        tobj.set_value('State', convert_state(t))
+        tobj.set_value("State", convert_state(t))
 
 
 def put_inferiors():
@@ -1032,13 +1029,14 @@ def put_inferiors():
         keys.append(INFERIOR_KEY_PATTERN.format(infnum=inf.num))
         infobj = STATE.trace.create_object(ipath)
         istate = compute_inf_state(inf)
-        infobj.set_value('State', istate)
+        infobj.set_value("State", istate)
         infobj.insert()
     STATE.trace.proxy_object_path(INFERIORS_PATH).retain_values(keys)
 
 
-@cmd('ghidra trace put-inferiors', '-ghidra-trace-put-inferiors',
-     gdb.COMMAND_DATA, True)
+@cmd(
+    "ghidra trace put-inferiors", "-ghidra-trace-put-inferiors", gdb.COMMAND_DATA, True
+)
 def ghidra_trace_put_inferiors(*, is_mi, **kwargs):
     """
     Put the list of inferiors into the trace's Inferiors list.
@@ -1058,14 +1056,15 @@ def put_available():
         ppath = AVAILABLE_PATTERN.format(pid=proc.pid)
         procobj = STATE.trace.create_object(ppath)
         keys.append(AVAILABLE_KEY_PATTERN.format(pid=proc.pid))
-        procobj.set_value('PID', proc.pid)
-        procobj.set_value('_display', '{} {}'.format(proc.pid, proc.name()))
+        procobj.set_value("PID", proc.pid)
+        procobj.set_value("_display", "{} {}".format(proc.pid, proc.name()))
         procobj.insert()
     STATE.trace.proxy_object_path(AVAILABLES_PATH).retain_values(keys)
 
 
-@cmd('ghidra trace put-available', '-ghidra-trace-put-available',
-     gdb.COMMAND_DATA, True)
+@cmd(
+    "ghidra trace put-available", "-ghidra-trace-put-available", gdb.COMMAND_DATA, True
+)
 def ghidra_trace_put_available(*, is_mi, **kwargs):
     """
     Put the list of available processes into the trace's Available list.
@@ -1080,69 +1079,70 @@ def put_single_breakpoint(b, ibobj, inf, ikeys):
     mapper = STATE.trace.memory_mapper
     bpath = BREAKPOINT_PATTERN.format(breaknum=b.number)
     brkobj = STATE.trace.create_object(bpath)
-    brkobj.set_value('Enabled', b.enabled)
+    brkobj.set_value("Enabled", b.enabled)
     if b.type == gdb.BP_BREAKPOINT:
-        brkobj.set_value('Expression', b.location)
-        brkobj.set_value('Kinds', 'SW_EXECUTE')
+        brkobj.set_value("Expression", b.location)
+        brkobj.set_value("Kinds", "SW_EXECUTE")
     elif b.type == gdb.BP_HARDWARE_BREAKPOINT:
-        brkobj.set_value('Expression', b.location)
-        brkobj.set_value('Kinds', 'HW_EXECUTE')
+        brkobj.set_value("Expression", b.location)
+        brkobj.set_value("Kinds", "HW_EXECUTE")
     elif b.type == gdb.BP_WATCHPOINT:
-        brkobj.set_value('Expression', b.expression)
-        brkobj.set_value('Kinds', 'WRITE')
+        brkobj.set_value("Expression", b.expression)
+        brkobj.set_value("Kinds", "WRITE")
     elif b.type == gdb.BP_HARDWARE_WATCHPOINT:
-        brkobj.set_value('Expression', b.expression)
-        brkobj.set_value('Kinds', 'WRITE')
+        brkobj.set_value("Expression", b.expression)
+        brkobj.set_value("Kinds", "WRITE")
     elif b.type == gdb.BP_READ_WATCHPOINT:
-        brkobj.set_value('Expression', b.expression)
-        brkobj.set_value('Kinds', 'READ')
+        brkobj.set_value("Expression", b.expression)
+        brkobj.set_value("Kinds", "READ")
     elif b.type == gdb.BP_ACCESS_WATCHPOINT:
-        brkobj.set_value('Expression', b.expression)
-        brkobj.set_value('Kinds', 'READ,WRITE')
+        brkobj.set_value("Expression", b.expression)
+        brkobj.set_value("Kinds", "READ,WRITE")
     else:
-        brkobj.set_value('Expression', '(unknown)')
-        brkobj.set_value('Kinds', '')
-    brkobj.set_value('Commands', b.commands)
-    brkobj.set_value('Condition', b.condition)
-    brkobj.set_value('Hit Count', b.hit_count)
-    brkobj.set_value('Ignore Count', b.ignore_count)
-    brkobj.set_value('Pending', b.pending)
-    brkobj.set_value('Silent', b.silent)
-    brkobj.set_value('Temporary', b.temporary)
+        brkobj.set_value("Expression", "(unknown)")
+        brkobj.set_value("Kinds", "")
+    brkobj.set_value("Commands", b.commands)
+    brkobj.set_value("Condition", b.condition)
+    brkobj.set_value("Hit Count", b.hit_count)
+    brkobj.set_value("Ignore Count", b.ignore_count)
+    brkobj.set_value("Pending", b.pending)
+    brkobj.set_value("Silent", b.silent)
+    brkobj.set_value("Temporary", b.temporary)
     # TODO: "_threads"?
     keys = []
     locs = util.BREAKPOINT_LOCATION_INFO_READER.get_locations(b)
     hooks.BRK_STATE.update_brkloc_count(b, len(locs))
     for i, l in enumerate(locs):
         # Retain the key, even if not for this inferior
-        k = BREAK_LOC_KEY_PATTERN.format(locnum=i+1)
+        k = BREAK_LOC_KEY_PATTERN.format(locnum=i + 1)
         keys.append(k)
         if inf.num not in l.thread_groups:
             continue
         locobj = STATE.trace.create_object(bpath + k)
-        locobj.set_value('Enabled', l.enabled)
-        ik = INF_BREAK_KEY_PATTERN.format(breaknum=b.number, locnum=i+1)
+        locobj.set_value("Enabled", l.enabled)
+        ik = INF_BREAK_KEY_PATTERN.format(breaknum=b.number, locnum=i + 1)
         ikeys.append(ik)
         if b.location is not None:  # Implies execution break
             base, addr = mapper.map(inf, l.address)
             if base != addr.space:
                 STATE.trace.create_overlay_space(base, addr.space)
-            locobj.set_value('Range', addr.extend(1))
+            locobj.set_value("Range", addr.extend(1))
         elif b.expression is not None:  # Implies watchpoint
             expr = b.expression
-            if expr.startswith('-location '):
-                expr = expr[len('-location '):]
+            if expr.startswith("-location "):
+                expr = expr[len("-location ") :]
             try:
-                address = int(gdb.parse_and_eval('&({})'.format(expr)))
+                address = int(gdb.parse_and_eval("&({})".format(expr)))
                 base, addr = mapper.map(inf, address)
                 if base != addr.space:
                     STATE.trace.create_overlay_space(base, addr.space)
-                size = int(gdb.parse_and_eval(
-                    'sizeof({})'.format(expr)))
-                locobj.set_value('Range', addr.extend(size))
+                size = int(gdb.parse_and_eval("sizeof({})".format(expr)))
+                locobj.set_value("Range", addr.extend(size))
             except Exception as e:
-                gdb.write("Error: Could not get range for breakpoint {}: {}\n".format(
-                    ik, e), stream=gdb.STDERR)
+                gdb.write(
+                    "Error: Could not get range for breakpoint {}: {}\n".format(ik, e),
+                    stream=gdb.STDERR,
+                )
         else:  # I guess it's a catchpoint
             pass
         locobj.insert()
@@ -1165,8 +1165,12 @@ def put_breakpoints():
     ibobj.retain_values(ikeys)
 
 
-@cmd('ghidra trace put-breakpoints', '-ghidra-trace-put-breakpoints',
-     gdb.COMMAND_DATA, True)
+@cmd(
+    "ghidra trace put-breakpoints",
+    "-ghidra-trace-put-breakpoints",
+    gdb.COMMAND_DATA,
+    True,
+)
 def ghidra_trace_put_breakpoints(*, is_mi, **kwargs):
     """
     Put the current inferior's breakpoints into the trace.
@@ -1181,15 +1185,19 @@ def put_environment():
     inf = gdb.selected_inferior()
     epath = ENV_PATTERN.format(infnum=inf.num)
     envobj = STATE.trace.create_object(epath)
-    envobj.set_value('Debugger', 'gdb')
-    envobj.set_value('Arch', arch.get_arch())
-    envobj.set_value('OS', arch.get_osabi())
-    envobj.set_value('Endian', arch.get_endian())
+    envobj.set_value("Debugger", "gdb")
+    envobj.set_value("Arch", arch.get_arch())
+    envobj.set_value("OS", arch.get_osabi())
+    envobj.set_value("Endian", arch.get_endian())
     envobj.insert()
 
 
-@cmd('ghidra trace put-environment', '-ghidra-trace-put-environment',
-     gdb.COMMAND_DATA, True)
+@cmd(
+    "ghidra trace put-environment",
+    "-ghidra-trace-put-environment",
+    gdb.COMMAND_DATA,
+    True,
+)
 def ghidra_trace_put_environment(*, is_mi, **kwargs):
     """
     Put some environment indicators into the Ghidra trace.
@@ -1218,23 +1226,23 @@ def put_regions(regions=None):
         start_base, start_addr = mapper.map(inf, r.start)
         if start_base != start_addr.space:
             STATE.trace.create_overlay_space(start_base, start_addr.space)
-        regobj.set_value('Range', start_addr.extend(r.end - r.start))
+        regobj.set_value("Range", start_addr.extend(r.end - r.start))
         if r.perms != None:
-            regobj.set_value('Permissions', r.perms)
-        regobj.set_value('_readable', r.perms == None or 'r' in r.perms)
-        regobj.set_value('_writable', r.perms == None or 'w' in r.perms)
-        regobj.set_value('_executable', r.perms == None or 'x' in r.perms)
-        regobj.set_value('Offset', hex(r.offset))
-        regobj.set_value('Object File', r.objfile)
-        regobj.set_value('_display', f'{r.objfile} (0x{r.start:x}-0x{r.end:x})')
+            regobj.set_value("Permissions", r.perms)
+        regobj.set_value("_readable", r.perms == None or "r" in r.perms)
+        regobj.set_value("_writable", r.perms == None or "w" in r.perms)
+        regobj.set_value("_executable", r.perms == None or "x" in r.perms)
+        regobj.set_value("Offset", hex(r.offset))
+        regobj.set_value("Object File", r.objfile)
+        regobj.set_value("_display", f"{r.objfile} (0x{r.start:x}-0x{r.end:x})")
         regobj.insert()
-    STATE.trace.proxy_object_path(
-        MEMORY_PATTERN.format(infnum=inf.num)).retain_values(keys)
+    STATE.trace.proxy_object_path(MEMORY_PATTERN.format(infnum=inf.num)).retain_values(
+        keys
+    )
     return regions
 
 
-@cmd('ghidra trace put-regions', '-ghidra-trace-put-regions', gdb.COMMAND_DATA,
-     True)
+@cmd("ghidra trace put-regions", "-ghidra-trace-put-regions", gdb.COMMAND_DATA, True)
 def ghidra_trace_put_regions(*, is_mi, **kwargs):
     """
     Read the memory map, if applicable, and write to the trace's Regions.
@@ -1255,11 +1263,11 @@ def put_modules(modules=None, sections=False):
         mpath = MODULE_PATTERN.format(infnum=inf.num, modpath=mk)
         modobj = STATE.trace.create_object(mpath)
         mod_keys.append(MODULE_KEY_PATTERN.format(modpath=mk))
-        modobj.set_value('Name', m.name)
+        modobj.set_value("Name", m.name)
         base_base, base_addr = mapper.map(inf, m.base)
         if base_base != base_addr.space:
             STATE.trace.create_overlay_space(base_base, base_addr.space)
-        modobj.set_value('Range', base_addr.extend(m.max - m.base))
+        modobj.set_value("Range", base_addr.extend(m.max - m.base))
         if sections:
             sec_keys = []
             for sk, s in m.sections.items():
@@ -1268,24 +1276,25 @@ def put_modules(modules=None, sections=False):
                 sec_keys.append(SECTION_KEY_PATTERN.format(secname=sk))
                 start_base, start_addr = mapper.map(inf, s.start)
                 if start_base != start_addr.space:
-                    STATE.trace.create_overlay_space(
-                        start_base, start_addr.space)
-                secobj.set_value('Range', start_addr.extend(s.end - s.start))
-                secobj.set_value('Offset', hex(s.offset))
-                secobj.set_value('Attrs', s.attrs, schema=sch.STRING_ARR)
+                    STATE.trace.create_overlay_space(start_base, start_addr.space)
+                secobj.set_value("Range", start_addr.extend(s.end - s.start))
+                secobj.set_value("Offset", hex(s.offset))
+                secobj.set_value("Attrs", s.attrs, schema=sch.STRING_ARR)
                 secobj.insert()
-            STATE.trace.proxy_object_path(
-                mpath + SECTIONS_ADD_PATTERN).retain_values(sec_keys)
+            STATE.trace.proxy_object_path(mpath + SECTIONS_ADD_PATTERN).retain_values(
+                sec_keys
+            )
 
         scpath = mpath + SECTIONS_ADD_PATTERN
         sec_container_obj = STATE.trace.create_object(scpath)
         sec_container_obj.insert()
     if not sections:
-        STATE.trace.proxy_object_path(MODULES_PATTERN.format(
-            infnum=inf.num)).retain_values(mod_keys)
+        STATE.trace.proxy_object_path(
+            MODULES_PATTERN.format(infnum=inf.num)
+        ).retain_values(mod_keys)
 
 
-@cmd('ghidra trace put-modules', '-ghidra-trace-put-modules', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace put-modules", "-ghidra-trace-put-modules", gdb.COMMAND_DATA, True)
 def ghidra_trace_put_modules(*, is_mi, **kwargs):
     """
     Gather object files, if applicable, and write to the trace's Modules.
@@ -1296,19 +1305,21 @@ def ghidra_trace_put_modules(*, is_mi, **kwargs):
         put_modules()
 
 
-@cmd('ghidra trace put-sections', '-ghidra-trace-put-sections', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace put-sections", "-ghidra-trace-put-sections", gdb.COMMAND_DATA, True)
 def ghidra_trace_put_sections(module_name, *, is_mi, **kwargs):
     """
     Write the sections of the given module or all modules
     """
 
     modules = None
-    if module_name != '-all-objects':
-        modules = {mk: m for mk, m in util.MODULE_INFO_READER.get_modules(
-        ).items() if mk == module_name}
+    if module_name != "-all-objects":
+        modules = {
+            mk: m
+            for mk, m in util.MODULE_INFO_READER.get_modules().items()
+            if mk == module_name
+        }
         if len(modules) == 0:
-            raise gdb.GdbError(
-                "No module / object named {}".format(module_name))
+            raise gdb.GdbError("No module / object named {}".format(module_name))
 
     STATE.require_tx()
     with STATE.client.batch() as b:
@@ -1317,12 +1328,12 @@ def ghidra_trace_put_sections(module_name, *, is_mi, **kwargs):
 
 def convert_state(t):
     if t.is_exited():
-        return 'TERMINATED'
+        return "TERMINATED"
     if t.is_running():
-        return 'RUNNING'
+        return "RUNNING"
     if t.is_stopped():
-        return 'STOPPED'
-    return 'INACTIVE'
+        return "STOPPED"
+    return "INACTIVE"
 
 
 def convert_tid(t):
@@ -1345,33 +1356,34 @@ def newest_frame(f):
 
 
 def compute_thread_display(t):
-    out = gdb.execute('info thread {}'.format(t.num), to_string=True)
-    line = out.strip().split('\n')[-1].strip().replace('\\s+', ' ')
-    if line.startswith('*'):
+    out = gdb.execute("info thread {}".format(t.num), to_string=True)
+    line = out.strip().split("\n")[-1].strip().replace("\\s+", " ")
+    if line.startswith("*"):
         line = line[1:].strip()
     return line
 
 
 def put_threads():
-    radix = gdb.parameter('output-radix')
+    radix = gdb.parameter("output-radix")
     inf = gdb.selected_inferior()
     keys = []
     for t in inf.threads():
         tpath = THREAD_PATTERN.format(infnum=inf.num, tnum=t.num)
         tobj = STATE.trace.create_object(tpath)
         keys.append(THREAD_KEY_PATTERN.format(tnum=t.num))
-        tobj.set_value('State', convert_state(t))
-        tobj.set_value('Name', t.name)
+        tobj.set_value("State", convert_state(t))
+        tobj.set_value("Name", t.name)
         tid = convert_tid(t.ptid)
-        tobj.set_value('TID', tid)
-        tidstr = ('0x{:x}' if radix ==
-                  16 else '0{:o}' if radix == 8 else '{}').format(tid)
-        tobj.set_value('_short_display', '[{}.{}:{}]'.format(
-            inf.num, t.num, tidstr))
-        tobj.set_value('_display', compute_thread_display(t))
+        tobj.set_value("TID", tid)
+        tidstr = ("0x{:x}" if radix == 16 else "0{:o}" if radix == 8 else "{}").format(
+            tid
+        )
+        tobj.set_value("_short_display", "[{}.{}:{}]".format(inf.num, t.num, tidstr))
+        tobj.set_value("_display", compute_thread_display(t))
         tobj.insert()
-    STATE.trace.proxy_object_path(
-        THREADS_PATTERN.format(infnum=inf.num)).retain_values(keys)
+    STATE.trace.proxy_object_path(THREADS_PATTERN.format(infnum=inf.num)).retain_values(
+        keys
+    )
 
 
 def put_event_thread():
@@ -1383,11 +1395,10 @@ def put_event_thread():
         tobj = STATE.trace.proxy_object_path(tpath)
     else:
         tobj = None
-    STATE.trace.proxy_object_path('').set_value('_event_thread', tobj)
+    STATE.trace.proxy_object_path("").set_value("_event_thread", tobj)
 
 
-@cmd('ghidra trace put-threads', '-ghidra-trace-put-threads', gdb.COMMAND_DATA,
-     True)
+@cmd("ghidra trace put-threads", "-ghidra-trace-put-threads", gdb.COMMAND_DATA, True)
 def ghidra_trace_put_threads(*, is_mi, **kwargs):
     """
     Put the current inferior's threads into the Ghidra trace
@@ -1405,7 +1416,7 @@ def put_frames():
     if t is None:
         return
     # NB: This command will fail if the process is running
-    bt = gdb.execute('bt', to_string=True).strip().split('\n')
+    bt = gdb.execute("bt", to_string=True).strip().split("\n")
     f = util.selected_frame()
     if f is None:
         return
@@ -1413,26 +1424,24 @@ def put_frames():
     keys = []
     level = 0
     while f is not None:
-        fpath = FRAME_PATTERN.format(
-            infnum=inf.num, tnum=t.num, level=level)
+        fpath = FRAME_PATTERN.format(infnum=inf.num, tnum=t.num, level=level)
         fobj = STATE.trace.create_object(fpath)
         keys.append(FRAME_KEY_PATTERN.format(level=level))
         base, pc = mapper.map(inf, f.pc())
         if base != pc.space:
             STATE.trace.create_overlay_space(base, pc.space)
-        fobj.set_value('PC', pc)
-        fobj.set_value('Function', str(f.function()))
-        fobj.set_value(
-            '_display', bt[level].strip().replace('\\s+', ' '))
+        fobj.set_value("PC", pc)
+        fobj.set_value("Function", str(f.function()))
+        fobj.set_value("_display", bt[level].strip().replace("\\s+", " "))
         f = f.older()
         level += 1
         fobj.insert()
-    STATE.trace.proxy_object_path(STACK_PATTERN.format(
-        infnum=inf.num, tnum=t.num)).retain_values(keys)
+    STATE.trace.proxy_object_path(
+        STACK_PATTERN.format(infnum=inf.num, tnum=t.num)
+    ).retain_values(keys)
 
 
-@cmd('ghidra trace put-frames', '-ghidra-trace-put-frames', gdb.COMMAND_DATA,
-     True)
+@cmd("ghidra trace put-frames", "-ghidra-trace-put-frames", gdb.COMMAND_DATA, True)
 def ghidra_trace_put_frames(*, is_mi, **kwargs):
     """
     Put the current thread's frames into the Ghidra trace.
@@ -1443,7 +1452,7 @@ def ghidra_trace_put_frames(*, is_mi, **kwargs):
         put_frames()
 
 
-@cmd('ghidra trace put-all', '-ghidra-trace-put-all', gdb.COMMAND_DATA, True)
+@cmd("ghidra trace put-all", "-ghidra-trace-put-all", gdb.COMMAND_DATA, True)
 def ghidra_trace_put_all(*, is_mi, **kwargs):
     """
     Put everything currently selected into the Ghidra trace
@@ -1463,8 +1472,12 @@ def ghidra_trace_put_all(*, is_mi, **kwargs):
         put_breakpoints()
 
 
-@cmd('ghidra trace install-hooks', '-ghidra-trace-install-hooks',
-     gdb.COMMAND_SUPPORT, False)
+@cmd(
+    "ghidra trace install-hooks",
+    "-ghidra-trace-install-hooks",
+    gdb.COMMAND_SUPPORT,
+    False,
+)
 def ghidra_trace_install_hooks(*, is_mi, **kwargs):
     """
     Install hooks to trace in Ghidra.
@@ -1473,8 +1486,12 @@ def ghidra_trace_install_hooks(*, is_mi, **kwargs):
     hooks.install_hooks()
 
 
-@cmd('ghidra trace remove-hooks', '-ghidra-trace-remove-hooks',
-     gdb.COMMAND_SUPPORT, False)
+@cmd(
+    "ghidra trace remove-hooks",
+    "-ghidra-trace-remove-hooks",
+    gdb.COMMAND_SUPPORT,
+    False,
+)
 def ghidra_trace_remove_hooks(*, is_mi, **kwargs):
     """
     Remove hooks to trace in Ghidra.
@@ -1487,8 +1504,7 @@ def ghidra_trace_remove_hooks(*, is_mi, **kwargs):
     hooks.remove_hooks()
 
 
-@cmd('ghidra trace sync-enable', '-ghidra-trace-sync-enable',
-     gdb.COMMAND_SUPPORT, True)
+@cmd("ghidra trace sync-enable", "-ghidra-trace-sync-enable", gdb.COMMAND_SUPPORT, True)
 def ghidra_trace_sync_enable(*, is_mi, **kwargs):
     """
     Synchronize the current inferior with the Ghidra trace
@@ -1508,8 +1524,9 @@ def ghidra_trace_sync_enable(*, is_mi, **kwargs):
     hooks.enable_current_inferior()
 
 
-@cmd('ghidra trace sync-disable', '-ghidra-trace-sync-disable',
-     gdb.COMMAND_SUPPORT, True)
+@cmd(
+    "ghidra trace sync-disable", "-ghidra-trace-sync-disable", gdb.COMMAND_SUPPORT, True
+)
 def ghidra_trace_sync_disable(*, is_mi, **kwargs):
     """
     Cease synchronizing the current inferior with the Ghidra trace.
@@ -1521,8 +1538,12 @@ def ghidra_trace_sync_disable(*, is_mi, **kwargs):
     hooks.disable_current_inferior()
 
 
-@cmd('ghidra trace sync-synth-stopped', '-ghidra-trace-sync-synth-stopped',
-     gdb.COMMAND_SUPPORT, False)
+@cmd(
+    "ghidra trace sync-synth-stopped",
+    "-ghidra-trace-sync-synth-stopped",
+    gdb.COMMAND_SUPPORT,
+    False,
+)
 def ghidra_trace_sync_synth_stopped(*, is_mi, **kwargs):
     """
     Act as though the target has just stopped.
@@ -1532,10 +1553,10 @@ def ghidra_trace_sync_synth_stopped(*, is_mi, **kwargs):
     """
 
     hooks.on_stop(object())  # Pass a fake event
-    
 
-@cmd('ghidra util wait-stopped', '-ghidra-util-wait-stopped', gdb.COMMAND_NONE, False)
-def ghidra_util_wait_stopped(timeout='1', *, is_mi, **kwargs):
+
+@cmd("ghidra util wait-stopped", "-ghidra-util-wait-stopped", gdb.COMMAND_NONE, False)
+def ghidra_util_wait_stopped(timeout="1", *, is_mi, **kwargs):
     """
     Spin wait until the selected thread is stopped.
     """
@@ -1549,4 +1570,4 @@ def ghidra_util_wait_stopped(timeout='1', *, is_mi, **kwargs):
         t = gdb.selected_thread()  # I suppose it could change
         time.sleep(0.1)
         if time.time() - start > timeout:
-            raise gdb.GdbError('Timed out waiting for thread to stop')
+            raise gdb.GdbError("Timed out waiting for thread to stop")

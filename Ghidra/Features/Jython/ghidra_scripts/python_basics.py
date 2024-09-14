@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -81,20 +81,26 @@ for key in my_dictionary:
 i = 5
 while i < 8:
     print i
-    i += 1 
+    i += 1
 
 # Python functions
+
+
 def factorial(n):
     if n == 0:
         return 1
     return n * factorial(n-1)
 
+
 i = 4
 print str(i) + "! = " + str(factorial(4))
 
 # Python exceptions
+
+
 def error_function():
     raise IOError("An IO error occurred!")
+
 
 try:
     error_function()
@@ -103,6 +109,8 @@ except IOError as e:
     print e.message
 
 # Python class
+
+
 class Employee:
     def __init__(self, id, name):
         self.id = id
@@ -113,6 +121,7 @@ class Employee:
 
     def getName(self):
         return self.name
+
 
 e = Employee(5555, "Snoopy")
 print e.getName()

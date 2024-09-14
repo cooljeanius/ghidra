@@ -1,20 +1,20 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ##
-# Generate the BSim signature for the function at the current address, then dump the 
-# signature hashes to the console 
+# Generate the BSim signature for the function at the current address, then dump the
+# signature hashes to the console
 # @category: BSim.python
 # @runtime Jython
 
@@ -39,7 +39,7 @@ def processFunction(func):
             return
         sigres = decompiler.generateSignatures(func, False, 10, None)
         buf = java.lang.StringBuffer()
-        for i,res in enumerate(sigres.features):
+        for i, res in enumerate(sigres.features):
             buf.append(java.lang.Integer.toHexString(sigres.features[i]))
             buf.append("\n")
         print buf.toString()
@@ -47,15 +47,18 @@ def processFunction(func):
         decompiler.closeProgram()
         decompiler.dispose()
 
+
 def getSettings():
     vectorFactory = WeightedLSHCosineVectorFactory()
     id = currentProgram.getLanguageID()
-    defaultWeightsFile = GenSignatures.getWeightsFile(id,id)
+    defaultWeightsFile = GenSignatures.getWeightsFile(id, id)
     input = defaultWeightsFile.getInputStream()
-    parser = NonThreadedXmlPullParserImpl(input,"Vector weights parser", SpecXmlUtils.getXmlHandler(),False)
+    parser = NonThreadedXmlPullParserImpl(
+        input, "Vector weights parser", SpecXmlUtils.getXmlHandler(), False)
     vectorFactory.readWeights(parser)
     input.close()
     return vectorFactory.getSettings()
+
 
 func = currentProgram.getFunctionManager().getFunctionContaining(currentAddress)
 if func is None:

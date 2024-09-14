@@ -20,43 +20,48 @@ import re
 import gdb
 
 
-GdbVersion = namedtuple('GdbVersion', ['full', 'major', 'minor'])
+GdbVersion = namedtuple("GdbVersion", ["full", "major", "minor"])
 
 
 def _compute_gdb_ver():
-    blurb = gdb.execute('show version', to_string=True)
-    top = blurb.split('\n')[0]
-    full = top.split(' ')[-1]
-    major, minor = full.split('.')[:2]
-    if '-' in minor:
-        minor = minor[:minor.find('-')]
+    blurb = gdb.execute("show version", to_string=True)
+    top = blurb.split("\n")[0]
+    full = top.split(" ")[-1]
+    major, minor = full.split(".")[:2]
+    if "-" in minor:
+        minor = minor[: minor.find("-")]
     return GdbVersion(full, int(major), int(minor))
 
 
 GDB_VERSION = _compute_gdb_ver()
 
-MODULES_CMD_V8 = 'maintenance info sections ALLOBJ'
-MODULES_CMD_V11 = 'maintenance info sections -all-objects'
+MODULES_CMD_V8 = "maintenance info sections ALLOBJ"
+MODULES_CMD_V11 = "maintenance info sections -all-objects"
 OBJFILE_PATTERN_V8 = re.compile("\\s*Object file: (?P<name>.*)")
 OBJFILE_PATTERN_V11 = re.compile(
-    "\\s*((Object)|(Exec)) file: `(?P<name>.*)', file type (?P<type>.*)")
-OBJFILE_SECTION_PATTERN_V8 = re.compile("\\s*" +
-                                        "0x(?P<vmaS>[0-9A-Fa-f]+)\\s*->\\s*" +
-                                        "0x(?P<vmaE>[0-9A-Fa-f]+)\\s+at\\s+" +
-                                        "0x(?P<offset>[0-9A-Fa-f]+)\\s*:\\s*" +
-                                        "(?P<name>\\S+)\\s+" +
-                                        "(?P<attrs>.*)")
-OBJFILE_SECTION_PATTERN_V9 = re.compile("\\s*" +
-                                        "\\[\\s*(?P<idx>\\d+)\\]\\s+" +
-                                        "0x(?P<vmaS>[0-9A-Fa-f]+)\\s*->\\s*" +
-                                        "0x(?P<vmaE>[0-9A-Fa-f]+)\\s+at\\s+" +
-                                        "0x(?P<offset>[0-9A-Fa-f]+)\\s*:\\s*" +
-                                        "(?P<name>\\S+)\\s+" +
-                                        "(?P<attrs>.*)")
+    "\\s*((Object)|(Exec)) file: `(?P<name>.*)', file type (?P<type>.*)"
+)
+OBJFILE_SECTION_PATTERN_V8 = re.compile(
+    "\\s*"
+    + "0x(?P<vmaS>[0-9A-Fa-f]+)\\s*->\\s*"
+    + "0x(?P<vmaE>[0-9A-Fa-f]+)\\s+at\\s+"
+    + "0x(?P<offset>[0-9A-Fa-f]+)\\s*:\\s*"
+    + "(?P<name>\\S+)\\s+"
+    + "(?P<attrs>.*)"
+)
+OBJFILE_SECTION_PATTERN_V9 = re.compile(
+    "\\s*"
+    + "\\[\\s*(?P<idx>\\d+)\\]\\s+"
+    + "0x(?P<vmaS>[0-9A-Fa-f]+)\\s*->\\s*"
+    + "0x(?P<vmaE>[0-9A-Fa-f]+)\\s+at\\s+"
+    + "0x(?P<offset>[0-9A-Fa-f]+)\\s*:\\s*"
+    + "(?P<name>\\S+)\\s+"
+    + "(?P<attrs>.*)"
+)
 GNU_DEBUGDATA_PREFIX = ".gnu_debugdata for "
 
 
-class Module(namedtuple('BaseModule', ['name', 'base', 'max', 'sections'])):
+class Module(namedtuple("BaseModule", ["name", "base", "max", "sections"])):
     pass
 
 
@@ -83,7 +88,7 @@ class Index:
                 return region.start
 
 
-class Section(namedtuple('BaseSection', ['name', 'start', 'end', 'offset', 'attrs'])):
+class Section(namedtuple("BaseSection", ["name", "start", "end", "offset", "attrs"])):
     def better(self, other):
         start = self.start if self.start != 0 else other.start
         end = self.end if self.end != 0 else other.end
@@ -102,27 +107,27 @@ def try_hexint(val, name):
 
 
 # AFAICT, Objfile does not give info about load addresses :(
-class ModuleInfoReader(object):
+class ModuleInfoReader:
     def name_from_line(self, line):
         mat = self.objfile_pattern.fullmatch(line)
         if mat is None:
             return None
-        n = mat['name']
-        return None if mat is None else mat['name']
+        n = mat["name"]
+        return None if mat is None else mat["name"]
 
     def section_from_line(self, line):
         mat = self.section_pattern.fullmatch(line)
         if mat is None:
             return None
-        start = try_hexint(mat['vmaS'], 'section start')
-        end = try_hexint(mat['vmaE'], 'section end')
-        offset = try_hexint(mat['offset'], 'section offset')
-        name = mat['name']
-        attrs = [a for a in mat['attrs'].split(' ') if a != '']
+        start = try_hexint(mat["vmaS"], "section start")
+        end = try_hexint(mat["vmaE"], "section end")
+        offset = try_hexint(mat["offset"], "section offset")
+        name = mat["name"]
+        attrs = [a for a in mat["attrs"].split(" ") if a != ""]
         return Section(name, start, end, offset, attrs)
 
     def finish_module(self, name, sections, index):
-        alloc = {k: s for k, s in sections.items() if 'ALLOC' in s.attrs}
+        alloc = {k: s for k, s in sections.items() if "ALLOC" in s.attrs}
         if len(alloc) == 0:
             return Module(name, 0, 0, alloc)
         base_addr = min(index.compute_base(s.start) for s in alloc.values())
@@ -135,7 +140,7 @@ class ModuleInfoReader(object):
         out = gdb.execute(self.cmd, to_string=True)
         name = None
         sections = None
-        for line in out.split('\n'):
+        for line in out.split("\n"):
             n = self.name_from_line(line)
             if n is not None:
                 if name is not None and not name.startswith(GNU_DEBUGDATA_PREFIX):
@@ -189,42 +194,47 @@ def _choose_module_info_reader():
         return ModuleInfoReaderV11()
     else:
         raise gdb.GdbError(
-            "GDB version not recognized by ghidragdb: " + GDB_VERSION.full)
+            "GDB version not recognized by ghidragdb: " + GDB_VERSION.full
+        )
 
 
 MODULE_INFO_READER = _choose_module_info_reader()
 
 
-REGIONS_CMD = 'info proc mappings'
-REGION_PATTERN_V8 = re.compile("\\s*" +
-                               "0x(?P<start>[0-9,A-F,a-f]+)\\s+" +
-                               "0x(?P<end>[0-9,A-F,a-f]+)\\s+" +
-                               "0x(?P<size>[0-9,A-F,a-f]+)\\s+" +
-                               "0x(?P<offset>[0-9,A-F,a-f]+)\\s+" +
-                               "(?P<objfile>.*)")
-REGION_PATTERN_V12 = re.compile("\\s*" +
-                                "0x(?P<start>[0-9,A-F,a-f]+)\\s+" +
-                                "0x(?P<end>[0-9,A-F,a-f]+)\\s+" +
-                                "0x(?P<size>[0-9,A-F,a-f]+)\\s+" +
-                                "0x(?P<offset>[0-9,A-F,a-f]+)\\s+" +
-                                "(?P<perms>[rwsxp\\-]+)\\s+" +
-                                "(?P<objfile>.*)")
+REGIONS_CMD = "info proc mappings"
+REGION_PATTERN_V8 = re.compile(
+    "\\s*"
+    + "0x(?P<start>[0-9,A-F,a-f]+)\\s+"
+    + "0x(?P<end>[0-9,A-F,a-f]+)\\s+"
+    + "0x(?P<size>[0-9,A-F,a-f]+)\\s+"
+    + "0x(?P<offset>[0-9,A-F,a-f]+)\\s+"
+    + "(?P<objfile>.*)"
+)
+REGION_PATTERN_V12 = re.compile(
+    "\\s*"
+    + "0x(?P<start>[0-9,A-F,a-f]+)\\s+"
+    + "0x(?P<end>[0-9,A-F,a-f]+)\\s+"
+    + "0x(?P<size>[0-9,A-F,a-f]+)\\s+"
+    + "0x(?P<offset>[0-9,A-F,a-f]+)\\s+"
+    + "(?P<perms>[rwsxp\\-]+)\\s+"
+    + "(?P<objfile>.*)"
+)
 
 
-class Region(namedtuple('BaseRegion', ['start', 'end', 'offset', 'perms', 'objfile'])):
+class Region(namedtuple("BaseRegion", ["start", "end", "offset", "perms", "objfile"])):
     pass
 
 
-class RegionInfoReader(object):
+class RegionInfoReader:
     def region_from_line(self, line):
         mat = self.region_pattern.fullmatch(line)
         if mat is None:
             return None
-        start = try_hexint(mat['start'], 'region start')
-        end = try_hexint(mat['end'], 'region end')
-        offset = try_hexint(mat['offset'], 'region offset')
+        start = try_hexint(mat["start"], "region start")
+        end = try_hexint(mat["end"], "region end")
+        offset = try_hexint(mat["offset"], "region offset")
         perms = self.get_region_perms(mat)
-        objfile = mat['objfile']
+        objfile = mat["objfile"]
         return Region(start, end, offset, perms, objfile)
 
     def get_regions(self):
@@ -233,7 +243,7 @@ class RegionInfoReader(object):
             out = gdb.execute(self.cmd, to_string=True)
         except:
             return regions
-        for line in out.split('\n'):
+        for line in out.split("\n"):
             r = self.region_from_line(line)
             if r is None:
                 continue
@@ -242,11 +252,11 @@ class RegionInfoReader(object):
 
     def full_mem(self):
         # TODO: This may not work for Harvard architectures
-        sizeptr = int(gdb.parse_and_eval('sizeof(void*)')) * 8
-        return Region(0, 1 << sizeptr, 0, None, 'full memory')
+        sizeptr = int(gdb.parse_and_eval("sizeof(void*)")) * 8
+        return Region(0, 1 << sizeptr, 0, None, "full memory")
 
     def have_changed(self, regions):
-        if len(regions) == 1 and regions[0].objfile == 'full memory':
+        if len(regions) == 1 and regions[0].objfile == "full memory":
             return False, None
         new_regions = self.get_regions()
         if new_regions == regions:
@@ -267,7 +277,7 @@ class RegionInfoReaderV12(RegionInfoReader):
     region_pattern = REGION_PATTERN_V12
 
     def get_region_perms(self, mat):
-        return mat['perms']
+        return mat["perms"]
 
 
 def _choose_region_info_reader():
@@ -277,22 +287,25 @@ def _choose_region_info_reader():
         return RegionInfoReaderV12()
     else:
         raise gdb.GdbError(
-            "GDB version not recognized by ghidragdb: " + GDB_VERSION.full)
+            "GDB version not recognized by ghidragdb: " + GDB_VERSION.full
+        )
 
 
 REGION_INFO_READER = _choose_region_info_reader()
 
 
-BREAK_LOCS_CMD = 'info break {}'
-BREAK_PATTERN = re.compile('')
-BREAK_LOC_PATTERN = re.compile('')
+BREAK_LOCS_CMD = "info break {}"
+BREAK_PATTERN = re.compile("")
+BREAK_LOC_PATTERN = re.compile("")
 
 
-class BreakpointLocation(namedtuple('BaseBreakpointLocation', ['address', 'enabled', 'thread_groups'])):
+class BreakpointLocation(
+    namedtuple("BaseBreakpointLocation", ["address", "enabled", "thread_groups"])
+):
     pass
 
 
-class BreakpointLocationInfoReaderV8(object):
+class BreakpointLocationInfoReaderV8:
     def breakpoint_from_line(self, line):
         pass
 
@@ -304,13 +317,12 @@ class BreakpointLocationInfoReaderV8(object):
         thread_groups = [inf.num]
         if breakpoint.location is not None and breakpoint.location.startswith("*0x"):
             address = int(breakpoint.location[1:], 16)
-            loc = BreakpointLocation(
-                address, breakpoint.enabled, thread_groups)
+            loc = BreakpointLocation(address, breakpoint.enabled, thread_groups)
             return [loc]
         return []
 
 
-class BreakpointLocationInfoReaderV9(object):
+class BreakpointLocationInfoReaderV9:
     def breakpoint_from_line(self, line):
         pass
 
@@ -324,15 +336,14 @@ class BreakpointLocationInfoReaderV9(object):
             return []
         try:
             address = gdb.parse_and_eval(breakpoint.location).address
-            loc = BreakpointLocation(
-                address, breakpoint.enabled, thread_groups)
+            loc = BreakpointLocation(address, breakpoint.enabled, thread_groups)
             return [loc]
-        except Exception as e:
+        except Exception:
             print(f"Error parsing bpt location = {breakpoint.location}")
         return []
 
 
-class BreakpointLocationInfoReaderV13(object):
+class BreakpointLocationInfoReaderV13:
     def get_locations(self, breakpoint):
         return breakpoint.locations
 
@@ -346,7 +357,8 @@ def _choose_breakpoint_location_info_reader():
         return BreakpointLocationInfoReaderV8()
     else:
         raise gdb.GdbError(
-            "GDB version not recognized by ghidragdb: " + GDB_VERSION.full)
+            "GDB version not recognized by ghidragdb: " + GDB_VERSION.full
+        )
 
 
 BREAKPOINT_LOCATION_INFO_READER = _choose_breakpoint_location_info_reader()
@@ -357,8 +369,8 @@ def set_bool_param_by_api(name, value):
 
 
 def set_bool_param_by_cmd(name, value):
-    val = 'on' if value else 'off'
-    gdb.execute(f'set {name} {val}')
+    val = "on" if value else "off"
+    gdb.execute(f"set {name} {val}")
 
 
 def choose_set_parameter():
@@ -383,11 +395,11 @@ def get_level(frame):
         return level
 
 
-class RegisterDesc(namedtuple('BaseRegisterDesc', ['name'])):
+class RegisterDesc(namedtuple("BaseRegisterDesc", ["name"])):
     pass
 
 
-def get_register_descs(arch, group='all'):
+def get_register_descs(arch, group="all"):
     if hasattr(arch, "registers"):
         try:
             return arch.registers(group)
@@ -396,11 +408,13 @@ def get_register_descs(arch, group='all'):
     else:
         descs = []
         try:
-            regset = gdb.execute(
-                f"info registers {group}", to_string=True).strip().split('\n')
-        except Exception as e:
-            regset = gdb.execute(
-                f"info registers", to_string=True).strip().split('\n')
+            regset = (
+                gdb.execute(f"info registers {group}", to_string=True)
+                .strip()
+                .split("\n")
+            )
+        except Exception:
+            regset = gdb.execute("info registers", to_string=True).strip().split("\n")
         for line in regset:
             if not line.startswith(" "):
                 tokens = line.strip().split()
@@ -411,6 +425,6 @@ def get_register_descs(arch, group='all'):
 def selected_frame():
     try:
         return gdb.selected_frame()
-    except Exception as e:
+    except Exception:
         print("No selected frame")
         return None

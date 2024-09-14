@@ -20,7 +20,7 @@ def import_test_function():
     print("imported successfully")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(" ".join(sys.argv))
     print(" ".join(getScriptArgs()))
     print(currentProgram)

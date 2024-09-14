@@ -31,11 +31,12 @@ logger = logging.getLogger("pyghidra")
 
 def _interpreter(interpreter_globals: dict):
     from ghidra.framework import Application
+
     version = Application.getApplicationVersion()
     name = Application.getApplicationReleaseName()
     banner = f"Python Interpreter for Ghidra {version} {name}\n"
     banner += f"Python {sys.version} on {sys.platform}"
-    code.interact(banner=banner, local=interpreter_globals, exitmsg='')
+    code.interact(banner=banner, local=interpreter_globals, exitmsg="")
 
 
 # pylint: disable=too-few-public-methods
@@ -71,7 +72,7 @@ class PyGhidraArgs(argparse.Namespace):
 
         if self.debug:
             logger.setLevel(logging.DEBUG)
-        
+
         vmargs = self.jvm_args
 
         if self.gui:
@@ -80,7 +81,8 @@ class PyGhidraArgs(argparse.Namespace):
 
         # not in gui mode so it is easier to start Ghidra now
         launcher = pyghidra.HeadlessPyGhidraLauncher(
-            verbose=self.verbose, install_dir=self.install_dir)
+            verbose=self.verbose, install_dir=self.install_dir
+        )
         launcher.vm_args = vmargs + launcher.vm_args
         launcher.start()
 
@@ -94,7 +96,7 @@ class PyGhidraArgs(argparse.Namespace):
                     script_args=self._script_args,
                     verbose=self.verbose,
                     analyze=not self.skip_analysis,
-                    install_dir=self.install_dir
+                    install_dir=self.install_dir,
                 )
             except KeyboardInterrupt:
                 # gracefully finish when cancelled
@@ -105,7 +107,7 @@ class PyGhidraArgs(argparse.Namespace):
                 self.project_path,
                 self.project_name,
                 self.verbose,
-                not self.skip_analysis
+                not self.skip_analysis,
             )
             with pyghidra.core._flat_api(*args, install_dir=self.install_dir) as api:
                 _interpreter(api)
@@ -123,7 +125,7 @@ class PyGhidraArgs(argparse.Namespace):
         else:
             # append any remaining args to the ones which were previously consumed
             self._script_args.extend(value)
-    
+
     @property
     def jvm_args(self):
         vmargs = []
@@ -141,11 +143,10 @@ class PathAction(argparse.Action):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.nargs = '*'
+        self.nargs = "*"
         self.type = str
 
     def __call__(self, parser, namespace: PyGhidraArgs, values, option_string=None):
-
         if not values:
             return
 
@@ -189,21 +190,17 @@ def _get_parser():
         "--verbose",
         dest="verbose",
         action="store_true",
-        help="Enable verbose JVM output during Ghidra initialization"
+        help="Enable verbose JVM output during Ghidra initialization",
     )
     parser.add_argument(
         "-d",
         "--debug",
         default=False,
         action="store_true",
-        help="Sets the log level to DEBUG"
+        help="Sets the log level to DEBUG",
     )
     parser.add_argument(
-        "-g",
-        "--gui",
-        action="store_true",
-        dest="gui",
-        help="Start Ghidra GUI"
+        "-g", "--gui", action="store_true", dest="gui", help="Start Ghidra GUI"
     )
     parser.add_argument(
         "--install-dir",
@@ -212,26 +209,22 @@ def _get_parser():
         dest="install_dir",
         metavar="",
         help="Path to Ghidra installation. "
-             "(defaults to the GHIDRA_INSTALL_DIR environment variable)"
+        "(defaults to the GHIDRA_INSTALL_DIR environment variable)",
     )
     parser.add_argument(
         "--skip-analysis",
         dest="skip_analysis",
         action="store_true",
-        help="Switch to skip analysis after loading the binary file if provided"
+        help="Switch to skip analysis after loading the binary file if provided",
     )
-    parser.add_argument(
-        "binary_path",
-        action=PathAction,
-        help="Optional binary path"
-    )
+    parser.add_argument("binary_path", action=PathAction, help="Optional binary path")
     parser.add_argument(
         "script_path",
         action=PathAction,
         help=(
             "Headless script path. The script must have a .py extension. "
             "If a script is not provided, pyghidra will drop into a repl."
-        )
+        ),
     )
     parser.add_argument(
         "--project-name",
@@ -239,7 +232,7 @@ def _get_parser():
         dest="project_name",
         metavar="name",
         help="Project name to use. "
-             "(defaults to binary filename with \"_ghidra\" suffix if provided else None)"
+        '(defaults to binary filename with "_ghidra" suffix if provided else None)',
     )
     parser.add_argument(
         "--project-path",
@@ -247,26 +240,26 @@ def _get_parser():
         dest="project_path",
         metavar="path",
         help="Location to store project. "
-             "(defaults to same directory as binary file if provided else None)"
+        "(defaults to same directory as binary file if provided else None)",
     )
     parser.add_argument(
         "-D",
         dest="_dargs",
         action="append",
         metavar="",
-        help="Argument to be forwarded to the JVM"
+        help="Argument to be forwarded to the JVM",
     )
     parser.add_argument(
         "-X",
         dest="_xargs",
         action="append",
         metavar="",
-        help="Argument to be forwarded to the JVM"
+        help="Argument to be forwarded to the JVM",
     )
     parser.add_argument(
         "script_args",
         help="Arguments to be passed to the headless script",
-        nargs=argparse.REMAINDER
+        nargs=argparse.REMAINDER,
     )
     return parser
 

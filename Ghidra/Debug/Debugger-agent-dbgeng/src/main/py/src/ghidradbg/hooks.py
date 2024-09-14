@@ -14,17 +14,11 @@
 # limitations under the License.
 ##
 import functools
-import sys
-import threading
-import time
 import traceback
 
 from comtypes.hresult import S_OK
-from pybag import pydbg
 from pybag.dbgeng import core as DbgEng
 from pybag.dbgeng import exception
-from pybag.dbgeng.callbacks import EventHandler
-from pybag.dbgeng.idebugbreakpoint import DebugBreakpoint
 
 from . import commands, util
 
@@ -32,17 +26,25 @@ from . import commands, util
 ALL_EVENTS = 0xFFFF
 
 
-class HookState(object):
-    __slots__ = ('installed', 'mem_catchpoint')
+class HookState:
+    __slots__ = ("installed", "mem_catchpoint")
 
     def __init__(self):
         self.installed = False
         self.mem_catchpoint = None
 
 
-class ProcessState(object):
-    __slots__ = ('first', 'regions', 'modules', 'threads',
-                 'breaks', 'watches', 'visited', 'waiting')
+class ProcessState:
+    __slots__ = (
+        "first",
+        "regions",
+        "modules",
+        "threads",
+        "breaks",
+        "watches",
+        "visited",
+        "waiting",
+    )
 
     def __init__(self):
         self.first = True
@@ -75,10 +77,12 @@ class ProcessState(object):
         if thread is not None:
             if first or thread not in self.visited:
                 commands.putreg()
-                commands.putmem('0x{:x}'.format(util.get_pc()),
-                                "1", display_result=False)
-                commands.putmem('0x{:x}'.format(util.get_sp()),
-                                "1", display_result=False)
+                commands.putmem(
+                    "0x{:x}".format(util.get_pc()), "1", display_result=False
+                )
+                commands.putmem(
+                    "0x{:x}".format(util.get_sp()), "1", display_result=False
+                )
                 commands.put_frames()
                 self.visited.add(thread)
             frame = util.selected_frame()
@@ -106,12 +110,12 @@ class ProcessState(object):
         proc = util.selected_process()
         ipath = commands.PROCESS_PATTERN.format(procnum=proc)
         procobj = commands.STATE.trace.proxy_object_path(ipath)
-        procobj.set_value('Exit Code', exit_code)
-        procobj.set_value('State', 'TERMINATED')
+        procobj.set_value("Exit Code", exit_code)
+        procobj.set_value("State", "TERMINATED")
 
 
-class BrkState(object):
-    __slots__ = ('break_loc_counts',)
+class BrkState:
+    __slots__ = ("break_loc_counts",)
 
     def __init__(self):
         self.break_loc_counts = {}
@@ -136,13 +140,14 @@ PROC_STATE = {}
 
 
 def log_errors(func):
-    '''
+    """
     Wrap a function in a try-except that prints and reraises the
     exception.
 
     This is needed because pybag and/or the COM wrappers do not print
     exceptions that occur during event callbacks.
-    '''
+    """
+
     @functools.wraps(func)
     def _func(*args, **kwargs):
         try:
@@ -150,6 +155,7 @@ def log_errors(func):
         except:
             traceback.print_exc()
             raise
+
     return _func
 
 
@@ -162,7 +168,7 @@ def on_state_changed(*args):
     elif args[0] == DbgEng.DEBUG_CES_BREAKPOINTS:
         return on_breakpoint_modified(args)
     elif args[0] == DbgEng.DEBUG_CES_RADIX:
-        util.set_convenience_variable('output-radix', args[1])
+        util.set_convenience_variable("output-radix", args[1])
         return S_OK
     elif args[0] == DbgEng.DEBUG_CES_EXECUTION_STATUS:
         util.dbg._ces_exec_status(args[1])
@@ -344,7 +350,7 @@ def on_memory_changed(space):
     # But, some observations will not be recovered
     with commands.STATE.client.batch():
         with trace.open_tx("Memory changed"):
-            commands.putmem_state(0, 2**64, 'unknown')
+            commands.putmem_state(0, 2**64, "unknown")
 
 
 def on_cont(*args):

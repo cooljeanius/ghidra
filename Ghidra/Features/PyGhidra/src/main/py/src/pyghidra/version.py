@@ -28,6 +28,7 @@ class ApplicationInfo:
     """
     Ghidra Application Properties
     """
+
     name: str
     version: str
     release_name: str
@@ -52,7 +53,7 @@ class ApplicationInfo:
             match = _APPLICATION_PATTERN.match(line)
             if not match:
                 continue
-            attr = match.group(1).replace('.', '_').replace('-', '_')
+            attr = match.group(1).replace(".", "_").replace("-", "_")
             value = match.group(2)
             if attr in valid_fields:
                 kwargs[attr] = value
@@ -64,6 +65,7 @@ class ExtensionDetails:
     """
     Python side ExtensionDetails
     """
+
     name: str
     description: str
     author: str
@@ -74,8 +76,10 @@ class ExtensionDetails:
     @classmethod
     def from_file(cls, ext_path: Path):
         valid_fields = {f.name for f in dataclasses.fields(cls)}
+
         def cast(key, value):
             return cls.__annotations__[key](value)
+
         lines = ext_path.read_text().splitlines()
         kwargs = {
             key: cast(key, value)
@@ -85,4 +89,6 @@ class ExtensionDetails:
         return cls(**kwargs)
 
     def __repr__(self):
-        return "\n".join(f"{key}={value}" for key, value in dataclasses.asdict(self).items())
+        return "\n".join(
+            f"{key}={value}" for key, value in dataclasses.asdict(self).items()
+        )

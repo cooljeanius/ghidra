@@ -28,6 +28,7 @@ from jpype import JMethod, JObject, JClass
 from ghidra.framework import Application
 from ghidra.util import SystemUtilities
 
+
 class _Helper:
     def __init__(self, stdout: PrintWriter):
         self.stdout = stdout
@@ -54,7 +55,6 @@ class _Helper:
             self.msg = "Press 'F1' for usage instructions"
 
     def __call__(self, param=None):
-
         def get_class_and_method(param):
             if param is None and not SystemUtilities.isInHeadlessMode():
                 # Enable help() in PyGhidraPlugin scenario to show help for GhidraScript
@@ -66,7 +66,7 @@ class _Helper:
             elif isinstance(param, Class):
                 class_name = param.getName()
             elif isinstance(param, JMethod):
-                class_name, _, method_name = param.__qualname__.rpartition('.')
+                class_name, _, method_name = param.__qualname__.rpartition(".")
             elif isinstance(param, JObject):
                 class_name = param.getClass().getName()
             return class_name, method_name
@@ -74,62 +74,66 @@ class _Helper:
         def get_jsondoc(class_name: str):
             jsondoc = None
             try:
-                root = Path(Application.getApplicationRootDirectory().getAbsolutePath()).parent
+                root = Path(
+                    Application.getApplicationRootDirectory().getAbsolutePath()
+                ).parent
                 javadoc_zip_name = "GhidraAPI_javadoc.zip"
                 if SystemUtilities.isInDevelopmentMode():
                     javadoc_zip = root / "build" / "tmp" / javadoc_zip_name
                 else:
                     javadoc_zip = root / "docs" / javadoc_zip_name
                 if javadoc_zip.exists():
-                    json_path = "api/" + class_name.replace('.', '/') + ".json"
+                    json_path = "api/" + class_name.replace(".", "/") + ".json"
                     with zipfile.ZipFile(javadoc_zip, "r") as docs:
                         with docs.open(json_path) as f:
                             jsondoc = json.load(f)
-            except (IOError, KeyError) as e:
+            except (OSError, KeyError):
                 pass
             return jsondoc
 
         def format_class(cls):
-            sig = "class " + cls['name'] + "\n"
+            sig = "class " + cls["name"] + "\n"
             if "extends" in cls:
-                sig += "  extends " + cls['extends'] + "\n"
-            implements = ", ".join(cls['implements'])
+                sig += "  extends " + cls["extends"] + "\n"
+            implements = ", ".join(cls["implements"])
             if implements:
                 sig += "  implements " + implements + " \n"
-            sig += "\n" + cls['comment']
+            sig += "\n" + cls["comment"]
             return sig
 
         def format_field(field):
             sig = f"{field['type_long']} {field['name']}"
-            if field['static']:
+            if field["static"]:
                 sig = "static " + sig
-            if constant_value := field['constant_value']:
+            if constant_value := field["constant_value"]:
                 sig += " = " + constant_value
             sig += "\n"
-            if comment := field['comment']:
+            if comment := field["comment"]:
                 sig += f"  {comment}\n"
             return sig
 
         def format_method(method):
             paramsig = ""
             args = ""
-            for param in method['params']:
+            for param in method["params"]:
                 if paramsig:
                     paramsig += ", "
                 paramsig += f"{param['type_short']} {param['name']}"
                 args += f"  @param {param['name']} ({param['type_long']}): {param['comment']}\n"
             throws = ""
-            for exception in method['throws']:
-                throws += f"  @throws {exception['type_short']}: {exception['comment']}\n"
+            for exception in method["throws"]:
+                throws += (
+                    f"  @throws {exception['type_short']}: {exception['comment']}\n"
+                )
             sig = f"{method['return']['type_short']} {method['name']}({paramsig})\n"
-            if method['static']:
+            if method["static"]:
                 sig = "static " + sig
-            if comment := method['comment']:
+            if comment := method["comment"]:
                 desc = f"  {comment}\n\n"
             else:
                 desc = ""
             ret = ""
-            if method['return']['type_short'] != "void":
+            if method["return"]["type_short"] != "void":
                 ret = f"  @return {method['return']['type_long']}: {method['return']['comment']}\n"
             return sig + desc + args + ret + throws
 
@@ -148,27 +152,39 @@ class _Helper:
                 if jsondoc is None:
                     self.stdout.println("No API found for " + class_name)
                 elif method_name is None:
-                    self.stdout.println("#####################################################")
+                    self.stdout.println(
+                        "#####################################################"
+                    )
                     self.stdout.println(format_class(jsondoc))
-                    self.stdout.println("#####################################################\n")
-                    for field in jsondoc['fields']:
+                    self.stdout.println(
+                        "#####################################################\n"
+                    )
+                    for field in jsondoc["fields"]:
                         self.stdout.println(format_field(field))
-                        self.stdout.println("-----------------------------------------------------")
-                    for method in jsondoc['methods']:
+                        self.stdout.println(
+                            "-----------------------------------------------------"
+                        )
+                    for method in jsondoc["methods"]:
                         self.stdout.println(format_method(method))
-                        self.stdout.println("-----------------------------------------------------")
+                        self.stdout.println(
+                            "-----------------------------------------------------"
+                        )
                 else:
                     found_method = False
-                    for method in jsondoc['methods']:
-                        if method['name'] == method_name:
-                            self.stdout.println("-----------------------------------------------------")
+                    for method in jsondoc["methods"]:
+                        if method["name"] == method_name:
+                            self.stdout.println(
+                                "-----------------------------------------------------"
+                            )
                             self.stdout.println(format_method(method))
-                            self.stdout.println("-----------------------------------------------------")
+                            self.stdout.println(
+                                "-----------------------------------------------------"
+                            )
                             found_method = True
                     if not found_method:
                         # The method may be inherited, so check for a super class and try again
                         if "extends" in jsondoc:
-                            class_name = jsondoc['extends']
+                            class_name = jsondoc["extends"]
                             try_again = True
 
     def __repr__(self):

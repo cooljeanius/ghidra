@@ -57,7 +57,7 @@ _TYPE_COLORS = {
     JFloat: NUMBER_COLOR,
     JDouble: NUMBER_COLOR,
     ModuleType: PACKAGE_COLOR,
-    JPackage: PACKAGE_COLOR
+    JPackage: PACKAGE_COLOR,
 }
 
 
@@ -67,7 +67,7 @@ class PythonCodeCompleter(Completer):
     """
 
     _BUILTIN_ATTRIBUTE = object()
-    __slots__ = ('cmd',)
+    __slots__ = ("cmd",)
 
     def __init__(self, py_console):
         super().__init__(py_console.locals.get_static_view())
@@ -81,7 +81,10 @@ class PythonCodeCompleter(Completer):
             if iskeyword(match.rstrip()):
                 return label
             attr = builtins.__dict__.get(match, PythonCodeCompleter._BUILTIN_ATTRIBUTE)
-            if attr is not PythonCodeCompleter._BUILTIN_ATTRIBUTE and not match.startswith("__"):
+            if (
+                attr is not PythonCodeCompleter._BUILTIN_ATTRIBUTE
+                and not match.startswith("__")
+            ):
                 attr = builtins.__dict__[match]
             else:
                 return label
@@ -98,7 +101,7 @@ class PythonCodeCompleter(Completer):
         return label
 
     def _supplier(self, i: int) -> CodeCompletion:
-        insertion = self.matches[i][len(self.cmd):]
+        insertion = self.matches[i][len(self.cmd) :]
         return CodeCompletion(self.matches[i], insertion, self._get_label(i))
 
     def get_completions(self, cmd: str):

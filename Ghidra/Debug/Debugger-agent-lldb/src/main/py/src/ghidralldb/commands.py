@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,16 +20,15 @@ import optparse
 import os.path
 import shlex
 import socket
-import sys
 import time
 
 try:
     import psutil
 except ImportError:
-    print(f"Unable to import 'psutil' - check that it has been installed")
+    print("Unable to import 'psutil' - check that it has been installed")
 
 from ghidratrace import sch
-from ghidratrace.client import Client, Address, AddressRange, TraceObject
+from ghidratrace.client import Client, Address, TraceObject
 import lldb
 
 from . import arch, hooks, methods, util
@@ -39,47 +38,46 @@ PAGE_SIZE = 4096
 
 DEFAULT_REGISTER_BANK = "General Purpose Registers"
 
-AVAILABLES_PATH = 'Available'
-AVAILABLE_KEY_PATTERN = '[{pid}]'
+AVAILABLES_PATH = "Available"
+AVAILABLE_KEY_PATTERN = "[{pid}]"
 AVAILABLE_PATTERN = AVAILABLES_PATH + AVAILABLE_KEY_PATTERN
-BREAKPOINTS_PATH = 'Breakpoints'
-BREAKPOINT_KEY_PATTERN = '[{breaknum}]'
+BREAKPOINTS_PATH = "Breakpoints"
+BREAKPOINT_KEY_PATTERN = "[{breaknum}]"
 BREAKPOINT_PATTERN = BREAKPOINTS_PATH + BREAKPOINT_KEY_PATTERN
-WATCHPOINTS_PATH = 'Watchpoints'
-WATCHPOINT_KEY_PATTERN = '[{watchnum}]'
+WATCHPOINTS_PATH = "Watchpoints"
+WATCHPOINT_KEY_PATTERN = "[{watchnum}]"
 WATCHPOINT_PATTERN = WATCHPOINTS_PATH + WATCHPOINT_KEY_PATTERN
-BREAK_LOC_KEY_PATTERN = '[{locnum}]'
-PROCESSES_PATH = 'Processes'
-PROCESS_KEY_PATTERN = '[{procnum}]'
+BREAK_LOC_KEY_PATTERN = "[{locnum}]"
+PROCESSES_PATH = "Processes"
+PROCESS_KEY_PATTERN = "[{procnum}]"
 PROCESS_PATTERN = PROCESSES_PATH + PROCESS_KEY_PATTERN
-PROC_WATCHES_PATTERN = PROCESS_PATTERN + '.Watchpoints'
-PROC_WATCH_KEY_PATTERN = PROC_WATCHES_PATTERN + '[{watchnum}]'
-PROC_BREAKS_PATTERN = PROCESS_PATTERN + '.Breakpoints'
-PROC_BREAK_KEY_PATTERN = '[{breaknum}.{locnum}]'
-ENV_PATTERN = PROCESS_PATTERN + '.Environment'
-THREADS_PATTERN = PROCESS_PATTERN + '.Threads'
-THREAD_KEY_PATTERN = '[{tnum}]'
+PROC_WATCHES_PATTERN = PROCESS_PATTERN + ".Watchpoints"
+PROC_WATCH_KEY_PATTERN = PROC_WATCHES_PATTERN + "[{watchnum}]"
+PROC_BREAKS_PATTERN = PROCESS_PATTERN + ".Breakpoints"
+PROC_BREAK_KEY_PATTERN = "[{breaknum}.{locnum}]"
+ENV_PATTERN = PROCESS_PATTERN + ".Environment"
+THREADS_PATTERN = PROCESS_PATTERN + ".Threads"
+THREAD_KEY_PATTERN = "[{tnum}]"
 THREAD_PATTERN = THREADS_PATTERN + THREAD_KEY_PATTERN
-STACK_PATTERN = THREAD_PATTERN + '.Stack'
-FRAME_KEY_PATTERN = '[{level}]'
+STACK_PATTERN = THREAD_PATTERN + ".Stack"
+FRAME_KEY_PATTERN = "[{level}]"
 FRAME_PATTERN = STACK_PATTERN + FRAME_KEY_PATTERN
-REGS_PATTERN = FRAME_PATTERN + '.Registers'
-BANK_PATTERN = REGS_PATTERN + '.{bank}'
-MEMORY_PATTERN = PROCESS_PATTERN + '.Memory'
-REGION_KEY_PATTERN = '[{start:08x}]'
+REGS_PATTERN = FRAME_PATTERN + ".Registers"
+BANK_PATTERN = REGS_PATTERN + ".{bank}"
+MEMORY_PATTERN = PROCESS_PATTERN + ".Memory"
+REGION_KEY_PATTERN = "[{start:08x}]"
 REGION_PATTERN = MEMORY_PATTERN + REGION_KEY_PATTERN
-MODULES_PATTERN = PROCESS_PATTERN + '.Modules'
-MODULE_KEY_PATTERN = '[{modpath}]'
+MODULES_PATTERN = PROCESS_PATTERN + ".Modules"
+MODULE_KEY_PATTERN = "[{modpath}]"
 MODULE_PATTERN = MODULES_PATTERN + MODULE_KEY_PATTERN
-SECTIONS_ADD_PATTERN = '.Sections'
-SECTION_KEY_PATTERN = '[{secname}]'
+SECTIONS_ADD_PATTERN = ".Sections"
+SECTION_KEY_PATTERN = "[{secname}]"
 SECTION_ADD_PATTERN = SECTIONS_ADD_PATTERN + SECTION_KEY_PATTERN
 
 # TODO: Symbols
 
 
-class State(object):
-
+class State:
     def __init__(self):
         self.reset_client()
 
@@ -107,7 +105,7 @@ class State(object):
 
     def reset_trace(self):
         self.trace = None
-        util.set_convenience_variable('_ghidra_tracing', "false")
+        util.set_convenience_variable("_ghidra_tracing", "false")
         self.reset_tx()
 
     def require_tx(self):
@@ -125,112 +123,162 @@ class State(object):
 
 STATE = State()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     lldb.SBDebugger.InitializeWithErrorHandling()
     lldb.debugger = lldb.SBDebugger.Create()
 elif lldb.debugger:
     lldb.debugger.HandleCommand(
-        'command container add -h "Commands for connecting to Ghidra" ghidra')
+        'command container add -h "Commands for connecting to Ghidra" ghidra'
+    )
     lldb.debugger.HandleCommand(
-        'command container add -h "Commands for exporting data to a Ghidra trace" ghidra trace')
+        'command container add -h "Commands for exporting data to a Ghidra trace" ghidra trace'
+    )
     lldb.debugger.HandleCommand(
-        'command container add -h "Utility commands for testing with Ghidra" ghidra util')
+        'command container add -h "Utility commands for testing with Ghidra" ghidra util'
+    )
 
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_connect         ghidra trace connect')
+        "command script add -f ghidralldb.commands.ghidra_trace_connect         ghidra trace connect"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_listen          ghidra trace listen')
+        "command script add -f ghidralldb.commands.ghidra_trace_listen          ghidra trace listen"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_disconnect      ghidra trace disconnect')
+        "command script add -f ghidralldb.commands.ghidra_trace_disconnect      ghidra trace disconnect"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_start           ghidra trace start')
+        "command script add -f ghidralldb.commands.ghidra_trace_start           ghidra trace start"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_stop            ghidra trace stop')
+        "command script add -f ghidralldb.commands.ghidra_trace_stop            ghidra trace stop"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_restart         ghidra trace restart')
+        "command script add -f ghidralldb.commands.ghidra_trace_restart         ghidra trace restart"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_info            ghidra trace info')
+        "command script add -f ghidralldb.commands.ghidra_trace_info            ghidra trace info"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_info_lcsp       ghidra trace info-lcsp')
+        "command script add -f ghidralldb.commands.ghidra_trace_info_lcsp       ghidra trace info-lcsp"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_txstart         ghidra trace tx-start')
+        "command script add -f ghidralldb.commands.ghidra_trace_txstart         ghidra trace tx-start"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_txcommit        ghidra trace tx-commit')
+        "command script add -f ghidralldb.commands.ghidra_trace_txcommit        ghidra trace tx-commit"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_txabort         ghidra trace tx-abort')
+        "command script add -f ghidralldb.commands.ghidra_trace_txabort         ghidra trace tx-abort"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_txopen          ghidra trace tx-open')
+        "command script add -f ghidralldb.commands.ghidra_trace_txopen          ghidra trace tx-open"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_save            ghidra trace save')
+        "command script add -f ghidralldb.commands.ghidra_trace_save            ghidra trace save"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_new_snap        ghidra trace new-snap')
+        "command script add -f ghidralldb.commands.ghidra_trace_new_snap        ghidra trace new-snap"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_set_snap        ghidra trace set-snap')
+        "command script add -f ghidralldb.commands.ghidra_trace_set_snap        ghidra trace set-snap"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_putmem          ghidra trace putmem')
+        "command script add -f ghidralldb.commands.ghidra_trace_putmem          ghidra trace putmem"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_putval          ghidra trace putval')
+        "command script add -f ghidralldb.commands.ghidra_trace_putval          ghidra trace putval"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_putmem_state    ghidra trace putmem-state')
+        "command script add -f ghidralldb.commands.ghidra_trace_putmem_state    ghidra trace putmem-state"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_delmem          ghidra trace delmem')
+        "command script add -f ghidralldb.commands.ghidra_trace_delmem          ghidra trace delmem"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_putreg          ghidra trace putreg')
+        "command script add -f ghidralldb.commands.ghidra_trace_putreg          ghidra trace putreg"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_delreg          ghidra trace delreg')
+        "command script add -f ghidralldb.commands.ghidra_trace_delreg          ghidra trace delreg"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_create_obj      ghidra trace create-obj')
+        "command script add -f ghidralldb.commands.ghidra_trace_create_obj      ghidra trace create-obj"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_insert_obj      ghidra trace insert-obj')
+        "command script add -f ghidralldb.commands.ghidra_trace_insert_obj      ghidra trace insert-obj"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_remove_obj      ghidra trace remove-obj')
+        "command script add -f ghidralldb.commands.ghidra_trace_remove_obj      ghidra trace remove-obj"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_set_value       ghidra trace set-value')
+        "command script add -f ghidralldb.commands.ghidra_trace_set_value       ghidra trace set-value"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_retain_values   ghidra trace retain-values')
+        "command script add -f ghidralldb.commands.ghidra_trace_retain_values   ghidra trace retain-values"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_get_obj         ghidra trace get-obj')
+        "command script add -f ghidralldb.commands.ghidra_trace_get_obj         ghidra trace get-obj"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_get_values      ghidra trace get-values')
+        "command script add -f ghidralldb.commands.ghidra_trace_get_values      ghidra trace get-values"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_get_values_rng  ghidra trace get-values-rng')
+        "command script add -f ghidralldb.commands.ghidra_trace_get_values_rng  ghidra trace get-values-rng"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_activate        ghidra trace activate')
+        "command script add -f ghidralldb.commands.ghidra_trace_activate        ghidra trace activate"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_disassemble     ghidra trace disassemble')
+        "command script add -f ghidralldb.commands.ghidra_trace_disassemble     ghidra trace disassemble"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_processes   ghidra trace put-processes')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_processes   ghidra trace put-processes"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_available   ghidra trace put-available')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_available   ghidra trace put-available"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_breakpoints ghidra trace put-breakpoints')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_breakpoints ghidra trace put-breakpoints"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_watchpoints ghidra trace put-watchpoints')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_watchpoints ghidra trace put-watchpoints"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_environment ghidra trace put-environment')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_environment ghidra trace put-environment"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_regions     ghidra trace put-regions')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_regions     ghidra trace put-regions"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_modules     ghidra trace put-modules')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_modules     ghidra trace put-modules"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_threads     ghidra trace put-threads')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_threads     ghidra trace put-threads"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_frames      ghidra trace put-frames')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_frames      ghidra trace put-frames"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_put_all         ghidra trace put-all')
+        "command script add -f ghidralldb.commands.ghidra_trace_put_all         ghidra trace put-all"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_install_hooks   ghidra trace install-hooks')
+        "command script add -f ghidralldb.commands.ghidra_trace_install_hooks   ghidra trace install-hooks"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_remove_hooks    ghidra trace remove-hooks')
+        "command script add -f ghidralldb.commands.ghidra_trace_remove_hooks    ghidra trace remove-hooks"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_sync_enable     ghidra trace sync-enable')
+        "command script add -f ghidralldb.commands.ghidra_trace_sync_enable     ghidra trace sync-enable"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_sync_disable    ghidra trace sync-disable')
+        "command script add -f ghidralldb.commands.ghidra_trace_sync_disable    ghidra trace sync-disable"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_trace_sync_synth_stopped    ghidra trace sync-synth-stopped')
+        "command script add -f ghidralldb.commands.ghidra_trace_sync_synth_stopped    ghidra trace sync-synth-stopped"
+    )
     lldb.debugger.HandleCommand(
-        'command script add -f ghidralldb.commands.ghidra_util_wait_stopped     ghidra util wait-stopped')
-    #lldb.debugger.HandleCommand('target stop-hook add -P ghidralldb.hooks.StopHook')
+        "command script add -f ghidralldb.commands.ghidra_util_wait_stopped     ghidra util wait-stopped"
+    )
+    # lldb.debugger.HandleCommand('target stop-hook add -P ghidralldb.hooks.StopHook')
     lldb.debugger.SetAsync(True)
     print("Commands loaded.")
 
@@ -244,6 +292,7 @@ def convert_errors(func):
             result.SetStatus(lldb.eReturnStatusSuccessFinishNoResult)
         except BaseException as e:
             result.SetError(str(e))
+
     return _func
 
 
@@ -265,15 +314,14 @@ def ghidra_trace_connect(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace connect ADDRESS")
     address = args[0]
 
-    parts = address.split(':')
+    parts = address.split(":")
     if len(parts) != 2:
         raise RuntimeError("ADDRESS must be HOST:PORT")
     host, port = parts
     try:
         c = socket.socket()
         c.connect((host, int(port)))
-        STATE.client = Client(
-            c, "lldb-" + util.LLDB_VERSION.full, methods.REGISTRY)
+        STATE.client = Client(c, "lldb-" + util.LLDB_VERSION.full, methods.REGISTRY)
     except ValueError:
         raise RuntimeError("port must be numeric")
 
@@ -295,12 +343,12 @@ def ghidra_trace_listen(debugger, command, result, internal_dict):
 
     args = shlex.split(command)
     if len(args) == 0:
-        host, port = '0.0.0.0', 0
+        host, port = "0.0.0.0", 0
     elif len(args) == 1:
         address = args[0]
-        parts = address.split(':')
+        parts = address.split(":")
         if len(parts) == 1:
-            host, port = '0.0.0.0', parts[0]
+            host, port = "0.0.0.0", parts[0]
         elif len(parts) == 2:
             host, port = parts
         else:
@@ -318,8 +366,7 @@ def ghidra_trace_listen(debugger, command, result, internal_dict):
         c, (chost, cport) = s.accept()
         s.close()
         print(f"Connection from {chost}:{cport}")
-        STATE.client = Client(
-            c, util.LLDB_VERSION.display, methods.REGISTRY)
+        STATE.client = Client(c, util.LLDB_VERSION.display, methods.REGISTRY)
     except ValueError:
         raise RuntimeError("PORT must be numeric")
 
@@ -344,9 +391,9 @@ def compute_name():
     target = lldb.debugger.GetTargetAtIndex(0)
     progname = target.executable.basename
     if progname is None:
-        return 'lldb/noname'
+        return "lldb/noname"
     else:
-        return 'lldb/' + progname.split('/')[-1]
+        return "lldb/" + progname.split("/")[-1]
 
 
 def start_trace(name):
@@ -357,15 +404,15 @@ def start_trace(name):
     STATE.trace.register_mapper = arch.compute_register_mapper(language)
 
     parent = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_fn = os.path.join(parent, 'schema.xml')
-    with open(schema_fn, 'r') as schema_file:
+    schema_fn = os.path.join(parent, "schema.xml")
+    with open(schema_fn) as schema_file:
         schema_xml = schema_file.read()
     with STATE.trace.open_tx("Create Root Object"):
-        root = STATE.trace.create_root_object(schema_xml, 'LldbSession')
-        root.set_value('_display', util.LLDB_VERSION.display)
+        root = STATE.trace.create_root_object(schema_xml, "LldbSession")
+        root.set_value("_display", util.LLDB_VERSION.display)
         STATE.trace.create_object(AVAILABLES_PATH).insert()
         STATE.trace.create_object(PROCESSES_PATH).insert()
-    util.set_convenience_variable('_ghidra_tracing', "true")
+    util.set_convenience_variable("_ghidra_tracing", "true")
 
 
 @convert_errors
@@ -616,7 +663,10 @@ def ghidra_trace_set_snap(debugger, command, result, internal_dict):
 
 
 def quantize_pages(start, end):
-    return (start // PAGE_SIZE * PAGE_SIZE, (end+PAGE_SIZE-1) // PAGE_SIZE*PAGE_SIZE)
+    return (
+        start // PAGE_SIZE * PAGE_SIZE,
+        (end + PAGE_SIZE - 1) // PAGE_SIZE * PAGE_SIZE,
+    )
 
 
 def put_bytes(start, end, result, pages):
@@ -684,7 +734,7 @@ def ghidra_trace_putmem(debugger, command, result, internal_dict):
     elif len(args) == 3:
         address = args[0]
         length = args[1]
-        pages = (util.get_eval(args[2]).unsigned != 0)
+        pages = util.get_eval(args[2]).unsigned != 0
     else:
         raise RuntimeError("Usage: ghidra trace putmem ADDRESS LENGTH [PAGES]")
 
@@ -719,7 +769,7 @@ def ghidra_trace_putval(debugger, command, result, internal_dict):
         pages = True
     elif len(args) == 2:
         expression = args[0]
-        pages = (util.get_eval(args[2]).unsigned != 0)
+        pages = util.get_eval(args[2]).unsigned != 0
     else:
         raise RuntimeError("Usage: ghidra trace putval EXPRESSION [PAGES]")
 
@@ -773,10 +823,9 @@ def ghidra_trace_putmem_state(debugger, command, result, internal_dict):
         address = args[0]
         length = args[1]
         state = args[2]
-        pages = (util.get_eval(args[2]).unsigned != 0)
+        pages = util.get_eval(args[2]).unsigned != 0
     else:
-        raise RuntimeError(
-            "Usage: ghidra trace putmem ADDRESS LENGTH STATE [PAGES]")
+        raise RuntimeError("Usage: ghidra trace putmem ADDRESS LENGTH STATE [PAGES]")
 
     STATE.require_tx()
     putmem_state(address, length, state, pages)
@@ -812,13 +861,18 @@ def ghidra_trace_delmem(debugger, command, result, internal_dict):
 
 def putreg(frame, bank):
     proc = util.get_process()
-    space = REGS_PATTERN.format(procnum=proc.GetProcessID(),
-                                tnum=util.selected_thread().GetThreadID(),
-                                level=frame.GetFrameID())
-    bank_path = BANK_PATTERN.format(procnum=proc.GetProcessID(),
-                                    tnum=util.selected_thread().GetThreadID(),
-                                    level=frame.GetFrameID(), bank=bank.name)
-    STATE.trace.create_overlay_space('register', space)
+    space = REGS_PATTERN.format(
+        procnum=proc.GetProcessID(),
+        tnum=util.selected_thread().GetThreadID(),
+        level=frame.GetFrameID(),
+    )
+    bank_path = BANK_PATTERN.format(
+        procnum=proc.GetProcessID(),
+        tnum=util.selected_thread().GetThreadID(),
+        level=frame.GetFrameID(),
+        bank=bank.name,
+    )
+    STATE.trace.create_overlay_space("register", space)
     robj = STATE.trace.create_object(space)
     robj.insert()
     bobj = STATE.trace.create_object(bank_path)
@@ -827,8 +881,9 @@ def putreg(frame, bank):
     values = []
     for i in range(bank.GetNumChildren()):
         item = bank.GetChildAtIndex(i, lldb.eDynamicCanRunTarget, True)
-        values.append(mapper.map_value(
-            proc, item.GetName(), data_to_reg_bytes(item.data)))
+        values.append(
+            mapper.map_value(proc, item.GetName(), data_to_reg_bytes(item.data))
+        )
         # In the tree, just use the human-friendly display value
         bobj.set_value(item.GetName(), item.value)
     # TODO: Memorize registers that failed for this arch, and omit later.
@@ -847,7 +902,7 @@ def ghidra_trace_putreg(debugger, command, result, internal_dict):
 
     args = shlex.split(command)
     if len(args) == 0:
-        group = 'all'
+        group = "all"
     elif len(args) == 1:
         group = args[0]
     else:
@@ -857,7 +912,7 @@ def ghidra_trace_putreg(debugger, command, result, internal_dict):
     frame = util.selected_frame()
     regs = frame.GetRegisters()
     with STATE.client.batch() as b:
-        if group != 'all':
+        if group != "all":
             bank = regs.GetFirstValueByName(group)
             putreg(frame, bank)
             return
@@ -889,7 +944,7 @@ def ghidra_trace_delreg(debugger, command, result, internal_dict):
 
     args = shlex.split(command)
     if len(args) == 0:
-        group = 'all'
+        group = "all"
     elif len(args) == 1:
         group = args[0]
     else:
@@ -899,10 +954,13 @@ def ghidra_trace_delreg(debugger, command, result, internal_dict):
     proc = util.get_process()
     frame = util.selected_frame()
     regs = frame.GetRegisters()
-    space = REGS_PATTERN.format(procnum=proc.GetProcessID(), tnum=util.selected_thread().GetThreadID(),
-                                level=frame.GetFrameID())
+    space = REGS_PATTERN.format(
+        procnum=proc.GetProcessID(),
+        tnum=util.selected_thread().GetThreadID(),
+        level=frame.GetFrameID(),
+    )
     names = []
-    if group != 'all':
+    if group != "all":
         bank = regs.GetFirstValueByName(group)
         collect_mapped_names(names, proc, bank)
     else:
@@ -986,19 +1044,22 @@ def ghidra_trace_remove_obj(debugger, command, result, internal_dict):
 
 def to_bytes(value, type):
     n = value.GetNumChildren()
-    return bytes(int(value.GetChildAtIndex(i).GetValueAsUnsigned()) for i in range(0, n))
+    return bytes(
+        int(value.GetChildAtIndex(i).GetValueAsUnsigned()) for i in range(0, n)
+    )
 
 
 def to_string(value, type, encoding, full):
     n = value.GetNumChildren()
-    b = bytes(int(value.GetChildAtIndex(i).GetValueAsUnsigned())
-              for i in range(0, n))
+    b = bytes(int(value.GetChildAtIndex(i).GetValueAsUnsigned()) for i in range(0, n))
     return str(b, encoding)
 
 
 def to_bool_list(value, type):
     n = value.GetNumChildren()
-    return [bool(int(value.GetChildAtIndex(i).GetValueAsUnsigned())) for i in range(0, n)]
+    return [
+        bool(int(value.GetChildAtIndex(i).GetValueAsUnsigned())) for i in range(0, n)
+    ]
 
 
 def to_int_list(value, type):
@@ -1013,9 +1074,9 @@ def to_short_list(value, type):
 
 def get_byte_order(order):
     if order == lldb.eByteOrderBig:
-        return 'big'
+        return "big"
     elif order == lldb.eByteOrderLittle:
-        return 'little'
+        return "little"
     elif order == lldb.eByteOrderPDP:
         raise ValueError("PDP byte order unsupported")
     else:
@@ -1029,7 +1090,7 @@ def data_to_int(data):
 
 def data_to_reg_bytes(data):
     order = get_byte_order(data.byte_order)
-    if order == 'little':
+    if order == "little":
         return bytes(reversed(data.uint8s))
     return bytes(data.uint8s)
 
@@ -1046,8 +1107,12 @@ def convert_value(val, schema=None):
     code = type.GetBasicType()
     if code == lldb.eBasicTypeVoid:
         return None, sch.VOID
-    if code == lldb.eBasicTypeChar or code == lldb.eBasicTypeSignedChar or code == lldb.eBasicTypeUnsignedChar:
-        if not "\\x" in val.GetValue():
+    if (
+        code == lldb.eBasicTypeChar
+        or code == lldb.eBasicTypeSignedChar
+        or code == lldb.eBasicTypeUnsignedChar
+    ):
+        if "\\x" not in val.GetValue():
             return int(val.GetValueAsUnsigned()), sch.CHAR
         return int(val.GetValueAsUnsigned()), sch.BYTE
     if code == lldb.eBasicTypeShort or code == lldb.eBasicTypeUnsignedShort:
@@ -1075,34 +1140,45 @@ def convert_value(val, schema=None):
         ecode = etype.GetBasicType()
         if ecode == lldb.eBasicTypeBool:
             return to_bool_list(val, type), sch.BOOL_ARR
-        elif ecode == lldb.eBasicTypeChar or ecode == lldb.eBasicTypeSignedChar or ecode == lldb.eBasicTypeUnsignedChar:
+        elif (
+            ecode == lldb.eBasicTypeChar
+            or ecode == lldb.eBasicTypeSignedChar
+            or ecode == lldb.eBasicTypeUnsignedChar
+        ):
             if schema == sch.BYTE_ARR:
                 return to_bytes(val, type), schema
             elif schema == sch.CHAR_ARR:
-                return to_string(val, type, 'utf-8', full=True), schema
-            return to_string(val, type, 'utf-8', full=False), sch.STRING
+                return to_string(val, type, "utf-8", full=True), schema
+            return to_string(val, type, "utf-8", full=False), sch.STRING
         elif ecode == lldb.eBasicTypeShort or ecode == lldb.eBasicTypeUnsignedShort:
             if schema is None:
-                if etype.name == 'wchar_t':
-                    return to_string(val, type, 'utf-16', full=False), sch.STRING
+                if etype.name == "wchar_t":
+                    return to_string(val, type, "utf-16", full=False), sch.STRING
                 schema = sch.SHORT_ARR
             elif schema == sch.CHAR_ARR:
-                return to_string(val, type, 'utf-16', full=True), schema
+                return to_string(val, type, "utf-16", full=True), schema
             return to_int_list(val, type), schema
-        elif ecode == lldb.eBasicTypeSignedWChar or ecode == lldb.eBasicTypeUnsignedWChar:
+        elif (
+            ecode == lldb.eBasicTypeSignedWChar or ecode == lldb.eBasicTypeUnsignedWChar
+        ):
             if schema is not None and schema != sch.CHAR_ARR:
                 return to_short_list(val, type), schema
             else:
-                return to_string(val, type, 'utf-16', full=False), sch.STRING
+                return to_string(val, type, "utf-16", full=False), sch.STRING
         elif ecode == lldb.eBasicTypeInt or ecode == lldb.eBasicTypeUnsignedInt:
             if schema is None:
-                if etype.name == 'wchar_t':
-                    return to_string(val, type, 'utf-32', full=False), sch.STRING
+                if etype.name == "wchar_t":
+                    return to_string(val, type, "utf-32", full=False), sch.STRING
                 schema = sch.INT_ARR
             elif schema == sch.CHAR_ARR:
-                return to_string(val, type, 'utf-32', full=True), schema
+                return to_string(val, type, "utf-32", full=True), schema
             return to_int_list(val, type), schema
-        elif ecode == lldb.eBasicTypeLong or ecode == lldb.eBasicTypeUnsignedLong or ecode == lldb.eBasicTypeLongLong or ecode == lldb.eBasicTypeUnsignedLongLong:
+        elif (
+            ecode == lldb.eBasicTypeLong
+            or ecode == lldb.eBasicTypeUnsignedLong
+            or ecode == lldb.eBasicTypeLongLong
+            or ecode == lldb.eBasicTypeUnsignedLongLong
+        ):
             if schema is not None:
                 return to_int_list(val, type), schema
             else:
@@ -1151,8 +1227,7 @@ def ghidra_trace_set_value(debugger, command, result, internal_dict):
         value = args[2]
         schema = sch.Schema(args[3])
     else:
-        raise RuntimeError(
-            "Usage: ghidra trace set-value PATH KEY VALUE [SCHEMA]")
+        raise RuntimeError("Usage: ghidra trace set-value PATH KEY VALUE [SCHEMA]")
 
     STATE.require_tx()
     if schema == sch.OBJECT:
@@ -1167,18 +1242,36 @@ def ghidra_trace_set_value(debugger, command, result, internal_dict):
     STATE.trace.proxy_object_path(path).set_value(key, val, schema)
 
 
-retain_values_parser = optparse.OptionParser(prog='ghidra trace retain-values',
-                                             usage="""
-Usage: %prog [OPTIONS] [KEYS...]""")
+retain_values_parser = optparse.OptionParser(
+    prog="ghidra trace retain-values",
+    usage="""
+Usage: %prog [OPTIONS] [KEYS...]""",
+)
 retain_values_parser.add_option(
-    '-e', '--elements', action='store_const', dest='kinds', default='elements',
-    const='elements', help="Remove all other elements")
+    "-e",
+    "--elements",
+    action="store_const",
+    dest="kinds",
+    default="elements",
+    const="elements",
+    help="Remove all other elements",
+)
 retain_values_parser.add_option(
-    '-a', '--attributes', action='store_const', dest='kinds',
-    const='attributes', help="Remove all other attributes")
+    "-a",
+    "--attributes",
+    action="store_const",
+    dest="kinds",
+    const="attributes",
+    help="Remove all other attributes",
+)
 retain_values_parser.add_option(
-    '-b', '--both', action='store_const', dest='kinds',
-    const='both', help="Remove all other elements and attributes")
+    "-b",
+    "--both",
+    action="store_const",
+    dest="kinds",
+    const="both",
+    help="Remove all other elements and attributes",
+)
 
 
 @convert_errors
@@ -1200,14 +1293,12 @@ def ghidra_trace_retain_values(debugger, command, result, internal_dict):
 
     options, args = retain_values_parser.parse_args(shlex.split(command))
     if len(args) < 1:
-        raise RuntimeError(
-            "Usage: ghidra trace retain-values [OPTIONS] PATH [KEYS...]")
+        raise RuntimeError("Usage: ghidra trace retain-values [OPTIONS] PATH [KEYS...]")
     path = args[0]
     keys = args[1:]
 
     STATE.require_tx()
-    STATE.trace.proxy_object_path(
-        path).retain_values(keys, kinds=options.kinds)
+    STATE.trace.proxy_object_path(path).retain_values(keys, kinds=options.kinds)
 
 
 @convert_errors
@@ -1231,7 +1322,7 @@ def ghidra_trace_get_obj(debugger, command, result, internal_dict):
     result.PutCString(f"{object.id}\t{object.path}")
 
 
-class TableColumn(object):
+class TableColumn:
     def __init__(self, head):
         self.head = head
         self.contents = [head]
@@ -1247,7 +1338,7 @@ class TableColumn(object):
         return self.contents[i] if self.is_last else self.contents[i].ljust(self.width)
 
 
-class Tabular(object):
+class Tabular:
     def __init__(self, heads):
         self.columns = [TableColumn(h) for h in heads]
         self.columns[-1].is_last = True
@@ -1262,22 +1353,21 @@ class Tabular(object):
         for c in self.columns:
             c.finish()
         for rn in range(self.num_rows):
-            printfn(''.join(c.format_cell(rn) for c in self.columns))
+            printfn("".join(c.format_cell(rn) for c in self.columns))
 
 
 def val_repr(value):
     if isinstance(value, TraceObject):
         return value.path
     elif isinstance(value, Address):
-        return f'{value.space}:{value.offset:08x}'
+        return f"{value.space}:{value.offset:08x}"
     return repr(value)
 
 
 def print_values(values, printfn):
-    table = Tabular(['Parent', 'Key', 'Span', 'Value', 'Type'])
+    table = Tabular(["Parent", "Key", "Span", "Value", "Type"])
     for v in values:
-        table.add_row(
-            [v.parent.path, v.key, v.span, val_repr(v.value), v.schema])
+        table.add_row([v.parent.path, v.key, v.span, val_repr(v.value), v.schema])
     table.print_table(printfn)
 
 
@@ -1295,7 +1385,7 @@ def ghidra_trace_get_values(debugger, command, result, internal_dict):
        Processes[0].Threads[]  To get all threads in the first process
        Processes[].Threads[]   To get all threads from all processes
        Processes[0].           (Note the trailing period) to get all attributes
-                               of the first process 
+                               of the first process
     """
 
     args = shlex.split(command)
@@ -1344,10 +1434,14 @@ def activate(path=None):
             frame = util.selected_frame()
             if frame is None:
                 path = THREAD_PATTERN.format(
-                    procnum=proc.GetProcessID(), tnum=t.GetThreadID())
+                    procnum=proc.GetProcessID(), tnum=t.GetThreadID()
+                )
             else:
                 path = FRAME_PATTERN.format(
-                    procnum=proc.GetProcessID(), tnum=t.GetThreadID(), level=frame.GetFrameID())
+                    procnum=proc.GetProcessID(),
+                    tnum=t.GetThreadID(),
+                    level=frame.GetFrameID(),
+                )
         trace.proxy_object_path(path).activate()
 
 
@@ -1402,8 +1496,8 @@ def ghidra_trace_disassemble(debugger, command, result, internal_dict):
 
 def compute_proc_state(proc=None):
     if proc.is_running:
-        return 'RUNNING'
-    return 'STOPPED'
+        return "RUNNING"
+    return "STOPPED"
 
 
 def put_processes():
@@ -1413,7 +1507,7 @@ def put_processes():
     keys.append(PROCESS_KEY_PATTERN.format(procnum=proc.GetProcessID()))
     procobj = STATE.trace.create_object(ipath)
     istate = compute_proc_state(proc)
-    procobj.set_value('State', istate)
+    procobj.set_value("State", istate)
     procobj.insert()
     STATE.trace.proxy_object_path(PROCESSES_PATH).retain_values(keys)
 
@@ -1421,10 +1515,10 @@ def put_processes():
 def put_state(event_process):
     ipath = PROCESS_PATTERN.format(procnum=event_process.GetProcessID())
     with STATE.client.batch():
-        with STATE.require_trace().open_tx('State'):
+        with STATE.require_trace().open_tx("State"):
             procobj = STATE.trace.create_object(ipath)
             state = "STOPPED" if event_process.is_stopped else "RUNNING"
-            procobj.set_value('State', state)
+            procobj.set_value("State", state)
             procobj.insert()
 
 
@@ -1451,8 +1545,8 @@ def put_available():
         ppath = AVAILABLE_PATTERN.format(pid=proc.pid)
         procobj = STATE.trace.create_object(ppath)
         keys.append(AVAILABLE_KEY_PATTERN.format(pid=proc.pid))
-        procobj.set_value('PID', proc.pid)
-        procobj.set_value('_display', f'{proc.pid} {proc.name()}')
+        procobj.set_value("PID", proc.pid)
+        procobj.set_value("_display", f"{proc.pid} {proc.name()}")
         procobj.insert()
     STATE.trace.proxy_object_path(AVAILABLES_PATH).retain_values(keys)
 
@@ -1479,39 +1573,39 @@ def put_single_breakpoint(b, ibobj, proc, ikeys):
     bpath = BREAKPOINT_PATTERN.format(breaknum=b.GetID())
     brkobj = STATE.trace.create_object(bpath)
     if b.IsHardware():
-        brkobj.set_value('Expression', util.get_description(b))
-        brkobj.set_value('Kinds', 'HW_EXECUTE')
+        brkobj.set_value("Expression", util.get_description(b))
+        brkobj.set_value("Kinds", "HW_EXECUTE")
     else:
-        brkobj.set_value('Expression', util.get_description(b))
-        brkobj.set_value('Kinds', 'SW_EXECUTE')
+        brkobj.set_value("Expression", util.get_description(b))
+        brkobj.set_value("Kinds", "SW_EXECUTE")
     cmdList = lldb.SBStringList()
     if b.GetCommandLineCommands(cmdList):
         list = []
         for i in range(0, cmdList.GetSize()):
             list.append(cmdList.GetStringAtIndex(i))
-        brkobj.set_value('Commands', list)
+        brkobj.set_value("Commands", list)
     if b.GetCondition():
-        brkobj.set_value('Condition', b.GetCondition())
-    brkobj.set_value('Hit Count', b.GetHitCount())
-    brkobj.set_value('Ignore Count', b.GetIgnoreCount())
-    brkobj.set_value('Temporary', b.IsOneShot())
-    brkobj.set_value('Enabled', b.IsEnabled())
+        brkobj.set_value("Condition", b.GetCondition())
+    brkobj.set_value("Hit Count", b.GetHitCount())
+    brkobj.set_value("Ignore Count", b.GetIgnoreCount())
+    brkobj.set_value("Temporary", b.IsOneShot())
+    brkobj.set_value("Enabled", b.IsEnabled())
     keys = []
     locs = util.BREAKPOINT_LOCATION_INFO_READER.get_locations(b)
     hooks.BRK_STATE.update_brkloc_count(b, len(locs))
     for i, l in enumerate(locs):
         # Retain the key, even if not for this process
-        k = BREAK_LOC_KEY_PATTERN.format(locnum=i+1)
+        k = BREAK_LOC_KEY_PATTERN.format(locnum=i + 1)
         keys.append(k)
         locobj = STATE.trace.create_object(bpath + k)
-        ik = PROC_BREAK_KEY_PATTERN.format(breaknum=b.GetID(), locnum=i+1)
+        ik = PROC_BREAK_KEY_PATTERN.format(breaknum=b.GetID(), locnum=i + 1)
         ikeys.append(ik)
         if b.location is not None:  # Implies execution break
             base, addr = mapper.map(proc, l.GetLoadAddress())
             if base != addr.space:
                 STATE.trace.create_overlay_space(base, addr.space)
-            locobj.set_value('Range', addr.extend(1))
-            locobj.set_value('Enabled', l.IsEnabled())
+            locobj.set_value("Range", addr.extend(1))
+            locobj.set_value("Enabled", l.IsEnabled())
         else:  # I guess it's a catchpoint
             pass
         locobj.insert()
@@ -1523,27 +1617,28 @@ def put_single_breakpoint(b, ibobj, proc, ikeys):
 def put_single_watchpoint(b, ibobj, proc, ikeys):
     mapper = STATE.trace.memory_mapper
     bpath = PROC_WATCH_KEY_PATTERN.format(
-        procnum=proc.GetProcessID(), watchnum=b.GetID())
+        procnum=proc.GetProcessID(), watchnum=b.GetID()
+    )
     brkobj = STATE.trace.create_object(bpath)
     desc = util.get_description(b, level=0)
-    brkobj.set_value('Expression', desc)
-    brkobj.set_value('Kinds', 'WRITE')
+    brkobj.set_value("Expression", desc)
+    brkobj.set_value("Kinds", "WRITE")
     if "type = r" in desc:
-        brkobj.set_value('Kinds', 'READ')
+        brkobj.set_value("Kinds", "READ")
     if "type = rw" in desc:
-        brkobj.set_value('Kinds', 'READ,WRITE')
+        brkobj.set_value("Kinds", "READ,WRITE")
     base, addr = mapper.map(proc, b.GetWatchAddress())
     if base != addr.space:
         STATE.trace.create_overlay_space(base, addr.space)
-    brkobj.set_value('Range', addr.extend(b.GetWatchSize()))
+    brkobj.set_value("Range", addr.extend(b.GetWatchSize()))
     if b.GetCondition():
-        brkobj.set_value('Condition', b.GetCondition())
-    brkobj.set_value('Hit Count', b.GetHitCount())
-    brkobj.set_value('Ignore Count', b.GetIgnoreCount())
-    brkobj.set_value('Hardware Index', b.GetHardwareIndex())
-    brkobj.set_value('Watch Address', hex(b.GetWatchAddress()))
-    brkobj.set_value('Watch Size', b.GetWatchSize())
-    brkobj.set_value('Enabled', b.IsEnabled())
+        brkobj.set_value("Condition", b.GetCondition())
+    brkobj.set_value("Hit Count", b.GetHitCount())
+    brkobj.set_value("Ignore Count", b.GetIgnoreCount())
+    brkobj.set_value("Hardware Index", b.GetHardwareIndex())
+    brkobj.set_value("Watch Address", hex(b.GetWatchAddress()))
+    brkobj.set_value("Watch Size", b.GetWatchSize())
+    brkobj.set_value("Enabled", b.IsEnabled())
     brkobj.insert()
 
 
@@ -1616,10 +1711,10 @@ def put_environment():
     proc = util.get_process()
     epath = ENV_PATTERN.format(procnum=proc.GetProcessID())
     envobj = STATE.trace.create_object(epath)
-    envobj.set_value('Debugger', 'lldb')
-    envobj.set_value('Arch', arch.get_arch())
-    envobj.set_value('OS', arch.get_osabi())
-    envobj.set_value('Endian', arch.get_endian())
+    envobj.set_value("Debugger", "lldb")
+    envobj.set_value("Arch", arch.get_arch())
+    envobj.set_value("OS", arch.get_osabi())
+    envobj.set_value("Endian", arch.get_endian())
     envobj.insert()
 
 
@@ -1641,14 +1736,14 @@ def ghidra_trace_put_environment(debugger, command, result, internal_dict):
 
 
 def should_update_regions():
-    '''
+    """
     It's possible some targets don't support regions.
 
     There is also a bug in LLDB that can cause its gdb-remote client
     to drop support. We need to account for this second case while
     still ensuring we populate the full range for targets that
     genuinely don't support it.
-    '''
+    """
     # somewhat crappy heuristic to distinguish remote from local
     tgt = util.get_target()
     if tgt.GetNumModules() == 0:
@@ -1676,24 +1771,24 @@ def put_regions():
     mapper = STATE.trace.memory_mapper
     keys = []
     for r in regions:
-        rpath = REGION_PATTERN.format(
-            procnum=proc.GetProcessID(), start=r.start)
+        rpath = REGION_PATTERN.format(procnum=proc.GetProcessID(), start=r.start)
         keys.append(REGION_KEY_PATTERN.format(start=r.start))
         regobj = STATE.trace.create_object(rpath)
         start_base, start_addr = mapper.map(proc, r.start)
         if start_base != start_addr.space:
             STATE.trace.create_overlay_space(start_base, start_addr.space)
-        regobj.set_value('Range', start_addr.extend(r.end - r.start))
+        regobj.set_value("Range", start_addr.extend(r.end - r.start))
         if r.perms != None:
-            regobj.set_value('Permissions', r.perms)
-        regobj.set_value('_readable', r.perms == None or 'r' in r.perms)
-        regobj.set_value('_writable', r.perms == None or 'w' in r.perms)
-        regobj.set_value('_executable', r.perms == None or 'x' in r.perms)
-        regobj.set_value('Offset', hex(r.offset))
-        regobj.set_value('Object File', r.objfile)
+            regobj.set_value("Permissions", r.perms)
+        regobj.set_value("_readable", r.perms == None or "r" in r.perms)
+        regobj.set_value("_writable", r.perms == None or "w" in r.perms)
+        regobj.set_value("_executable", r.perms == None or "x" in r.perms)
+        regobj.set_value("Offset", hex(r.offset))
+        regobj.set_value("Object File", r.objfile)
         regobj.insert()
     STATE.trace.proxy_object_path(
-        MEMORY_PATTERN.format(procnum=proc.GetProcessID())).retain_values(keys)
+        MEMORY_PATTERN.format(procnum=proc.GetProcessID())
+    ).retain_values(keys)
 
 
 @convert_errors
@@ -1723,12 +1818,12 @@ def put_modules():
         mpath = MODULE_PATTERN.format(procnum=proc.GetProcessID(), modpath=mk)
         modobj = STATE.trace.create_object(mpath)
         mod_keys.append(MODULE_KEY_PATTERN.format(modpath=mk))
-        modobj.set_value('Name', m.name)
+        modobj.set_value("Name", m.name)
         base_base, base_addr = mapper.map(proc, m.base)
         if base_base != base_addr.space:
             STATE.trace.create_overlay_space(base_base, base_addr.space)
         if m.max > m.base:
-            modobj.set_value('Range', base_addr.extend(m.max - m.base + 1))
+            modobj.set_value("Range", base_addr.extend(m.max - m.base + 1))
         sec_keys = []
         for sk, s in m.sections.items():
             spath = mpath + SECTION_ADD_PATTERN.format(secname=sk)
@@ -1736,18 +1831,19 @@ def put_modules():
             sec_keys.append(SECTION_KEY_PATTERN.format(secname=sk))
             start_base, start_addr = mapper.map(proc, s.start)
             if start_base != start_addr.space:
-                STATE.trace.create_overlay_space(
-                    start_base, start_addr.space)
-            secobj.set_value('Range', start_addr.extend(s.end - s.start + 1))
-            secobj.set_value('Offset', hex(s.offset))
-            secobj.set_value('Attrs', s.attrs)
+                STATE.trace.create_overlay_space(start_base, start_addr.space)
+            secobj.set_value("Range", start_addr.extend(s.end - s.start + 1))
+            secobj.set_value("Offset", hex(s.offset))
+            secobj.set_value("Attrs", s.attrs)
             secobj.insert()
         # In case there are no sections, we must still insert the module
         modobj.insert()
-        STATE.trace.proxy_object_path(
-            mpath + SECTIONS_ADD_PATTERN).retain_values(sec_keys)
-    STATE.trace.proxy_object_path(MODULES_PATTERN.format(
-        procnum=proc.GetProcessID())).retain_values(mod_keys)
+        STATE.trace.proxy_object_path(mpath + SECTIONS_ADD_PATTERN).retain_values(
+            sec_keys
+        )
+    STATE.trace.proxy_object_path(
+        MODULES_PATTERN.format(procnum=proc.GetProcessID())
+    ).retain_values(mod_keys)
 
 
 @convert_errors
@@ -1770,10 +1866,10 @@ def ghidra_trace_put_modules(debugger, command, result, internal_dict):
 def convert_state(t):
     # TODO: This does not seem to work - currently supplanted by proc.is_running
     if t.IsSuspended():
-        return 'SUSPENDED'
+        return "SUSPENDED"
     if t.IsStopped():
-        return 'STOPPED'
-    return 'RUNNING'
+        return "STOPPED"
+    return "RUNNING"
 
 
 def convert_tid(t):
@@ -1794,27 +1890,30 @@ def compute_thread_display(t):
 
 
 def put_threads():
-    radix = util.get_convenience_variable('output-radix')
-    if radix == 'auto':
+    radix = util.get_convenience_variable("output-radix")
+    if radix == "auto":
         radix = 16
     proc = util.get_process()
     keys = []
     for t in proc.threads:
-        tpath = THREAD_PATTERN.format(
-            procnum=proc.GetProcessID(), tnum=t.GetThreadID())
+        tpath = THREAD_PATTERN.format(procnum=proc.GetProcessID(), tnum=t.GetThreadID())
         tobj = STATE.trace.create_object(tpath)
         keys.append(THREAD_KEY_PATTERN.format(tnum=t.GetThreadID()))
-        tobj.set_value('State', compute_proc_state(proc))
-        tobj.set_value('Name', t.GetName())
+        tobj.set_value("State", compute_proc_state(proc))
+        tobj.set_value("Name", t.GetName())
         tid = t.GetThreadID()
-        tobj.set_value('TID', tid)
-        tidstr = f'0x{tid:x}' if radix == 16 else f'0{tid:o}' if radix == 8 else f'{tid}'
-        tobj.set_value('_short_display',
-                       f'[{proc.GetProcessID()}.{t.GetThreadID()}:{tidstr}]')
-        tobj.set_value('_display', compute_thread_display(t))
+        tobj.set_value("TID", tid)
+        tidstr = (
+            f"0x{tid:x}" if radix == 16 else f"0{tid:o}" if radix == 8 else f"{tid}"
+        )
+        tobj.set_value(
+            "_short_display", f"[{proc.GetProcessID()}.{t.GetThreadID()}:{tidstr}]"
+        )
+        tobj.set_value("_display", compute_thread_display(t))
         tobj.insert()
     STATE.trace.proxy_object_path(
-        THREADS_PATTERN.format(procnum=proc.GetProcessID())).retain_values(keys)
+        THREADS_PATTERN.format(procnum=proc.GetProcessID())
+    ).retain_values(keys)
 
 
 def put_event_thread():
@@ -1822,12 +1921,11 @@ def put_event_thread():
     # Assumption: Event thread is selected by lldb upon stopping
     t = util.selected_thread()
     if t is not None:
-        tpath = THREAD_PATTERN.format(
-            procnum=proc.GetProcessID(), tnum=t.GetThreadID())
+        tpath = THREAD_PATTERN.format(procnum=proc.GetProcessID(), tnum=t.GetThreadID())
         tobj = STATE.trace.proxy_object_path(tpath)
     else:
         tobj = None
-    STATE.trace.proxy_object_path('').set_value('_event_thread', tobj)
+    STATE.trace.proxy_object_path("").set_value("_event_thread", tobj)
 
 
 @convert_errors
@@ -1857,18 +1955,20 @@ def put_frames():
     for i in range(0, t.GetNumFrames()):
         f = t.GetFrameAtIndex(i)
         fpath = FRAME_PATTERN.format(
-            procnum=proc.GetProcessID(), tnum=t.GetThreadID(), level=f.GetFrameID())
+            procnum=proc.GetProcessID(), tnum=t.GetThreadID(), level=f.GetFrameID()
+        )
         fobj = STATE.trace.create_object(fpath)
         keys.append(FRAME_KEY_PATTERN.format(level=f.GetFrameID()))
         base, pc = mapper.map(proc, f.GetPC())
         if base != pc.space:
             STATE.trace.create_overlay_space(base, pc.space)
-        fobj.set_value('PC', pc)
-        fobj.set_value('Function', str(f.GetFunctionName()))
-        fobj.set_value('_display', util.get_description(f))
+        fobj.set_value("PC", pc)
+        fobj.set_value("Function", str(f.GetFunctionName()))
+        fobj.set_value("_display", util.get_description(f))
         fobj.insert()
-    STATE.trace.proxy_object_path(STACK_PATTERN.format(
-        procnum=proc.GetProcessID(), tnum=t.GetThreadID())).retain_values(keys)
+    STATE.trace.proxy_object_path(
+        STACK_PATTERN.format(procnum=proc.GetProcessID(), tnum=t.GetThreadID())
+    ).retain_values(keys)
 
 
 @convert_errors
@@ -1902,8 +2002,7 @@ def ghidra_trace_put_all(debugger, command, result, internal_dict):
 
     STATE.require_tx()
     with STATE.client.batch() as b:
-        ghidra_trace_putreg(debugger, DEFAULT_REGISTER_BANK,
-                            result, internal_dict)
+        ghidra_trace_putreg(debugger, DEFAULT_REGISTER_BANK, result, internal_dict)
         ghidra_trace_putmem(debugger, "$pc 1", result, internal_dict)
         ghidra_trace_putmem(debugger, "$sp 1", result, internal_dict)
         put_processes()
@@ -2030,5 +2129,5 @@ def ghidra_util_wait_stopped(debugger, command, result, internal_dict):
         time.sleep(0.1)
         p = util.selected_process()  # I suppose it could change
         if time.time() - start > timeout:
-            raise RuntimeError('Timed out waiting for thread to stop')
+            raise RuntimeError("Timed out waiting for thread to stop")
     print(f"Finished wait. State={p.state}")

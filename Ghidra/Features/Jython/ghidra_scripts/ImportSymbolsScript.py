@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,13 +28,14 @@
 #
 
 from ghidra.program.model.symbol.SourceType import *
-import string
 
 functionManager = currentProgram.getFunctionManager()
 
 f = askFile("Give me a file to open", "Go baby go!")
 
-for line in file(f.absolutePath):  # note, cannot use open(), since that is in GhidraScript
+for line in file(
+    f.absolutePath
+):  # note, cannot use open(), since that is in GhidraScript
     pieces = line.split()
 
     name = pieces[0]
@@ -45,14 +46,17 @@ for line in file(f.absolutePath):  # note, cannot use open(), since that is in G
     except IndexError:
         function_or_label = "l"
 
-    
     if function_or_label == "f":
         func = functionManager.getFunctionAt(address)
 
         if func is not None:
             old_name = func.getName()
             func.setName(name, USER_DEFINED)
-            print("Renamed function {} to {} at address {}".format(old_name, name, address))
+            print(
+                "Renamed function {} to {} at address {}".format(
+                    old_name, name, address
+                )
+            )
         else:
             func = createFunction(address, name)
             print("Created function {} at address {}".format(name, address))

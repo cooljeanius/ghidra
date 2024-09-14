@@ -69,7 +69,7 @@ def _interpreter_trace(frame: types.FrameType, event: str, _):
     elif event == "call":
         mod = inspect.getmodule(frame.f_code)
         if mod:
-            name, _, _ = mod.__name__.partition('.')
+            name, _, _ = mod.__name__.partition(".")
             if name in ("_jpype", "jpype"):
                 # do not trace these functions to avoid raising during
                 # critical python/java bridge functionality
@@ -81,7 +81,7 @@ class PyJavaThread(threading.Thread):
     """
     A thread that can be interrupted when running either python or java code
     """
-    
+
     def __init__(self, target=None, name=None, args=(), kwargs=None):
         super().__init__(target=target, name=name, args=args, kwargs=kwargs)
         self._jthread_lock = threading.Lock()
@@ -91,7 +91,7 @@ class PyJavaThread(threading.Thread):
         # if a python exception is thrown during customization and it will show an unrelated error
         JClass("java.lang.InterruptedException", initialize=True)
         JClass("java.nio.channels.ClosedByInterruptException", initialize=True)
-    
+
     def run(self):
         try:
             with self._jthread_lock:
@@ -103,7 +103,7 @@ class PyJavaThread(threading.Thread):
                 if self._jthread and JThread.isAttached():
                     self._jthread = None
                     JThread.detach()
-    
+
     def interrupt(self):
         if not self.is_alive():
             return
@@ -111,7 +111,7 @@ class PyJavaThread(threading.Thread):
             if self._jthread:
                 self._jthread.interrupt()
         self._state = ThreadState.INTERRUPTED
-    
+
     def clear_interrupted(self):
         self._state = ThreadState.RUNNING
 
@@ -122,11 +122,11 @@ class PyJavaThread(threading.Thread):
             if self._jthread:
                 self._jthread.interrupt()
         self._state = ThreadState.KILLED
-    
+
     @property
     def interrupted(self) -> bool:
         return self._state == ThreadState.INTERRUPTED
-    
+
     @property
     def killed(self) -> bool:
         return self._state == ThreadState.KILLED
@@ -145,15 +145,19 @@ class PyConsole(InteractiveConsole):
     """
     PyGhidra Interactive Console
     """
-    
-    _WORD_PATTERN = re.compile(r".*?([\w\.]+)\Z") # get the last word, including '.', from the right
+
+    _WORD_PATTERN = re.compile(
+        r".*?([\w\.]+)\Z"
+    )  # get the last word, including '.', from the right
 
     def __init__(self, py_plugin: PyGhidraPlugin):
         super().__init__(locals=PyGhidraScript(py_plugin.script))
         appVersion = Application.getApplicationVersion()
         appName = Application.getApplicationReleaseName()
-        self.banner = f"Python Interpreter for Ghidra {appVersion} {appName}\n" \
-                      f"Python {sys.version} on {sys.platform}"
+        self.banner = (
+            f"Python Interpreter for Ghidra {appVersion} {appName}\n"
+            f"Python {sys.version} on {sys.platform}"
+        )
         console = py_plugin.interpreter.console
         self._console = py_plugin.interpreter.console
         self._line_reader = BufferedReader(InputStreamReader(console.getStdin()))
@@ -168,7 +172,7 @@ class PyConsole(InteractiveConsole):
         self._state = ConsoleState.RESET
         self._completer = PythonCodeCompleter(self)
 
-    def raw_input(self, prompt=''):
+    def raw_input(self, prompt=""):
         self._console.setPrompt(prompt)
         while True:
             line = self._line_reader.readLine()
@@ -180,7 +184,7 @@ class PyConsole(InteractiveConsole):
                 # if we were not reset, read the next line
                 continue
             if not line:
-                return '\n'
+                return "\n"
             return line
 
     def write(self, data: str):
@@ -234,7 +238,7 @@ class PyConsole(InteractiveConsole):
 
         # this resets the locals, and gets a new code compiler
         super().__init__(locals=PyGhidraScript(self._script))
-    
+
     @property
     def name(self) -> str:
         return "Interpreter"
@@ -245,9 +249,11 @@ class PyConsole(InteractiveConsole):
         if not self._interact_thread:
             target = self.interact
             kwargs = {"banner": self.banner}
-            self._interact_thread = threading.Thread(target=target, name=self.name, kwargs=kwargs)
+            self._interact_thread = threading.Thread(
+                target=target, name=self.name, kwargs=kwargs
+            )
             self._interact_thread.start()
-    
+
     @JOverride
     def interrupt(self):
         if self._state != ConsoleState.RUNNING:
@@ -256,14 +262,16 @@ class PyConsole(InteractiveConsole):
         if self._thread:
             self._state = ConsoleState.INTERRUPTED
             self._thread.interrupt()
-    
+
     def interact(self, *args, **kwargs):
         while self._state != ConsoleState.DISPOSING:
             # We need a nested thread to handle sys.exit which ends the thread.
             # This is the only way to guarantee the interpreter will never
             # be left in a dead state.
             target = super().interact
-            self._thread = PyJavaThread(target=target, name=self.name, args=args, kwargs=kwargs)
+            self._thread = PyJavaThread(
+                target=target, name=self.name, args=args, kwargs=kwargs
+            )
             self._state = ConsoleState.IDLE
             self._thread.start()
             self._thread.join()
@@ -296,7 +304,9 @@ class PyConsole(InteractiveConsole):
             self._state = ConsoleState.RUNNING
             sys.settrace(_interpreter_trace)
             # NOTE: redirect stdout to self so we can flush after each write
-            with contextlib.redirect_stdout(self), contextlib.redirect_stderr(self._err):
+            with contextlib.redirect_stdout(self), contextlib.redirect_stderr(
+                self._err
+            ):
                 yield
                 success = True
         except KeyboardInterrupt:
@@ -331,7 +341,7 @@ class PyConsole(InteractiveConsole):
 
 def _init_plugin(plugin: PyGhidraPlugin):
     console = PyConsole(plugin)
-    plugin.interpreter.init(console)       
+    plugin.interpreter.init(console)
 
 
 def setup_plugin():

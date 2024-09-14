@@ -1,12 +1,12 @@
 ## ###
 #  IP: GHIDRA
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,6 @@
 #  limitations under the License.
 ##
 import threading
-import time
 
 import lldb
 
@@ -24,17 +23,24 @@ from . import commands, util
 ALL_EVENTS = 0xFFFF
 
 
-class HookState(object):
-    __slots__ = ('installed', 'mem_catchpoint')
+class HookState:
+    __slots__ = ("installed", "mem_catchpoint")
 
     def __init__(self):
         self.installed = False
         self.mem_catchpoint = None
 
 
-class ProcessState(object):
-    __slots__ = ('first', 'regions', 'modules', 'threads',
-                 'breaks', 'watches', 'visited')
+class ProcessState:
+    __slots__ = (
+        "first",
+        "regions",
+        "modules",
+        "threads",
+        "breaks",
+        "watches",
+        "visited",
+    )
 
     def __init__(self):
         self.first = True
@@ -67,8 +73,7 @@ class ProcessState(object):
             hashable_frame = (thread.GetThreadID(), frame.GetFrameID())
             if first or hashable_frame not in self.visited:
                 banks = frame.GetRegisters()
-                primary = banks.GetFirstValueByName(
-                    commands.DEFAULT_REGISTER_BANK)
+                primary = banks.GetFirstValueByName(commands.DEFAULT_REGISTER_BANK)
                 if primary.value is None:
                     primary = banks[0]
                     if primary is not None:
@@ -106,12 +111,12 @@ class ProcessState(object):
         proc = util.get_process()
         ipath = commands.PROCESS_PATTERN.format(procnum=proc.GetProcessID())
         procobj = commands.STATE.trace.proxy_object_path(ipath)
-        procobj.set_value('Exit Code', exit_code)
-        procobj.set_value('State', 'TERMINATED')
+        procobj.set_value("Exit Code", exit_code)
+        procobj.set_value("State", "TERMINATED")
 
 
-class BrkState(object):
-    __slots__ = ('break_loc_counts',)
+class BrkState:
+    __slots__ = ("break_loc_counts",)
 
     def __init__(self):
         self.break_loc_counts = {}
@@ -135,7 +140,7 @@ BRK_STATE = BrkState()
 PROC_STATE = {}
 
 
-class QuitSentinel(object):
+class QuitSentinel:
     pass
 
 
@@ -264,9 +269,13 @@ def process_event(self, listener, event):
             print("UNKNOWN WATCHPOINT EVENT")
             return True
         if lldb.SBCommandInterpreter.EventIsCommandInterpreterEvent(event):
-            if (type & lldb.SBCommandInterpreter.eBroadcastBitAsynchronousErrorData) != 0:
+            if (
+                type & lldb.SBCommandInterpreter.eBroadcastBitAsynchronousErrorData
+            ) != 0:
                 return True
-            if (type & lldb.SBCommandInterpreter.eBroadcastBitAsynchronousOutputData) != 0:
+            if (
+                type & lldb.SBCommandInterpreter.eBroadcastBitAsynchronousOutputData
+            ) != 0:
                 return True
             if (type & lldb.SBCommandInterpreter.eBroadcastBitQuitCommandReceived) != 0:
                 # DO NOT return QUIT here.
@@ -290,7 +299,7 @@ class EventThread(threading.Thread):
     def run(self):
         # Let's only try at most 4 times to retrieve any kind of event.
         # After that, the thread exits.
-        listener = lldb.SBListener('eventlistener')
+        listener = lldb.SBListener("eventlistener")
         cli = util.get_debugger().GetCommandInterpreter()
         target = util.get_target()
         proc = util.get_process()
@@ -322,7 +331,8 @@ class EventThread(threading.Thread):
             # return
 
         rc = listener.StartListeningForEventClass(
-            util.get_debugger(), lldb.SBThread.GetBroadcasterClassName(), ALL_EVENTS)
+            util.get_debugger(), lldb.SBThread.GetBroadcasterClassName(), ALL_EVENTS
+        )
         if not rc:
             print("add listener for threads failed")
             # return
@@ -436,7 +446,9 @@ def on_thread_selected():
         return
     t = util.selected_thread()
     with commands.STATE.client.batch():
-        with trace.open_tx("Thread {}.{} selected".format(proc.GetProcessID(), t.GetThreadID())):
+        with trace.open_tx(
+            "Thread {}.{} selected".format(proc.GetProcessID(), t.GetThreadID())
+        ):
             PROC_STATE[proc.GetProcessID()].record()
             commands.put_threads()
             commands.activate()
@@ -452,7 +464,11 @@ def on_frame_selected():
     f = util.selected_frame()
     t = f.GetThread()
     with commands.STATE.client.batch():
-        with trace.open_tx("Frame {}.{}.{} selected".format(proc.GetProcessID(), t.GetThreadID(), f.GetFrameID())):
+        with trace.open_tx(
+            "Frame {}.{}.{} selected".format(
+                proc.GetProcessID(), t.GetThreadID(), f.GetFrameID()
+            )
+        ):
             PROC_STATE[proc.GetProcessID()].record()
             commands.put_threads()
             commands.put_frames()
@@ -475,8 +491,13 @@ def on_memory_changed(event):
         return
     with commands.STATE.client.batch():
         with trace.open_tx("Memory *0x{:08x} changed".format(event.address)):
-            commands.put_bytes(event.address, event.address + event.length,
-                               pages=False, is_mi=False, result=None)
+            commands.put_bytes(
+                event.address,
+                event.address + event.length,
+                pages=False,
+                is_mi=False,
+                result=None,
+            )
 
 
 def on_register_changed(event):
@@ -494,7 +515,8 @@ def on_register_changed(event):
         with trace.open_tx("Register {} changed".format(event.regnum)):
             banks = event.frame.GetRegisters()
             commands.putreg(
-                event.frame, banks.GetFirstValueByName(commands.DEFAULT_REGISTER_BANK))
+                event.frame, banks.GetFirstValueByName(commands.DEFAULT_REGISTER_BANK)
+            )
 
 
 def on_cont(event):
@@ -511,8 +533,11 @@ def on_cont(event):
 
 
 def on_stop(event):
-    proc = lldb.SBProcess.GetProcessFromEvent(
-        event) if event is not None else util.get_process()
+    proc = (
+        lldb.SBProcess.GetProcessFromEvent(event)
+        if event is not None
+        else util.get_process()
+    )
     if proc.GetProcessID() not in PROC_STATE:
         print("not in state")
         return
@@ -613,7 +638,8 @@ def on_breakpoint_modified(b):
             # NOTE: Location may not apply to process, but whatever.
             for i in range(new_count, old_count):
                 ikey = commands.PROC_BREAK_KEY_PATTERN.format(
-                    breaknum=b.GetID(), locnum=i+1)
+                    breaknum=b.GetID(), locnum=i + 1
+                )
                 ibobj.set_value(ikey, None)
 
 
@@ -628,13 +654,15 @@ def on_breakpoint_deleted(b):
         return
     bpath = commands.BREAKPOINT_PATTERN.format(breaknum=b.GetID())
     ibobj = trace.proxy_object_path(
-        commands.PROC_BREAKS_PATTERN.format(procnum=proc.GetProcessID()))
+        commands.PROC_BREAKS_PATTERN.format(procnum=proc.GetProcessID())
+    )
     with commands.STATE.client.batch():
         with trace.open_tx("Breakpoint {} deleted".format(b.GetID())):
             trace.proxy_object_path(bpath).remove(tree=True)
             for i in range(old_count):
                 ikey = commands.PROC_BREAK_KEY_PATTERN.format(
-                    breaknum=b.GetID(), locnum=i+1)
+                    breaknum=b.GetID(), locnum=i + 1
+                )
                 ibobj.set_value(ikey, None)
 
 
@@ -681,7 +709,8 @@ def on_watchpoint_deleted(b):
         return
     bpath = commands.WATCHPOINT_PATTERN.format(watchnum=b.GetID())
     ibobj = trace.proxy_object_path(
-        commands.PROC_WATCHES_PATTERN.format(procnum=proc.GetProcessID()))
+        commands.PROC_WATCHES_PATTERN.format(procnum=proc.GetProcessID())
+    )
     with commands.STATE.client.batch():
         with trace.open_tx("Watchpoint {} deleted".format(b.GetID())):
             trace.proxy_object_path(bpath).remove(tree=True)
