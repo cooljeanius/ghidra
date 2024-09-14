@@ -121,7 +121,7 @@ class IdaXml:
         """
         Frees memory and closes message box and XML file at termination.
         """
-        if self.options != None:
+        if self.options is not None:
             self.options.Free()
         ida_kernwin.hide_wait_box()
         self.close_xmlfile()
@@ -141,7 +141,7 @@ class IdaXml:
         Args:
             message: String containing the debug message.
         """
-        if self.debug == True:
+        if self.debug is True:
             idc.msg(message)
 
     def display_summary(self, what):
@@ -158,7 +158,7 @@ class IdaXml:
         summary += "\n--------------------------------------"
         summary += "\n%-26s %8d" % ("Total XML Elements:", total)
         idc.msg(summary)
-        if self.autorun == False:  # and self.plugin:
+        if self.autorun is False:  # and self.plugin:
             frmt = "TITLE XML " + what + " Successful!\n"
             frmt += "ICON INFO\n"
             frmt += "AUTOHIDE NONE\n"
@@ -295,7 +295,7 @@ class XmlExporter(IdaXml):
 
         self.get_options()
 
-        if self.autorun == True:
+        if self.autorun is True:
             (self.filename, ext) = os.path.splitext(idc.get_idb_path())
             self.filename += ".xml"
         else:
@@ -303,7 +303,7 @@ class XmlExporter(IdaXml):
                 1, "*.xml", "Enter name of export xml file:"
             )
 
-        if self.filename == None or len(self.filename) == 0:
+        if self.filename is None or len(self.filename) == 0:
             raise Cancelled
         self.xmlfile = self.open_file(self.filename, "w")
 
@@ -317,36 +317,36 @@ class XmlExporter(IdaXml):
 
         # export database items based on options
         if (
-            self.options.DataTypes.checked == True
-            or self.options.DataDefinitions.checked == True
-            or self.options.Functions.checked == True
+            self.options.DataTypes.checked is True
+            or self.options.DataDefinitions.checked is True
+            or self.options.Functions.checked is True
         ):
             self.export_datatypes()
         if (
-            self.options.MemorySections.checked == True
-            or self.options.MemoryContent.checked == True
+            self.options.MemorySections.checked is True
+            or self.options.MemoryContent.checked is True
         ):
             self.export_memory_map()
-        if self.options.RegisterValues.checked == True:
+        if self.options.RegisterValues.checked is True:
             self.export_register_values()
-        if self.options.CodeBlocks.checked == True:
+        if self.options.CodeBlocks.checked is True:
             self.export_code()
-        if self.options.DataDefinitions.checked == True:
+        if self.options.DataDefinitions.checked is True:
             self.export_data()
-        if self.options.Comments.checked == True:
+        if self.options.Comments.checked is True:
             self.export_comments()
             self.export_bookmarks()
-        if self.options.EntryPoints.checked == True:
+        if self.options.EntryPoints.checked is True:
             self.export_program_entry_points()
-        if self.options.Symbols.checked == True:
+        if self.options.Symbols.checked is True:
             self.export_symbol_table()
-        if self.options.Functions.checked == True:
+        if self.options.Functions.checked is True:
             self.export_functions()
         if (
-            self.options.MemoryReferences.checked == True
-            or self.options.StackReferences.checked == True
-            or self.options.Manual.checked == True
-            or self.options.DataTypes.checked == True
+            self.options.MemoryReferences.checked is True
+            or self.options.StackReferences.checked is True
+            or self.options.Manual.checked is True
+            or self.options.DataTypes.checked is True
         ):
             self.export_markup()
         self.end_element(PROGRAM)
@@ -454,7 +454,7 @@ class XmlExporter(IdaXml):
             False if no address in a segment contains a value.
         """
         for addr in idautils.Heads(seg.start_ea, seg.end_ea):
-            if idc.has_value(idc.get_full_flags(addr)) == True:
+            if idc.has_value(idc.get_full_flags(addr)) is True:
                 return True
         return False
 
@@ -472,10 +472,10 @@ class XmlExporter(IdaXml):
         n = sframe.memqty
         for i in range(n):
             member = sframe.get_member(i)
-            if member == None:
+            if member is None:
                 continue
             mname = ida_struct.get_member_name(member.id)
-            if mname != None and len(mname) > 0:
+            if mname is not None and len(mname) > 0:
                 if mname != " s" and mname != " r":
                     return True
         return False
@@ -565,9 +565,9 @@ class XmlExporter(IdaXml):
             description = idc.get_bookmark_desc(slot)
             if address == BADADDR:
                 continue
-            if description == None:
+            if description is None:
                 continue
-            if found == False:
+            if found is False:
                 found = True
                 self.update_status(BOOKMARKS)
                 self.start_element(BOOKMARKS, True)
@@ -584,17 +584,17 @@ class XmlExporter(IdaXml):
         Exports block and end-of-line comments entered in the decompiler
         interface.
         """
-        if self.hexrays == False:
+        if self.hexrays is False:
             return
         functions = idautils.Functions()
-        if functions == None:
+        if functions is None:
             return
         for addr in functions:
             try:
                 if ida_segment.is_spec_ea(addr):
                     continue
                 ccmts = ida_hexrays.restore_user_cmts(addr)
-                if ccmts == None:
+                if ccmts is None:
                     continue
                 p = ida_hexrays.user_cmts_begin(ccmts)
                 while p != ida_hexrays.user_cmts_end(ccmts):
@@ -615,7 +615,7 @@ class XmlExporter(IdaXml):
         with START and END address attributes.
         """
         addr = self.min_ea
-        if idc.is_code(idc.get_full_flags(addr)) == False:
+        if idc.is_code(idc.get_full_flags(addr)) is False:
             addr = ida_bytes.next_that(addr, self.max_ea, idc.is_code)
         if addr == BADADDR:
             return
@@ -631,7 +631,7 @@ class XmlExporter(IdaXml):
                 if ida_segment.getseg(start).end_ea < self.max_ea:
                     codeend = ida_segment.getseg(start).end_ea - 1
                     addr = ida_segment.getseg(idc.next_addr(codeend)).start_ea
-                    if idc.is_code(idc.get_full_flags(addr)) == False:
+                    if idc.is_code(idc.get_full_flags(addr)) is False:
                         addr = ida_bytes.next_that(addr, self.max_ea, idc.is_code)
                 else:
                     codeend = self.max_ea - 1
@@ -640,7 +640,7 @@ class XmlExporter(IdaXml):
                 if ida_segment.getseg(start).end_ea < end:
                     codeend = ida_segment.getseg(start).end_ea - 1
                     addr = ida_segment.getseg(idc.next_addr(codeend)).start_ea
-                    if idc.is_code(ida_bytes.get_full_flags(addr)) == False:
+                    if idc.is_code(ida_bytes.get_full_flags(addr)) is False:
                         addr = ida_bytes.next_that(addr, self.max_ea, idc.is_code)
                 else:
                     codeend = (
@@ -687,7 +687,7 @@ class XmlExporter(IdaXml):
         Exports all comments in the IDA database as <COMMENT> elements.
         """
         addr = self.min_ea
-        if ida_bytes.has_cmt(idc.get_full_flags(addr)) == False:
+        if ida_bytes.has_cmt(idc.get_full_flags(addr)) is False:
             addr = ida_bytes.next_that(addr, self.max_ea, ida_bytes.has_cmt)
         if addr == BADADDR:
             return
@@ -696,21 +696,21 @@ class XmlExporter(IdaXml):
         self.start_element(COMMENTS, True)
         while addr != BADADDR:
             cmt = idc.get_cmt(addr, False)
-            if cmt != None:
+            if cmt is not None:
                 self.export_comment(addr, "end-of-line", cmt)
             cmt = idc.get_cmt(addr, True)
-            if cmt != None:
+            if cmt is not None:
                 self.export_comment(addr, "repeatable", cmt)
             addr = ida_bytes.next_that(addr, self.max_ea, ida_bytes.has_cmt)
         addr = self.min_ea
-        if ida_bytes.has_extra_cmts(idc.get_full_flags(addr)) == False:
+        if ida_bytes.has_extra_cmts(idc.get_full_flags(addr)) is False:
             addr = ida_bytes.next_that(addr, self.max_ea, ida_bytes.has_extra_cmts)
         while addr != BADADDR:
             extra = idc.get_extra_cmt(addr, idc.E_PREV)
-            if extra != None:
+            if extra is not None:
                 self.export_extra_comment(addr, "pre", idc.E_PREV)
             extra = idc.get_extra_cmt(addr, idc.E_NEXT)
-            if extra != None:
+            if extra is not None:
                 self.export_extra_comment(addr, "post", idc.E_NEXT)
             addr = ida_bytes.next_that(addr, self.max_ea, ida_bytes.has_extra_cmts)
         self.export_c_comments()
@@ -722,7 +722,7 @@ class XmlExporter(IdaXml):
         Exports the data items in the database as <DEFINED_DATA> elements.
         """
         addr = self.min_ea
-        if idc.is_data(idc.get_full_flags(addr)) == False:
+        if idc.is_data(idc.get_full_flags(addr)) is False:
             addr = ida_bytes.next_that(addr, self.max_ea, idc.is_data)
         if addr == BADADDR:
             return
@@ -731,19 +731,19 @@ class XmlExporter(IdaXml):
         self.start_element(DATA, True)
         while addr != BADADDR:
             f = idc.get_full_flags(addr)
-            if ida_bytes.is_align(f) == True:
+            if ida_bytes.is_align(f) is True:
                 addr = ida_bytes.next_that(addr, self.max_ea, idc.is_data)
                 continue
             dtype = self.get_datatype(addr)
             size = idc.get_item_size(addr)
             ti = ida_nalt.opinfo_t()
             msize = ida_bytes.get_data_elsize(addr, f, ti)
-            if ida_bytes.is_struct(f) == True:
+            if ida_bytes.is_struct(f) is True:
                 s = idc.get_struc_id(dtype)
                 msize = idc.get_struc_size(s)
                 if msize == 0:
                     msize = 1
-            if idc.is_strlit(f) == False and size != msize:
+            if idc.is_strlit(f) is False and size != msize:
                 dtype = "%s[%d]" % (dtype, size // msize)
             self.start_element(DEFINED_DATA)
             self.write_address_attribute(ADDRESS, addr)
@@ -757,14 +757,14 @@ class XmlExporter(IdaXml):
             # TODO: How to handle print_type for data mangled names?
             # outbuf = idaapi.print_type(addr, False)
             if demangled == "'string'":
-                demangled == None
-            has_typeinfo = (demangled != None and len(demangled) > 0) or (
-                outbuf != None and len(outbuf) > 0
+                demangled is None
+            has_typeinfo = (demangled is not None and len(demangled) > 0) or (
+                outbuf is not None and len(outbuf) > 0
             )
             # TODO export_data: add DISPLAY_SETTINGS
             self.close_tag(has_typeinfo)
-            if has_typeinfo == True:
-                if demangled != None and len(demangled) > 0:
+            if has_typeinfo is True:
+                if demangled is not None and len(demangled) > 0:
                     self.export_typeinfo_cmt(demangled)
                 elif len(outbuf) > 0:
                     self.export_typeinfo_cmt(outbuf)
@@ -800,11 +800,11 @@ class XmlExporter(IdaXml):
             signness: Boolean indicating if signed value
         """
         cname = ida_enum.get_enum_member_name(cid)
-        if cname == None or len(cname) == 0:
+        if cname is None or len(cname) == 0:
             return
         regcmt = ida_enum.get_enum_member_cmt(cid, False)
         rptcmt = ida_enum.get_enum_member_cmt(cid, True)
-        has_comment = regcmt != None or rptcmt != None
+        has_comment = regcmt is not None or rptcmt is not None
         self.start_element(ENUM_ENTRY)
         self.write_attribute(NAME, cname)
         value = ida_enum.get_enum_member_value(cid)
@@ -813,9 +813,9 @@ class XmlExporter(IdaXml):
         # if bf == True:
         #    self.write_numeric_attribute(BIT_MASK, mask)
         self.close_tag(has_comment)
-        if regcmt != None and len(regcmt) > 0:
+        if regcmt is not None and len(regcmt) > 0:
             self.export_regular_cmt(regcmt)
-        if rptcmt != None and len(rptcmt) > 0:
+        if rptcmt is not None and len(rptcmt) > 0:
             self.export_repeatable_cmt(rptcmt)
         if has_comment:
             self.end_element(ENUM_ENTRY)
@@ -832,11 +832,11 @@ class XmlExporter(IdaXml):
             eflags: Integer representing the enum flags
         """
         mask = 0xFFFFFFFF
-        if bf == True:
+        if bf is True:
             mask = idc.get_first_bmask(eid)
         first = True
         for n in range(idc.get_enum_size(eid)):
-            if first == True:
+            if first is True:
                 value = ida_enum.get_first_enum_member(eid, mask)
                 first = False
             else:
@@ -873,7 +873,7 @@ class XmlExporter(IdaXml):
         value = insn.ops[op].value
         cid = BADNODE
         last = idc.get_last_bmask(eid)
-        if idc.is_bf(eid) == True:
+        if idc.is_bf(eid) is True:
             last = idc.get_last_bmask(eid)
             mask = idc.get_first_bmask(eid)
             while cid == BADNODE:
@@ -890,9 +890,9 @@ class XmlExporter(IdaXml):
         self.write_numeric_attribute(OPERAND_INDEX, op, 10)
         self.write_numeric_attribute(VALUE, ida_enum.get_enum_member_value(cid))
         cname = ida_enum.get_enum_member_name(cid)
-        if cname != None and len(cname) > 0:
+        if cname is not None and len(cname) > 0:
             self.write_attribute(NAME, cname)
-        if idc.is_bf(eid) == True:
+        if idc.is_bf(eid) is True:
             self.write_numeric_attribute("BIT_MASK", mask)
         self.close_tag()
 
@@ -905,7 +905,7 @@ class XmlExporter(IdaXml):
         """
         f = idc.get_full_flags(addr)
         for op in range(2):
-            if ida_bytes.is_enum(f, op) == True:
+            if ida_bytes.is_enum(f, op) is True:
                 self.export_enum_reference(addr, op)
 
     def export_enums(self):
@@ -919,7 +919,7 @@ class XmlExporter(IdaXml):
             self.start_element(ENUM)
             eid = idc.getn_enum(i)
             ename = idc.get_enum_name(eid)
-            if ename == None or len(ename) == 0:
+            if ename is None or len(ename) == 0:
                 continue
             self.write_attribute(NAME, ename)
             ewidth = idc.get_enum_width(eid)
@@ -934,25 +934,25 @@ class XmlExporter(IdaXml):
             rptcmt = idc.get_enum_cmt(eid, True)
             has_children = (
                 (idc.get_enum_size(eid) > 0)
-                or (regcmt != None)
-                or (rptcmt != None)
+                or (regcmt is not None)
+                or (rptcmt is not None)
                 or (ida_bytes.get_radix(eflags, 0) != 16)
-                or (self.is_signed_data(eflags) == True)
+                or (self.is_signed_data(eflags) is True)
             )
             self.close_tag(has_children)
             if (
                 ida_bytes.get_radix(eflags, 0) != 16
-                or self.is_signed_data(eflags) == True
+                or self.is_signed_data(eflags) is True
             ):
                 self.start_element(DISPLAY_SETTINGS)
                 if ida_bytes.get_radix(eflags, 0) != 16:
                     self.write_attribute(FORMAT, self.get_format(eflags))
-                if self.is_signed_data(eflags) == True:
+                if self.is_signed_data(eflags) is True:
                     self.write_attribute(SIGNED, "yes")
                 self.close_tag()
-            if regcmt != None:
+            if regcmt is not None:
                 self.export_regular_cmt(regcmt)
-            if rptcmt != None:
+            if rptcmt is not None:
                 self.export_repeatable_cmt(rptcmt)
             self.export_enum_members(eid, bf, eflags)
             if has_children:
@@ -969,12 +969,12 @@ class XmlExporter(IdaXml):
         """
         cmt = ""
         nextline = idc.get_extra_cmt(addr, extra)
-        while nextline != None:
+        while nextline is not None:
             # workaround for tag_remove bug is to add space
             cmt += ida_lines.tag_remove(nextline + " ")
             extra += 1
             nextline = idc.get_extra_cmt(addr, extra)
-            if nextline != None:
+            if nextline is not None:
                 cmt += "\n"
         self.export_comment(addr, cmt_type, cmt)
 
@@ -983,20 +983,20 @@ class XmlExporter(IdaXml):
         Exports information about all functions.
         """
         functions = idautils.Functions()
-        if functions == None:
+        if functions is None:
             return
         self.update_status(FUNCTIONS)
         timer = time.clock()
         self.start_element(FUNCTIONS, True)
         for addr in functions:
             function = ida_funcs.get_func(addr)
-            if ida_segment.is_spec_ea(function.start_ea) == True:
+            if ida_segment.is_spec_ea(function.start_ea) is True:
                 continue
             self.start_element(FUNCTION)
             self.write_address_attribute(ENTRY_POINT, function.start_ea)
-            if ida_bytes.has_user_name(idc.get_full_flags(addr)) == True:
+            if ida_bytes.has_user_name(idc.get_full_flags(addr)) is True:
                 name = self.get_symbol_name(addr)
-                if name != None and len(name) > 0:
+                if name is not None and len(name) > 0:
                     self.write_attribute(NAME, name)
             if function.flags & idc.FUNC_LIB != 0:
                 self.write_attribute(LIBRARY_FUNCTION, "y")
@@ -1008,23 +1008,23 @@ class XmlExporter(IdaXml):
                 self.write_address_attribute(END, endEA - 1)
                 self.close_tag()
             regcmt = ida_funcs.get_func_cmt(function, False)
-            if regcmt != None:
+            if regcmt is not None:
                 self.export_regular_cmt(regcmt)
             rptcmt = ida_funcs.get_func_cmt(function, True)
-            if rptcmt != None:
+            if rptcmt is not None:
                 self.export_repeatable_cmt(rptcmt)
             demangled = ida_name.get_demangled_name(
                 addr, DEMANGLED_TYPEINFO, self.inf.demnames, True
             )
-            if demangled != None and demangled == "'string'":
+            if demangled is not None and demangled == "'string'":
                 demangled = None
             outbuf = ""
             # TODO: How to handle print_type for function typeinfo cmts
             # outbuf = idaapi.print_type(addr, False)
-            has_typeinfo = demangled != None or (outbuf != None and len(outbuf) > 0)
-            if demangled != None:
+            has_typeinfo = demangled is not None or (outbuf is not None and len(outbuf) > 0)
+            if demangled is not None:
                 self.export_typeinfo_cmt(demangled)
-            elif has_typeinfo == True:
+            elif has_typeinfo is True:
                 self.export_typeinfo_cmt(outbuf[:-1])
             self.export_stack_frame(function)
             self.end_element(FUNCTION)
@@ -1039,7 +1039,7 @@ class XmlExporter(IdaXml):
             addr: Integer representing instruction address.
         """
         text = idc.get_manual_insn(addr)
-        if text == None or len(text) == 0:
+        if text is None or len(text) == 0:
             return
         self.start_element(MANUAL_INSTRUCTION)
         self.write_address_attribute(ADDRESS, addr)
@@ -1055,9 +1055,9 @@ class XmlExporter(IdaXml):
             addr: Integer representing instruction address.
         """
         for op in range(ida_ida.UA_MAXOP):
-            if ida_bytes.is_forced_operand(addr, op) == True:
+            if ida_bytes.is_forced_operand(addr, op) is True:
                 text = idc.get_forced_operand(addr, op)
-                if text != None and len(text) > 0:
+                if text is not None and len(text) > 0:
                     self.start_element(MANUAL_OPERAND)
                     self.write_address_attribute(ADDRESS, addr)
                     self.write_numeric_attribute(OPERAND_INDEX, op, 10)
@@ -1076,31 +1076,31 @@ class XmlExporter(IdaXml):
         addr = self.min_ea
         while addr != BADADDR:
             f = idc.get_full_flags(addr)
-            if self.options.MemoryReferences.checked == True:
-                if ida_bytes.has_xref(f) == True:
+            if self.options.MemoryReferences.checked is True:
+                if ida_bytes.has_xref(f) is True:
                     self.export_user_memory_reference(addr)
-                if ida_bytes.is_off(f, ida_bytes.OPND_ALL) == True:
+                if ida_bytes.is_off(f, ida_bytes.OPND_ALL) is True:
                     self.export_memory_references(addr)
             if (
-                self.options.Functions.checked == True
-                and self.options.StackReferences.checked == True
-                and ida_bytes.is_stkvar(f, ida_bytes.OPND_ALL) == True
+                self.options.Functions.checked is True
+                and self.options.StackReferences.checked is True
+                and ida_bytes.is_stkvar(f, ida_bytes.OPND_ALL) is True
             ):
                 self.export_stack_reference(addr)
             if (
-                self.options.DataTypes.checked == True
-                and ida_bytes.is_enum(f, ida_bytes.OPND_ALL) == True
+                self.options.DataTypes.checked is True
+                and ida_bytes.is_enum(f, ida_bytes.OPND_ALL) is True
             ):
                 self.export_enum_references(addr)
-            if self.options.Manual.checked == True:
+            if self.options.Manual.checked is True:
                 # TODO: Ask about OPND_ALL and retrieving additional manual operands
                 # if ida_bytes.is_forced_operand(addr, ida_bytes.OPND_ALL) == True:
                 if (
-                    ida_bytes.is_forced_operand(addr, 0) == True
-                    or ida_bytes.is_forced_operand(addr, 1) == True
+                    ida_bytes.is_forced_operand(addr, 0) is True
+                    or ida_bytes.is_forced_operand(addr, 1) is True
                 ):
                     self.export_manual_operand(addr)
-                if ida_bytes.is_manual_insn(addr) == True:
+                if ida_bytes.is_manual_insn(addr) is True:
                     self.export_manual_instruction(addr)
             addr = idc.next_head(addr, self.max_ea)
         self.end_element(MARKUP)
@@ -1117,7 +1117,7 @@ class XmlExporter(IdaXml):
         for n in range(nmembers):
             m = s.get_member(n)
             offset = m.soff
-            if s.is_union() == True:
+            if s.is_union() is True:
                 offset = 0
             self.start_element(MEMBER)
             self.write_numeric_attribute(OFFSET, offset)
@@ -1125,12 +1125,12 @@ class XmlExporter(IdaXml):
             if len(mname) > 0:
                 self.write_attribute(NAME, mname)
             dtype = self.get_member_type(m)
-            if ida_struct.is_varmember(m) == True:
+            if ida_struct.is_varmember(m) is True:
                 msize = 0
                 size = 0
             else:
                 mtibuf = ida_nalt.opinfo_t()
-                mti = ida_struct.retrieve_member_info(mtibuf, m)
+                ida_struct.retrieve_member_info(mtibuf, m)
                 # if IDA_SDK_VERSION < 640:
                 #    msize = idaapi.get_type_size0(None, dtype)
                 #    if msize == None or msize == 0:
@@ -1149,12 +1149,12 @@ class XmlExporter(IdaXml):
             self.write_numeric_attribute(SIZE, size * self.cbsize)
             regcmt = ida_struct.get_member_cmt(m.id, False)
             rptcmt = ida_struct.get_member_cmt(m.id, True)
-            hascmt = regcmt != None or rptcmt != None
+            hascmt = regcmt is not None or rptcmt is not None
             self.close_tag(hascmt)
             if hascmt:
-                if regcmt != None:
+                if regcmt is not None:
                     self.export_regular_cmt(regcmt)
-                if rptcmt != None:
+                if rptcmt is not None:
                     self.export_repeatable_cmt(rptcmt)
                 self.end_element(MEMBER)
 
@@ -1181,11 +1181,11 @@ class XmlExporter(IdaXml):
             if length == 0:
                 startaddr = addr
             has_val = ida_bytes.has_value(idc.get_full_flags(addr))
-            if has_val == True:
+            if has_val is True:
                 length += self.cbsize
             next_address = idc.next_addr(addr)
             if (
-                (has_val == False)
+                (has_val is False)
                 or (next_address != addr + 1)
                 or (next_address == end)
             ):
@@ -1216,7 +1216,7 @@ class XmlExporter(IdaXml):
         self.update_status(MEMORY_MAP)
         timer = time.clock()
         binfilename = ""
-        if self.options.MemoryContent.checked == True:
+        if self.options.MemoryContent.checked is True:
             (binfilename, ext) = os.path.splitext(self.filename)
             binfilename += ".bytes"
             self.binfile = ida_fpro.qfile_t()
@@ -1225,7 +1225,7 @@ class XmlExporter(IdaXml):
         for i in range(nsegs):
             self.export_memory_section(ida_segment.getnseg(i), binfilename)
         self.end_element(MEMORY_MAP)
-        if self.options.MemoryContent.checked == True:
+        if self.options.MemoryContent.checked is True:
             self.close_binfile()
         self.display_cpu_time(timer)
 
@@ -1242,11 +1242,11 @@ class XmlExporter(IdaXml):
         if ida_nalt.get_refinfo(ri, addr, op) == 1:
             if ri.target != BADADDR:
                 target = ri.target
-            elif idc.is_code(f) == True:
+            elif idc.is_code(f) is True:
                 insn = ida_ua.insn_t()
                 ida_ua.decode_insn(insn, addr)
                 target = (insn.ops[op].value - ri.tdelta + ri.base) & ((1 << 64) - 1)
-            elif idc.is_data(f) == True:
+            elif idc.is_data(f) is True:
                 target = (self.get_data_value(addr) - ri.tdelta + ri.base) & (
                     (1 << 64) - 1
                 )
@@ -1254,7 +1254,7 @@ class XmlExporter(IdaXml):
                 return
         else:
             return
-        if ida_bytes.is_mapped(target) == False:
+        if ida_bytes.is_mapped(target) is False:
             return
         self.start_element(MEMORY_REFERENCE)
         self.write_address_attribute(ADDRESS, addr)
@@ -1272,9 +1272,9 @@ class XmlExporter(IdaXml):
         """
         f = idc.get_full_flags(addr)
         for op in range(ida_ida.UA_MAXOP):
-            if ida_bytes.is_off(f, op) == True and (
-                idc.is_data(f) == True
-                or (idc.is_code(f) == True and self.is_imm_op(addr, op) == True)
+            if ida_bytes.is_off(f, op) is True and (
+                idc.is_data(f) is True
+                or (idc.is_code(f) is True and self.is_imm_op(addr, op) is True)
             ):
                 self.export_memory_reference(addr, op)
 
@@ -1303,11 +1303,11 @@ class XmlExporter(IdaXml):
             if len(perms) > 0:
                 self.write_attribute(PERMISSIONS, perms)
         has_contents = (
-            self.options.MemoryContent.checked == True
-            and self.check_if_seg_contents(seg) == True
+            self.options.MemoryContent.checked is True
+            and self.check_if_seg_contents(seg) is True
         )
         self.close_tag(has_contents)
-        if has_contents == True:
+        if has_contents is True:
             self.export_memory_contents(
                 os.path.basename(binfilename), self.binfile, seg.start_ea, seg.end_ea
             )
@@ -1333,7 +1333,7 @@ class XmlExporter(IdaXml):
             input_md5 = idc.retrieve_input_file_md5()
         else:
             input_md5 = md5.supval(ida_nalt.RIDX_MD5)
-        if input_md5 != None:
+        if input_md5 is not None:
             self.write_attribute(INPUT_MD5, input_md5)
         self.close_tag(True)
 
@@ -1356,7 +1356,7 @@ class XmlExporter(IdaXml):
         # output the PROCESSOR element
         self.start_element(PROCESSOR)
         self.write_attribute(NAME, self.inf.procname)
-        if self.inf.is_be() == True:
+        if self.inf.is_be() is True:
             byte_order = "big"
         else:
             byte_order = "little"
@@ -1423,7 +1423,7 @@ class XmlExporter(IdaXml):
             if nsegregareas != 0:
                 has_segregareas = True
                 break
-        if has_segregareas == False:
+        if has_segregareas is False:
             return
         self.update_status(REGISTER_VALUES)
         timer = time.clock()
@@ -1435,13 +1435,13 @@ class XmlExporter(IdaXml):
                 continue
             for i in range(nsegregareas):
                 success = ida_segregs.getn_sreg_range(sr, j, i)
-                if success == False:
+                if success is False:
                     continue
                 value = sr.val
                 if value == idc.BADSEL:
                     continue
                 regname = ida_idp.ph.regnames[j]
-                if regname == None:
+                if regname is None:
                     continue
                 if regname.lower() == "cs":
                     continue
@@ -1484,7 +1484,7 @@ class XmlExporter(IdaXml):
             function: IDA function instance
         """
         sframe = ida_struct.get_struc(function.frame)
-        if sframe == None or sframe.memqty <= 0:
+        if sframe is None or sframe.memqty <= 0:
             return
         self.start_element(STACK_FRAME)
         self.write_numeric_attribute(LOCAL_VAR_SIZE, function.frsize)
@@ -1494,7 +1494,7 @@ class XmlExporter(IdaXml):
         self.write_numeric_attribute(BYTES_PURGED, function.argsize)
         has_stack_vars = self.check_stack_frame(sframe)
         self.close_tag(has_stack_vars)
-        if has_stack_vars == True:
+        if has_stack_vars is True:
             self.export_stack_vars(function, sframe)
             self.end_element(STACK_FRAME)
 
@@ -1507,7 +1507,7 @@ class XmlExporter(IdaXml):
         """
         f = idc.get_full_flags(addr)
         for op in range(ida_ida.UA_MAXOP):
-            if idc.is_code(f) == True and ida_bytes.is_stkvar(f, op) == True:
+            if idc.is_code(f) is True and ida_bytes.is_stkvar(f, op) is True:
                 insn = ida_ua.insn_t()
                 ida_ua.decode_insn(insn, addr)
                 opnd = insn.ops[op]
@@ -1517,7 +1517,7 @@ class XmlExporter(IdaXml):
                     continue
                 # TODO:How to handle op_t_get_addr for stack references
                 SV = ida_frame.get_stkvar(insn, opnd, opnd.value)
-                if SV == None:
+                if SV is None:
                     continue
                 (sv, actval) = SV
                 function = ida_funcs.get_func(addr)
@@ -1545,10 +1545,10 @@ class XmlExporter(IdaXml):
         """
         for i in range(sframe.memqty):
             member = sframe.get_member(i)
-            if member == None:
+            if member is None:
                 continue
             mname = ida_struct.get_member_name(member.id)
-            if mname == None or len(mname) < 0:
+            if mname is None or len(mname) < 0:
                 continue
             if mname == " s" or mname == " r":
                 continue
@@ -1565,18 +1565,18 @@ class XmlExporter(IdaXml):
             size = ida_struct.get_member_size(member)
             mtype = self.get_member_type(member)
             msize = size
-            if idc.is_struct(f) == True:
+            if idc.is_struct(f) is True:
                 msize = idc.get_struc_size(ida_struct.get_struc_id(mtype))
-            elif idc.is_strlit(f) == False:
+            elif idc.is_strlit(f) is False:
                 mtibuf = ida_nalt.opinfo_t()
-                mti = ida_struct.retrieve_member_info(mtibuf, member)
+                ida_struct.retrieve_member_info(mtibuf, member)
                 # TODO: How to handle get_data_type_size (for stack vars)
                 # msize = idaapi.get_data_type_size(f, mtibuf)
             if size < msize:
                 size = msize
             if (
-                idc.is_strlit(f) == False
-                and ida_bytes.is_align(f) == False
+                idc.is_strlit(f) is False
+                and ida_bytes.is_align(f) is False
                 and size != msize
             ):
                 mtype = "%s[%d]" % (mtype, size // msize)
@@ -1584,18 +1584,18 @@ class XmlExporter(IdaXml):
             self.write_numeric_attribute(SIZE, size * self.cbsize)
             regcmt = ida_struct.get_member_cmt(member.id, False)
             rptcmt = ida_struct.get_member_cmt(member.id, True)
-            if regcmt != None:
+            if regcmt is not None:
                 regcmt = ida_lines.tag_remove(regcmt + " ")
-            if rptcmt != None:
-                rptrcmt = ida_lines.tag_remove(rptcmt + " ")
-            has_regcmt = regcmt != None and len(regcmt) > 0
-            has_rptcmt = rptcmt != None and len(rptcmt) > 0
+            if rptcmt is not None:
+                ida_lines.tag_remove(rptcmt + " ")
+            has_regcmt = regcmt is not None and len(regcmt) > 0
+            has_rptcmt = rptcmt is not None and len(rptcmt) > 0
             has_content = has_regcmt or has_rptcmt
             self.close_tag(has_content)
-            if has_content == True:
-                if has_regcmt == True:
+            if has_content is True:
+                if has_regcmt is True:
                     self.export_regular_cmt(regcmt)
-                if has_rptcmt == True:
+                if has_rptcmt is True:
                     self.export_repeatable_cmt(rptcmt)
                 self.end_element(STACK_VAR)
 
@@ -1608,22 +1608,22 @@ class XmlExporter(IdaXml):
             (idx, sid, sname) = struct
             s = ida_struct.get_struc(sid)
             stype = STRUCTURE
-            if s.is_union() == True:
+            if s.is_union() is True:
                 stype = UNION
             self.start_element(stype)
             self.write_attribute(NAME, sname)
             size = idc.get_struc_size(sid) * self.cbsize
             self.write_numeric_attribute(SIZE, size)
-            if s.is_varstr() == True:
+            if s.is_varstr() is True:
                 self.write_attribute(VARIABLE_LENGTH, "y")
             regcmt = idc.get_struc_cmt(sid, False)
             rptcmt = idc.get_struc_cmt(sid, True)
-            has_contents = regcmt != None or rptcmt != None or s.memqty > 0
+            has_contents = regcmt is not None or rptcmt is not None or s.memqty > 0
             self.close_tag(has_contents)
             if has_contents:
-                if regcmt != None:
+                if regcmt is not None:
                     self.export_regular_cmt(regcmt)
-                if rptcmt != None:
+                if rptcmt is not None:
                     self.export_repeatable_cmt(rptcmt)
                 if s.memqty > 0:
                     self.export_members(s)
@@ -1644,7 +1644,7 @@ class XmlExporter(IdaXml):
         self.write_attribute(NAME, name)
         self.write_attribute(TYPE, stype)
         mangled = idc.get_name(addr, idc.GN_STRICT)
-        if name != None and mangled != name:
+        if name is not None and mangled != name:
             self.write_attribute("MANGLED", mangled)
         self.close_tag()
 
@@ -1653,7 +1653,7 @@ class XmlExporter(IdaXml):
         Exports user-defined and non-default names as SYMBOL elements.
         """
         addr = self.min_ea
-        if ida_bytes.has_any_name(idc.get_full_flags(addr)) == False:
+        if ida_bytes.has_any_name(idc.get_full_flags(addr)) is False:
             addr = ida_bytes.next_that(addr, self.max_ea, ida_bytes.has_any_name)
         if addr == BADADDR:
             return
@@ -1663,15 +1663,15 @@ class XmlExporter(IdaXml):
         while addr != BADADDR:
             # only export meaningful names (user and auto)
             f = idc.get_full_flags(addr)
-            if ida_bytes.has_user_name(f) == True or ida_bytes.has_auto_name(f) == True:
+            if ida_bytes.has_user_name(f) is True or ida_bytes.has_auto_name(f) is True:
                 # check for global name
                 name = self.get_symbol_name(addr)
-                if name != None and len(name) > 0:
+                if name is not None and len(name) > 0:
                     self.export_symbol(addr, name)
                 # check for local name
                 if ida_nalt.has_lname(addr):
                     name = idc.get_name(addr, idc.GN_LOCAL)
-                    if name != None and len(name) > 0:
+                    if name is not None and len(name) > 0:
                         self.export_symbol(addr, name, "local")
             # get next address with any name
             addr = ida_bytes.next_that(addr, self.max_ea, ida_bytes.has_any_name)
@@ -1758,7 +1758,7 @@ class XmlExporter(IdaXml):
         """
         temp = "0x%X" % (addr - ida_segment.get_segm_base(ida_segment.getseg(addr)))
         space = self.get_space_name(addr)
-        if space != None:
+        if space is not None:
             temp = "{}:{:04X}".format(
                 space,
                 addr - ida_segment.get_segm_base(ida_segment.getseg(addr)),
@@ -1772,7 +1772,7 @@ class XmlExporter(IdaXml):
                 temp = "{:04X}:{:04X}".format(base, addr - (base << 4))
         if ida_idp.ph_get_id() == ida_idp.PLFM_C166:
             temp = "0x%X" % addr
-        if self.has_overlays == True and self.is_overlay(addr) == True:
+        if self.has_overlays is True and self.is_overlay(addr) is True:
             oname = ida_segment.get_segm_name(ida_segment.getseg(addr))
             if len(oname) > 0:
                 temp = oname + "::" + temp
@@ -1808,11 +1808,11 @@ class XmlExporter(IdaXml):
         """
         f = idc.get_full_flags(addr)
         t = self.get_type(f)
-        if ida_bytes.is_struct(f) == True:
+        if ida_bytes.is_struct(f) is True:
             opndbuf = ida_nalt.opinfo_t()
             opnd = ida_bytes.get_opinfo(opndbuf, addr, 0, f)
             return idc.get_struc_name(opnd.tid)
-        if idc.is_strlit(f) == True:
+        if idc.is_strlit(f) is True:
             str_type = idc.get_str_type(addr)
             # print(ida_bytes.print_strlit_type(str_type))
             if str_type == ida_nalt.STRTYPE_TERMCHR:
@@ -1830,7 +1830,7 @@ class XmlExporter(IdaXml):
             if str_type == ida_nalt.STRTYPE_C_32:
                 return "unicode4"
             return "string"
-        if ida_bytes.is_off0(f) == True:
+        if ida_bytes.is_off0(f) is True:
             return "pointer"
         return t
 
@@ -1867,15 +1867,15 @@ class XmlExporter(IdaXml):
         """
         f = m.flag
         t = self.get_type(f)
-        if ida_bytes.is_off0(f) == True:
+        if ida_bytes.is_off0(f) is True:
             t = "pointer"
-        if ida_bytes.is_struct(f) == False:
+        if ida_bytes.is_struct(f) is False:
             return t
         s = ida_struct.get_sptr(m)
-        if s == None:
+        if s is None:
             return t
         sname = idc.get_struc_name(s.id)
-        if sname == None:
+        if sname is None:
             return t
         return sname
 
@@ -1945,7 +1945,7 @@ class XmlExporter(IdaXml):
         self.options.StackReferences.checked = False
         self.options.Manual.checked = True
 
-        if self.autorun == False:
+        if self.autorun is False:
             ok = self.options.Execute()
             if ok == 0:
                 raise Cancelled
@@ -2001,9 +2001,9 @@ class XmlExporter(IdaXml):
         name = ida_name.get_demangled_name(
             ea, DEMANGLED_FORM, self.inf.demnames, idc.GN_STRICT
         )
-        if name == None or len(name) == 0 or name == "`string'":
+        if name is None or len(name) == 0 or name == "`string'":
             name = idc.get_name(ea)
-        if name != None:
+        if name is not None:
             name = name.replace(" ", "_")
         return name
 
@@ -2018,33 +2018,33 @@ class XmlExporter(IdaXml):
             String representing item datatype.
         """
         if self.cbsize == 2:
-            if ida_bytes.is_byte(flags) == True:
+            if ida_bytes.is_byte(flags) is True:
                 return "word"
-            if ida_bytes.is_word(flags) == True:
+            if ida_bytes.is_word(flags) is True:
                 return "dword"
-        if ida_bytes.is_byte(flags) == True:
+        if ida_bytes.is_byte(flags) is True:
             return "byte"
-        if ida_bytes.is_word(flags) == True:
+        if ida_bytes.is_word(flags) is True:
             return "word"
-        if ida_bytes.is_dword(flags) == True:
+        if ida_bytes.is_dword(flags) is True:
             return "dword"
-        if ida_bytes.is_qword(flags) == True:
+        if ida_bytes.is_qword(flags) is True:
             return "qword"
-        if ida_bytes.is_oword(flags) == True:
+        if ida_bytes.is_oword(flags) is True:
             return "oword"
-        if ida_bytes.is_tbyte(flags) == True:
+        if ida_bytes.is_tbyte(flags) is True:
             return "tbyte"
-        if ida_bytes.is_float(flags) == True:
+        if ida_bytes.is_float(flags) is True:
             return "float"
-        if ida_bytes.is_double(flags) == True:
+        if ida_bytes.is_double(flags) is True:
             return "double"
-        if ida_bytes.is_pack_real(flags) == True:
+        if ida_bytes.is_pack_real(flags) is True:
             return "packed"
-        if idc.is_strlit(flags) == True:
+        if idc.is_strlit(flags) is True:
             return "ascii"
-        if ida_bytes.is_struct(flags) == True:
+        if ida_bytes.is_struct(flags) is True:
             return "structure"
-        if ida_bytes.is_align(flags) == True:
+        if ida_bytes.is_align(flags) is True:
             return "align"
         return "unknown"
 
@@ -2094,7 +2094,7 @@ class XmlExporter(IdaXml):
             tag: String representing the element tag
             close: Boolean indicating if tag is should be closed.
         """
-        if ida_kernwin.user_cancelled() == True:
+        if ida_kernwin.user_cancelled() is True:
             raise Cancelled
         self.write_to_xmlfile("\n" + ("    " * self.indent_level) + "<" + tag)
         if close:
@@ -2114,7 +2114,7 @@ class XmlExporter(IdaXml):
         Returns:
             Integer representing the logical address.
         """
-        if self.seg_addr == False:
+        if self.seg_addr is False:
             return addr - ida_segment.get_segm_base(ida_segment.getseg(addr))
         base = ida_segment.get_segm_para(ida_segment.getseg(addr))
         return (base << 16) + (addr - (base << 4))
@@ -2137,7 +2137,7 @@ class XmlExporter(IdaXml):
             name: String representing attribute name.
             value: String representing attribute value.
         """
-        if name == None or value == None:
+        if name is None or value is None:
             return
         if (len(name) == 0) or (len(value) == 0):
             return
@@ -2171,7 +2171,7 @@ class XmlExporter(IdaXml):
         if base == 10:
             temp = "%d" % value
         else:
-            if signedhex == True and value < 0:
+            if signedhex is True and value < 0:
                 temp = "-0x%X" % abs(value)
             else:
                 temp = "0x%X" % value
@@ -2292,32 +2292,32 @@ class XmlImporter(IdaXml):
         """
         global event, element
         self.display_version("Importer" if self.plugin else "Loader")
-        displayMenu = self.autorun == False
+        displayMenu = self.autorun is False
         self.get_options(displayMenu)
         if self.plugin:
             self.filename = ida_kernwin.ask_file(0, "*.xml", "Enter name of xml file:")
         else:
             self.filename = idc.get_input_file_path()
-        if self.filename == None or len(self.filename) == 0:
+        if self.filename is None or len(self.filename) == 0:
             return
         idc.msg("\nImporting from: " + self.filename + "\n")
-        if self.plugin == False:
+        if self.plugin is False:
             ida_kernwin.hide_wait_box()
         ida_kernwin.show_wait_box("Importing XML PROGRAM document....")
         n = 0
         for event, element in cElementTree.iterparse(
             self.filename, events=("start", "end")
         ):
-            if ida_kernwin.user_cancelled() == True:
+            if ida_kernwin.user_cancelled() is True:
                 raise Cancelled
 
-            if self.debug == True and event == "start":
+            if self.debug is True and event == "start":
                 msg = ""
-                if element.tag != None:
+                if element.tag is not None:
                     msg += str(element.tag) + " "
-                if element.attrib != None:
+                if element.attrib is not None:
                     msg += str(element.attrib) + " "
-                if element.text != None:
+                if element.text is not None:
                     msg += str(element.text)
                 if len(msg) > 0:
                     idc.msg("\n" + msg)
@@ -2331,7 +2331,7 @@ class XmlImporter(IdaXml):
                         element.clear()
             if event == "end":
                 n += 1
-        end = time.clock()
+        time.clock()
         ida_kernwin.hide_wait_box()
         self.display_summary("Import" if self.plugin else "Load")
         idc.msg("\nXML Elements parsed: " + str(n) + "\n\n")
@@ -2397,7 +2397,7 @@ class XmlImporter(IdaXml):
         self.options.EquateReferences.checked = True
         self.options.Manual.checked = True
 
-        if display == True:
+        if display is True:
             ok = self.options.Execute()
             if ok == 0:
                 raise Cancelled
@@ -2444,7 +2444,7 @@ class XmlImporter(IdaXml):
         elif ":" in addrstr:
             [segstr, offset_str] = str.split(addrstr, ":")
             offset = int(offset_str, 16)
-            if self.is_int(segstr) == True:
+            if self.is_int(segstr) is True:
                 sgmt = int(segstr, 16)
                 addr = (sgmt << 4) + offset
             else:
@@ -2656,11 +2656,11 @@ class XmlImporter(IdaXml):
         cid = ida_enum.get_enum_member_by_name(name)
         self.update_counter(BIT_MASK)
         regcmt = bitmask.find(REGULAR_CMT)
-        if regcmt != None:
+        if regcmt is not None:
             ida_enum.set_enum_member_cmt(cid, regcmt.text, False)
             self.update_counter(BIT_MASK + ":" + REGULAR_CMT)
         rptcmt = bitmask.find(REPEATABLE_CMT)
-        if rptcmt != None:
+        if rptcmt is not None:
             ida_enum.set_enum_member_cmt(cid, rptcmt.txt, True)
             self.update_counter(BIT_MASK + ":" + REPEATABLE_CMT)
 
@@ -2671,19 +2671,18 @@ class XmlImporter(IdaXml):
         Args:
             bookmark: XML element object containing bookmark data.
         """
-        if self.options.Bookmarks.checked == False:
+        if self.options.Bookmarks.checked is False:
             return
         try:
             addr = self.get_address(bookmark, ADDRESS)
             if self.has_attribute(bookmark, TYPE):
-                typ = self.get_attribute(bookmark, TYPE)
-            category = ""
+                self.get_attribute(bookmark, TYPE)
             if self.has_attribute(bookmark, CATEGORY):
-                category = self.get_attribute(bookmark, CATEGORY)
+                self.get_attribute(bookmark, CATEGORY)
             description = ""
             if self.has_attribute(bookmark, DESCRIPTION):
                 description = self.get_attribute(bookmark, DESCRIPTION)
-            if idc.is_mapped(addr) == False:
+            if idc.is_mapped(addr) is False:
                 msg = "import_bookmark: address %X not enabled in database" % addr
                 print(msg)
                 return
@@ -2708,11 +2707,11 @@ class XmlImporter(IdaXml):
             typ: String indicating structure type (STRUCTURE or UNION)
         """
         regcmt = element.find(REGULAR_CMT)
-        if regcmt != None:
+        if regcmt is not None:
             ida_struct.set_struc_cmt(sid, regcmt.text, False)
             self.update_counter(typ + ":" + REGULAR_CMT)
         rptcmt = element.find(REPEATABLE_CMT)
-        if rptcmt != None:
+        if rptcmt is not None:
             ida_struct.set_struc_cmt(sid, rptcmt.text, True)
             self.update_counter(typ + ":" + REPEATABLE_CMT)
 
@@ -2724,14 +2723,14 @@ class XmlImporter(IdaXml):
             code_block: XML element containing codeblock start and end
                 addresses.
         """
-        if self.options.CodeBlocks.checked == False:
+        if self.options.CodeBlocks.checked is False:
             return
         start = self.get_address(code_block, START)
         end = self.get_address(code_block, END)
         ida_bytes.del_items(start, 3, end - start + 1)
         addr = start
         while addr <= end:
-            length = ida_ua.create_insn(addr)
+            ida_ua.create_insn(addr)
             addr += ida_bytes.get_item_size(addr) * self.get_cbsize()
         self.update_counter(CODE_BLOCK)
 
@@ -2743,7 +2742,7 @@ class XmlImporter(IdaXml):
             comment: XML element containing the comment address, type,
                 and text.
         """
-        if self.options.Comments.checked == False:
+        if self.options.Comments.checked is False:
             return
         addr = self.get_address(comment, ADDRESS)
         ctype = self.get_attribute(comment, TYPE)
@@ -2793,13 +2792,13 @@ class XmlImporter(IdaXml):
             defined_data: XML element containing the address and
                 datatype information for the data item
         """
-        if self.options.DataDefinitions.checked == False:
+        if self.options.DataDefinitions.checked is False:
             return
         addr = self.get_address(defined_data, ADDRESS)
         datatype = self.get_attribute(defined_data, DATATYPE)
         size = self.get_attribute_value(defined_data, SIZE)
         self.update_counter(DEFINED_DATA)
-        ti = ida_nalt.opinfo_t()
+        ida_nalt.opinfo_t()
         if self.is_pointer_type(datatype):
             # idaapi.set_refinfo(ti, 0, 0, 0, REF_OFF32)
             flag = ida_bytes.dword_flag() | idc.FF_0OFF
@@ -2813,7 +2812,7 @@ class XmlImporter(IdaXml):
         else:
             idc.create_data(addr, flag, size, BADNODE)
         typecmt = defined_data.find(TYPEINFO_CMT)
-        if typecmt != None:
+        if typecmt is not None:
             self.update_counter(DEFINED_DATA + ":" + TYPEINFO_CMT)
 
     def import_description(self, description):
@@ -2835,25 +2834,25 @@ class XmlImporter(IdaXml):
             enum: XML element containing the enumeration name and
                 member data.
         """
-        if self.options.DataTypes.checked == False:
+        if self.options.DataTypes.checked is False:
             return
         name = self.get_attribute(enum, NAME)
         if self.has_attribute(enum, NAMESPACE):
-            namespace = self.get_attribute(enum, NAMESPACE)
+            self.get_attribute(enum, NAMESPACE)
         if self.has_attribute(enum, SIZE):
-            size = self.get_attribute_value(enum, SIZE)
+            self.get_attribute_value(enum, SIZE)
         eid = idc.add_enum(BADNODE, name, ida_bytes.hex_flag() | ida_bytes.dword_flag())
         self.update_counter(ENUM)
         regcmt = enum.find(REGULAR_CMT)
-        if regcmt != None:
+        if regcmt is not None:
             idc.set_enum_cmt(eid, regcmt.text, False)
             self.update_counter(ENUM + ":" + REGULAR_CMT)
         rptcmt = enum.find(REPEATABLE_CMT)
-        if rptcmt != None:
+        if rptcmt is not None:
             idc.set_enum_cmt(eid, rptcmt.text, True)
             self.update_counter(ENUM + ":" + REPEATABLE_CMT)
         display_settings = enum.find(DISPLAY_SETTINGS)
-        if display_settings != None:
+        if display_settings is not None:
             self.update_counter(ENUM + ":" + DISPLAY_SETTINGS)
         enum_entries = enum.findall(ENUM_ENTRY)
         for enum_entry in enum_entries:
@@ -2873,11 +2872,11 @@ class XmlImporter(IdaXml):
         cid = idc.get_enum_member_by_name(name)
         self.update_counter(ENUM_ENTRY)
         regcmt = enum_entry.find(REGULAR_CMT)
-        if regcmt != None:
+        if regcmt is not None:
             idc.set_enum_member_cmt(cid, regcmt.text, False)
             self.update_counter(ENUM_ENTRY + ":" + REGULAR_CMT)
         rptcmt = enum_entry.find(REPEATABLE_CMT)
-        if rptcmt != None:
+        if rptcmt is not None:
             idc.set_enum_member_cmt(cid, rptcmt.text, True)
             self.update_counter(ENUM_ENTRY + ":" + REPEATABLE_CMT)
 
@@ -2898,11 +2897,11 @@ class XmlImporter(IdaXml):
         cid = idc.get_enum_member_by_name(name)
         self.update_counter(EQUATE)
         regcmt = equate.find(REGULAR_CMT)
-        if regcmt != None:
+        if regcmt is not None:
             idc.set_enum_member_cmt(cid, regcmt.text, False)
             self.update_counter(EQUATE + ":" + REGULAR_CMT)
         rptcmt = equate.find(REPEATABLE_CMT)
-        if rptcmt != None:
+        if rptcmt is not None:
             idc.set_enum_member_cmt(cid, rptcmt.text, True)
             self.update_counter(EQUATE + ":" + REPEATABLE_CMT)
 
@@ -2914,9 +2913,8 @@ class XmlImporter(IdaXml):
             equate_group: XML element containing the group name and
                 equate definitions.
         """
-        if self.options.DataTypes.checked == False:
+        if self.options.DataTypes.checked is False:
             return
-        msg = EQUATE_GROUP
         name = ""
         if self.has_attribute(equate_group, NAME):
             name = self.get_attribute(equate_group, NAME)
@@ -2927,11 +2925,11 @@ class XmlImporter(IdaXml):
         idc.set_enum_bf(eid, (bf == "yes"))
         self.update_counter(EQUATE_GROUP)
         regcmt = equate_group.find(REGULAR_CMT)
-        if regcmt != None:
+        if regcmt is not None:
             idc.set_enum_cmt(eid, regcmt.text, False)
             self.update_counter(EQUATE_GROUP + ":" + REGULAR_CMT)
         rptcmt = equate_group.find(REPEATABLE_CMT)
-        if rptcmt != None:
+        if rptcmt is not None:
             idc.set_enum_cmt(eid, rptcmt.text, True)
             self.update_counter(EQUATE_GROUP + ":" + REPEATABLE_CMT)
         equates = equate_group.findall(EQUATE)
@@ -2943,8 +2941,8 @@ class XmlImporter(IdaXml):
 
     def import_equate_reference(self, equate_reference):
         if (
-            self.options.DataTypes.checked == False
-            or self.options.EquateReferences.checked == False
+            self.options.DataTypes.checked is False
+            or self.options.EquateReferences.checked is False
         ):
             return
         self.update_counter(EQUATE_REFERENCE)
@@ -2957,9 +2955,8 @@ class XmlImporter(IdaXml):
         opnd = 0
         if self.has_attribute(equate_reference, OPERAND_INDEX):
             opnd = self.get_attribute_value(equate_reference, OPERAND_INDEX)
-        value = None
         if self.has_attribute(equate_reference, VALUE):
-            value = self.get_attribute_value(equate_reference, VALUE)
+            self.get_attribute_value(equate_reference, VALUE)
             cid = idc.get_enum_member_by_name(name)
         if cid == BADNODE:
             return
@@ -2976,17 +2973,16 @@ class XmlImporter(IdaXml):
             function: XML element containing the function address and
                 attributes.
         """
-        if self.options.Functions.checked == False:
+        if self.options.Functions.checked is False:
             return
         try:
             entry_point = self.get_address(function, ENTRY_POINT)
-            name = ""
             if self.has_attribute(function, NAME):
-                name = self.get_attribute(function, NAME)
+                self.get_attribute(function, NAME)
             libfunc = "n"
             if self.has_attribute(function, LIBRARY_FUNCTION):
                 libfunc = self.get_attribute(function, LIBRARY_FUNCTION)
-            if idc.is_mapped(entry_point) == False:
+            if idc.is_mapped(entry_point) is False:
                 msg = (
                     "import_function: address %X not enabled in database" % entry_point
                 )
@@ -3005,20 +3001,20 @@ class XmlImporter(IdaXml):
             if AUTO_WAIT:
                 ida_auto.auto_wait()
             regcmt = function.find(REGULAR_CMT)
-            if regcmt != None:
+            if regcmt is not None:
                 self.update_counter(FUNCTION + ":" + REGULAR_CMT)
                 ida_funcs.set_func_cmt(func, regcmt.text, False)
             rptcmt = function.find(REPEATABLE_CMT)
-            if rptcmt != None:
+            if rptcmt is not None:
                 self.update_counter(FUNCTION + ":" + REPEATABLE_CMT)
                 ida_funcs.set_func_cmt(func, rptcmt.text, True)
             typecmt = function.find(TYPEINFO_CMT)
-            if typecmt != None:
+            if typecmt is not None:
                 self.update_counter(FUNCTION + ":" + TYPEINFO_CMT)
                 # TODO: TYPECMTs
                 # idc.SetType(entry_point, typecmt.text + ';')
             sf = function.find(STACK_FRAME)
-            if sf != None:
+            if sf is not None:
                 self.import_stack_frame(sf, func)
             register_vars = function.findall(REGISTER_VAR)
             for register_var in register_vars:
@@ -3029,7 +3025,7 @@ class XmlImporter(IdaXml):
 
     def import_function_def(self, function_def):
         # import_function_def: NOT IMPLEMENTED
-        if self.options.DataTypes.checked == False:
+        if self.options.DataTypes.checked is False:
             return
         self.update_counter(FUNCTION_DEF)
 
@@ -3043,13 +3039,13 @@ class XmlImporter(IdaXml):
                 the source of the PROGRAM data.
         """
         if self.has_attribute(info_source, TOOL):
-            tool = self.get_attribute(info_source, TOOL)
+            self.get_attribute(info_source, TOOL)
         if self.has_attribute(info_source, USER):
-            user = self.get_attribute(info_source, USER)
+            self.get_attribute(info_source, USER)
         if self.has_attribute(info_source, FILE):
-            f = self.get_attribute(info_source, FILE)
+            self.get_attribute(info_source, FILE)
         if self.has_attribute(info_source, TIMESTAMP):
-            ts = self.get_attribute(info_source, TIMESTAMP)
+            self.get_attribute(info_source, TIMESTAMP)
         self.update_counter(INFO_SOURCE)
 
     def import_manual_instruction(self, manual_instruction):
@@ -3059,7 +3055,7 @@ class XmlImporter(IdaXml):
         Args:
             manual_instruction: XML element containing MANUAL_INSTRUCTION.
         """
-        if self.options.Manual.checked == False:
+        if self.options.Manual.checked is False:
             return
         addr = self.get_address(manual_instruction, ADDRESS)
         idc.set_manual_insn(addr, manual_instruction.text)
@@ -3072,7 +3068,7 @@ class XmlImporter(IdaXml):
         Args:
             manual_operand: MANUAL_OPERAND XML element.
         """
-        if self.options.Manual.checked == False:
+        if self.options.Manual.checked is False:
             return
         addr = self.get_address(manual_operand, ADDRESS)
         op = self.get_attribute_value(manual_operand, OPERAND_INDEX)
@@ -3107,7 +3103,7 @@ class XmlImporter(IdaXml):
         offset = self.get_attribute_value(member, OFFSET)
         datatype = self.get_attribute(member, DATATYPE)
         if self.has_attribute(member, DATATYPE_NAMESPACE):
-            dt_namespace = self.get_attribute(member, DATATYPE_NAMESPACE)
+            self.get_attribute(member, DATATYPE_NAMESPACE)
         name = ""
         if self.has_attribute(member, NAME):
             name = self.get_attribute(member, NAME)
@@ -3122,7 +3118,7 @@ class XmlImporter(IdaXml):
             ti.ri = r
         else:
             flag = self.get_datatype_flags(datatype, size)
-        if flag == 0 and defer == True:
+        if flag == 0 and defer is True:
             self.deferred.append((member, sptr))
             return
         if flag == ida_bytes.enum_flag():
@@ -3132,7 +3128,7 @@ class XmlImporter(IdaXml):
         if flag == ida_bytes.stru_flag():
             t = idc.get_struc_id(datatype)
             ti.tid = t
-        error = ida_struct.add_struc_member(sptr, name, offset, flag, ti, size)
+        ida_struct.add_struc_member(sptr, name, offset, flag, ti, size)
         mbr = ida_struct.get_member(sptr, offset)
         self.import_member_cmts(member, mbr)
         self.update_counter(MEMBER)
@@ -3147,11 +3143,11 @@ class XmlImporter(IdaXml):
             mbr: Integer representing the member id
         """
         regcmt = member.find(REGULAR_CMT)
-        if regcmt != None:
+        if regcmt is not None:
             ida_struct.set_member_cmt(mbr, regcmt.text, False)
             self.update_counter(MEMBER + ":" + REGULAR_CMT)
         rptcmt = member.find(REPEATABLE_CMT)
-        if rptcmt != None:
+        if rptcmt is not None:
             ida_struct.set_member_cmt(mbr, rptcmt.text, True)
             self.update_counter(MEMBER + ":" + REPEATABLE_CMT)
 
@@ -3174,13 +3170,13 @@ class XmlImporter(IdaXml):
         Args:
             memory_contents: MEMORY_CONTENTS XML element.
         """
-        if memory_contents.get(START_ADDR) == None:
+        if memory_contents.get(START_ADDR) is None:
             saddr = start
         else:
             saddr = self.get_address(memory_contents, START_ADDR)
         fname = self.get_attribute(memory_contents, FILE_NAME)
         offset = self.get_attribute_value(memory_contents, FILE_OFFSET)
-        if memory_contents.get(LENGTH) == None:
+        if memory_contents.get(LENGTH) is None:
             length = size
         else:
             length = self.get_attribute_value(memory_contents, LENGTH)
@@ -3217,23 +3213,19 @@ class XmlImporter(IdaXml):
         Args:
             memory_reference: MEMORY_REFERENCE XML element.
         """
-        if self.options.MemoryReferences.checked == False:
+        if self.options.MemoryReferences.checked is False:
             return
         # initialize implied attributes
-        user = None
-        op = None
-        primary = None
-        base_addr = None
-        addr = self.get_address(memory_reference, ADDRESS)
+        self.get_address(memory_reference, ADDRESS)
         if self.has_attribute(memory_reference, OPERAND_INDEX):
-            op = self.get_attribute_value(memory_reference, OPERAND_INDEX)
+            self.get_attribute_value(memory_reference, OPERAND_INDEX)
         if self.has_attribute(memory_reference, USER_DEFINED):
-            user = self.get_attribute(memory_reference, USER_DEFINED)
-        to_addr = self.get_address(memory_reference, TO_ADDRESS)
+            self.get_attribute(memory_reference, USER_DEFINED)
+        self.get_address(memory_reference, TO_ADDRESS)
         if self.has_attribute(memory_reference, BASE_ADDRESS):
-            base_addr = self.get_address(memory_reference, BASE_ADDRESS)
+            self.get_address(memory_reference, BASE_ADDRESS)
         if self.has_attribute(memory_reference, PRIMARY):
-            primary = self.get_attribute(memory_reference, PRIMARY)
+            self.get_attribute(memory_reference, PRIMARY)
         self.update_counter(MEMORY_REFERENCE)
         # TODO: import_memory_reference: store refs? maybe only user-defined?
         """
@@ -3272,7 +3264,7 @@ class XmlImporter(IdaXml):
             return
         elif ":" in addrstr:
             [seg_str, offset_str] = str.split(addrstr, ":")
-            offset = int(offset_str, 16)
+            int(offset_str, 16)
             if self.is_int(seg_str):
                 base = int(seg_str, 16)
                 sel = ida_segment.setup_selector(base)
@@ -3299,7 +3291,7 @@ class XmlImporter(IdaXml):
             s.perm |= ida_segment.SEGPERM_WRITE
         if "x" in perms:
             s.perm |= ida_segment.SEGPERM_EXEC
-        ok = ida_segment.add_segm_ex(s, name, "", idc.ADDSEG_OR_DIE | idc.ADDSEG_QUIET)
+        ida_segment.add_segm_ex(s, name, "", idc.ADDSEG_OR_DIE | idc.ADDSEG_QUIET)
         self.update_counter(MEMORY_SECTION)
         for memory_contents in memory_section.findall(MEMORY_CONTENTS):
             self.import_memory_contents(memory_contents, start, length)
@@ -3311,12 +3303,12 @@ class XmlImporter(IdaXml):
         Args:
             processor: PROCESSOR XML element.
         """
-        name = self.get_attribute(processor, NAME)
+        self.get_attribute(processor, NAME)
         self.update_counter(PROCESSOR)
         if self.plugin:
             return
         address_model = self.get_attribute(processor, ADDRESS_MODEL)
-        if address_model != None:
+        if address_model is not None:
             if str.lower(address_model) == "16-bit":
                 self.addr_mode = 0
                 idc.set_flag(idc.INF_LFLAGS, idc.LFLG_PC_FLAT, 0)
@@ -3368,7 +3360,7 @@ class XmlImporter(IdaXml):
             program_entry_point: PROGRAM_ENTRY_POINT XML element.
                 Contains the entry point address.
         """
-        if self.options.EntryPoints.checked == False:
+        if self.options.EntryPoints.checked is False:
             return
         addr = self.get_address(program_entry_point, ADDRESS)
         idc.add_entry(addr, addr, "", True)
@@ -3382,7 +3374,7 @@ class XmlImporter(IdaXml):
             register_value_range: REGISTER_VALUE_RANGE XML element.
                 Contains the register, value, start address and range length.
         """
-        if self.options.RegisterValues.checked == False:
+        if self.options.RegisterValues.checked is False:
             return
         self.update_counter(REGISTER_VALUE_RANGE)
         reg = self.get_attribute(register_value_range, REGISTER)
@@ -3390,7 +3382,7 @@ class XmlImporter(IdaXml):
             return
         value = self.get_attribute_value(register_value_range, VALUE)
         addr = self.get_address(register_value_range, START_ADDRESS)
-        length = self.get_attribute_value(register_value_range, LENGTH)
+        self.get_attribute_value(register_value_range, LENGTH)
         r = ida_idp.str2reg(reg)
         if r >= ida_idp.ph_get_reg_first_sreg() and r <= ida_idp.ph_get_reg_last_sreg():
             ida_segregs.split_sreg_range(addr, r, value, idc.SR_user, True)
@@ -3407,9 +3399,9 @@ class XmlImporter(IdaXml):
         name = self.get_attribute(register_var, NAME)
         reg = self.get_attribute(register_var, REGISTER)
         if self.has_attribute(register_var, DATATYPE):
-            datatype = self.get_attribute(register_var, DATATYPE)
+            self.get_attribute(register_var, DATATYPE)
         if self.has_attribute(register_var, DATATYPE_NAMESPACE):
-            namespace = self.get_attribute(register_var, DATATYPE_NAMESPACE)
+            self.get_attribute(register_var, DATATYPE_NAMESPACE)
         idc.define_local_var(func.startEA, func.endEA, reg, name)
         self.update_counter(REGISTER_VAR)
 
@@ -3421,15 +3413,15 @@ class XmlImporter(IdaXml):
             stack_frame: STACK_FRAME element with STACK_VAR child elements.
         """
         if self.has_attribute(stack_frame, LOCAL_VAR_SIZE):
-            lvsize = self.get_attribute_value(stack_frame, LOCAL_VAR_SIZE)
+            self.get_attribute_value(stack_frame, LOCAL_VAR_SIZE)
         if self.has_attribute(stack_frame, PARAM_OFFSET):
-            param_offset = self.get_attribute_value(stack_frame, PARAM_OFFSET)
+            self.get_attribute_value(stack_frame, PARAM_OFFSET)
         if self.has_attribute(stack_frame, REGISTER_SAVE_SIZE):
-            reg_save_size = self.get_attribute_value(stack_frame, REGISTER_SAVE_SIZE)
+            self.get_attribute_value(stack_frame, REGISTER_SAVE_SIZE)
         if self.has_attribute(stack_frame, RETURN_ADDR_SIZE):
-            retaddr_size = self.get_attribute_value(stack_frame, RETURN_ADDR_SIZE)
+            self.get_attribute_value(stack_frame, RETURN_ADDR_SIZE)
         if self.has_attribute(stack_frame, BYTES_PURGED):
-            bytes_purged = self.get_attribute_value(stack_frame, BYTES_PURGED)
+            self.get_attribute_value(stack_frame, BYTES_PURGED)
         self.update_counter(STACK_FRAME)
         for stack_var in stack_frame.findall(STACK_VAR):
             self.import_stack_var(stack_var, func)
@@ -3451,7 +3443,7 @@ class XmlImporter(IdaXml):
         a stack variable at the specified stack/frame offset.
         """
         spoffset = self.get_attribute_value(stack_var, STACK_PTR_OFFSET)
-        datatype = self.get_attribute(stack_var, DATATYPE)
+        self.get_attribute(stack_var, DATATYPE)
         offset = spoffset + func.frsize + func.frregs
         if self.has_attribute(stack_var, FRAME_PTR_OFFSET):
             fpoffset = self.get_attribute_value(stack_var, FRAME_PTR_OFFSET)
@@ -3460,9 +3452,9 @@ class XmlImporter(IdaXml):
         if self.has_attribute(stack_var, NAME):
             name = self.get_attribute(stack_var, NAME)
         if self.has_attribute(stack_var, DATATYPE_NAMESPACE):
-            namespace = self.get_attribute(stack_var, DATATYPE_NAMESPACE)
+            self.get_attribute(stack_var, DATATYPE_NAMESPACE)
         if self.has_attribute(stack_var, SIZE):
-            size = self.get_attribute_value(stack_var, SIZE)
+            self.get_attribute_value(stack_var, SIZE)
         self.update_counter(STACK_VAR)
         sf = ida_frame.get_frame(func)
         if name != "":
@@ -3476,13 +3468,13 @@ class XmlImporter(IdaXml):
             structure: STRUCTURE XML element.
                 Contains the STRUCTURE attributes and child elements.
         """
-        if self.options.DataTypes.checked == False:
+        if self.options.DataTypes.checked is False:
             return
         name = self.get_attribute(structure, NAME)
         dtyp = idc.get_struc_id(name)
         if dtyp != BADNODE:
             # duplicate name, try adding name space
-            if self.has_attribute(structure, NAMESPACE) == False:
+            if self.has_attribute(structure, NAMESPACE) is False:
                 return
             namespace = self.get_attribute(structure, NAMESPACE)
             name = namespace + "__" + name
@@ -3496,8 +3488,7 @@ class XmlImporter(IdaXml):
         if self.has_attribute(structure, SIZE):
             size = self.get_attribute_value(structure, SIZE)
         if self.has_attribute(structure, VARIABLE_LENGTH):
-            vl = self.get_attribute_value(structure, VARIABLE_LENGTH)
-            isVariableLength = vl == "y"
+            self.get_attribute_value(structure, VARIABLE_LENGTH)
         sid = idc.add_struc(-1, name, 0)
         sptr = ida_struct.get_struc(sid)
         self.update_counter(STRUCTURE)
@@ -3516,7 +3507,7 @@ class XmlImporter(IdaXml):
                 Contains symbol name and address. Optionally includes
                 type and mangled symbol.
         """
-        if self.options.Symbols.checked == False:
+        if self.options.Symbols.checked is False:
             return
         addr = self.get_address(symbol, ADDRESS)
         name = self.get_attribute(symbol, NAME)
@@ -3532,7 +3523,7 @@ class XmlImporter(IdaXml):
 
     def import_typedef(self, type_def):
         # import_typedef: NOT IMPLEMENTED
-        if self.options.DataTypes.checked == False:
+        if self.options.DataTypes.checked is False:
             return
         self.update_counter(TYPE_DEF)
 
@@ -3544,13 +3535,13 @@ class XmlImporter(IdaXml):
             union: UNION XML element.
                 Contains UNION attributes and child elements.
         """
-        if self.options.DataTypes.checked == False:
+        if self.options.DataTypes.checked is False:
             return
         name = self.get_attribute(union, NAME)
         dtyp = idc.get_struc_id(name)
         if dtyp != BADNODE:
             # duplicate name, try adding name space
-            if self.has_attribute(union, NAMESPACE) == False:
+            if self.has_attribute(union, NAMESPACE) is False:
                 return
             namespace = self.get_attribute(union, NAMESPACE)
             name = namespace + "__" + name

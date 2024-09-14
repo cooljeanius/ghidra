@@ -911,7 +911,7 @@ def ghidra_trace_putreg(debugger, command, result, internal_dict):
     STATE.require_tx()
     frame = util.selected_frame()
     regs = frame.GetRegisters()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         if group != "all":
             bank = regs.GetFirstValueByName(group)
             putreg(frame, bank)
@@ -1535,7 +1535,7 @@ def ghidra_trace_put_processes(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-processes")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_processes()
 
 
@@ -1564,7 +1564,7 @@ def ghidra_trace_put_available(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-available")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_available()
 
 
@@ -1686,7 +1686,7 @@ def ghidra_trace_put_breakpoints(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-breakpoints")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_breakpoints()
 
 
@@ -1703,7 +1703,7 @@ def ghidra_trace_put_watchpoints(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-watchpoints")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_watchpoints()
 
 
@@ -1731,7 +1731,7 @@ def ghidra_trace_put_environment(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-environment")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_environment()
 
 
@@ -1778,11 +1778,11 @@ def put_regions():
         if start_base != start_addr.space:
             STATE.trace.create_overlay_space(start_base, start_addr.space)
         regobj.set_value("Range", start_addr.extend(r.end - r.start))
-        if r.perms != None:
+        if r.perms is not None:
             regobj.set_value("Permissions", r.perms)
-        regobj.set_value("_readable", r.perms == None or "r" in r.perms)
-        regobj.set_value("_writable", r.perms == None or "w" in r.perms)
-        regobj.set_value("_executable", r.perms == None or "x" in r.perms)
+        regobj.set_value("_readable", r.perms is None or "r" in r.perms)
+        regobj.set_value("_writable", r.perms is None or "w" in r.perms)
+        regobj.set_value("_executable", r.perms is None or "x" in r.perms)
         regobj.set_value("Offset", hex(r.offset))
         regobj.set_value("Object File", r.objfile)
         regobj.insert()
@@ -1804,12 +1804,12 @@ def ghidra_trace_put_regions(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-regions")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_regions()
 
 
 def put_modules():
-    target = util.get_target()
+    util.get_target()
     proc = util.get_process()
     modules = util.MODULE_INFO_READER.get_modules()
     mapper = STATE.trace.memory_mapper
@@ -1859,7 +1859,7 @@ def ghidra_trace_put_modules(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-modules")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_modules()
 
 
@@ -1941,7 +1941,7 @@ def ghidra_trace_put_threads(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-threads")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_threads()
 
 
@@ -1984,7 +1984,7 @@ def ghidra_trace_put_frames(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-frames")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_frames()
 
 
@@ -2001,7 +2001,7 @@ def ghidra_trace_put_all(debugger, command, result, internal_dict):
         raise RuntimeError("Usage: ghidra trace put-all")
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         ghidra_trace_putreg(debugger, DEFAULT_REGISTER_BANK, result, internal_dict)
         ghidra_trace_putmem(debugger, "$pc 1", result, internal_dict)
         ghidra_trace_putmem(debugger, "$sp 1", result, internal_dict)

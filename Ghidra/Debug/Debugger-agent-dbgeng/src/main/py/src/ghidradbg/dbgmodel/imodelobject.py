@@ -272,7 +272,7 @@ class ModelObject:
     def GetRawValueMap(self):
         # print(f"GetRawValueMap: {self}")
         map = {}
-        kind = self.GetKind()
+        self.GetKind()
         # TODO: forcing kind to 0 because we can't GetTypeKind
         keys = self.EnumerateRawValues(c_long(0), 0)
         (k, v) = keys.GetNext()

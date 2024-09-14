@@ -4761,7 +4761,7 @@ def parse_CL(op, rv):
             op.bitpattern.append("clwspimm54386")
     if op.bitpattern.count("cldimm") == 1:
         op.bitpattern.remove("cldimm")
-        if None == rv:
+        if None is rv:
             op.display = op.display.replace("cldimm", "cldimm5326")
             op.bitpattern.append("cldimm5326")
         elif 32 == rv and (x == 3 or x == 7):
@@ -4781,7 +4781,7 @@ def parse_CL(op, rv):
             exit(1)
     if op.bitpattern.count("clwimm") == 1:
         op.bitpattern.remove("clwimm")
-        if None == rv:
+        if None is rv:
             op.display = op.display.replace("clwimm", "clwimm5326")
             op.bitpattern.append("clwimm5326")
         elif 32 == rv and (x == 3 or x == 7):
@@ -4806,7 +4806,7 @@ def parse_CS(op, rv):
     x = (op.match >> 13) & 7
     if op.bitpattern.count("clwimm") == 1:
         op.bitpattern.remove("clwimm")
-        if None == rv:
+        if None is rv:
             op.display = op.display.replace("clwimm", "clwimm5326")
             op.bitpattern.append("clwimm5326")
         elif 32 == rv and (x == 3 or x == 7):
@@ -4826,7 +4826,7 @@ def parse_CS(op, rv):
             exit(1)
     if op.bitpattern.count("cldimm") == 1:
         op.bitpattern.remove("cldimm")
-        if None == rv:
+        if None is rv:
             op.display = op.display.replace("cldimm", "cldimm5326")
             op.bitpattern.append("cldimm5326")
         elif 32 == rv and (x == 3 or x == 7):
@@ -5521,7 +5521,6 @@ def find_gaps(op):
 def parse():
     sorted_opcodes = sorted(opcodes, key=lambda x: x[0])
     for op in sorted_opcodes:
-        size = 0
         op = OpCode(op)
         if op.xlen:
             print("@if defined(RISCV%d)" % (op.xlen))

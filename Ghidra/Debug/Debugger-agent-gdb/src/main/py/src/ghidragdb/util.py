@@ -78,11 +78,11 @@ class Index:
         if index == -1:
             return address
         floor = self.bases[index]
-        if floor == None:
+        if floor is None:
             return address
         else:
             region = self.regions[floor]
-            if region.objfile == None or region.end <= address:
+            if region.objfile is None or region.end <= address:
                 return address
             else:
                 return region.start
@@ -112,7 +112,7 @@ class ModuleInfoReader:
         mat = self.objfile_pattern.fullmatch(line)
         if mat is None:
             return None
-        n = mat["name"]
+        mat["name"]
         return None if mat is None else mat["name"]
 
     def section_from_line(self, line):

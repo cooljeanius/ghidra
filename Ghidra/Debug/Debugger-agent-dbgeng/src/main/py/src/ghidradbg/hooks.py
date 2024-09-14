@@ -277,7 +277,7 @@ def on_process_selected():
 @log_errors
 def on_process_deleted(*args):
     # print("ON_PROCESS_DELETED")
-    exit_code = args[0]
+    args[0]
     proc = util.selected_process()
     on_exited(proc)
     if proc in PROC_STATE:
@@ -443,7 +443,7 @@ def on_breakpoint_modified(*args):
     if trace is None:
         return
     ibpath = commands.PROC_BREAKS_PATTERN.format(procnum=proc)
-    ibobj = trace.create_object(ibpath)
+    trace.create_object(ibpath)
     bpid = args[0][1]
     try:
         bp = util.dbg._base._control.GetBreakpointById(bpid)

@@ -266,7 +266,7 @@ def refresh_threads(node: sch.Schema("ThreadContainer")):
 @REGISTRY.method(action="refresh", display="Refresh Stack")
 def refresh_stack(node: sch.Schema("Stack")):
     """Refresh the backtrace for the thread."""
-    tnum = find_thread_by_stack_obj(node)
+    find_thread_by_stack_obj(node)
     with commands.open_tracked_tx("Refresh Stack"):
         commands.ghidra_trace_put_frames()
 
@@ -274,7 +274,7 @@ def refresh_stack(node: sch.Schema("Stack")):
 @REGISTRY.method(action="refresh", display="Refresh Registers")
 def refresh_registers(node: sch.Schema("RegisterValueContainer")):
     """Refresh the register values for the frame."""
-    tnum = find_thread_by_regs_obj(node)
+    find_thread_by_regs_obj(node)
     with commands.open_tracked_tx("Refresh Registers"):
         commands.ghidra_trace_putreg()
 
@@ -368,7 +368,7 @@ def launch_loader(
     Start a native process with the given command line, stopping at the ntdll initial breakpoint.
     """
     command = file
-    if args != None:
+    if args is not None:
         command += " " + args
     commands.ghidra_trace_create(command=file, start_trace=False)
 
@@ -384,7 +384,7 @@ def launch(
     Run a native process with the given command line.
     """
     command = file
-    if args != None:
+    if args is not None:
         command += " " + args
     commands.ghidra_trace_create(
         command, initial_break=initial_break, timeout=timeout, start_trace=False
@@ -575,7 +575,7 @@ def write_mem(process: sch.Schema("Process"), address: Address, data: bytes):
 def write_reg(frame: sch.Schema("StackFrame"), name: str, value: bytes):
     """Write a register."""
     util.select_frame()
-    nproc = pydbg.selected_process()
+    pydbg.selected_process()
     dbg().reg._set_register(name, value)
 
 

@@ -255,7 +255,7 @@ def refresh_threads(node: sch.Schema("ThreadContainer")):
 @REGISTRY.method(action="refresh")
 def refresh_stack(node: sch.Schema("Stack")):
     """Refresh the backtrace for the thread."""
-    tnum = find_thread_by_stack_obj(node)
+    find_thread_by_stack_obj(node)
     with commands.open_tracked_tx("Refresh Stack"):
         commands.ghidra_trace_put_frames()
 
@@ -263,7 +263,7 @@ def refresh_stack(node: sch.Schema("Stack")):
 @REGISTRY.method(action="refresh")
 def refresh_registers(node: sch.Schema("RegisterValueContainer")):
     """Refresh the register values for the frame."""
-    tnum = find_thread_by_regs_obj(node)
+    find_thread_by_regs_obj(node)
     with commands.open_tracked_tx("Refresh Registers"):
         commands.ghidra_trace_putreg()
 
@@ -351,7 +351,7 @@ def launch_loader(
     Start a native process with the given command line, stopping at the ntdll initial breakpoint.
     """
     command = file
-    if args != None:
+    if args is not None:
         command += " " + args
     commands.ghidra_trace_create(command=file, start_trace=False)
 
@@ -366,7 +366,7 @@ def launch(
     Run a native process with the given command line.
     """
     command = file
-    if args != None:
+    if args is not None:
         command += " " + args
     commands.ghidra_trace_create(
         command, initial_break=False, timeout=timeout, start_trace=False
@@ -516,7 +516,7 @@ def delete_breakpoint(breakpoint: sch.Schema("BreakpointSpec")):
 def read_mem(process: sch.Schema("Process"), range: AddressRange):
     """Read memory."""
     nproc = find_proc_by_obj(process)
-    offset_start = process.trace.memory_mapper.map_back(
+    process.trace.memory_mapper.map_back(
         nproc, Address(range.space, range.min)
     )
     with commands.open_tracked_tx("Read Memory"):

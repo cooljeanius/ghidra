@@ -688,7 +688,7 @@ def on_watchpoint_modified(b):
     notify_others_watches(proc)
     if proc.GetProcessID() not in PROC_STATE:
         return
-    old_count = BRK_STATE.get_brkloc_count(b)
+    BRK_STATE.get_brkloc_count(b)
     trace = commands.STATE.trace
     if trace is None:
         return
@@ -708,7 +708,7 @@ def on_watchpoint_deleted(b):
     if trace is None:
         return
     bpath = commands.WATCHPOINT_PATTERN.format(watchnum=b.GetID())
-    ibobj = trace.proxy_object_path(
+    trace.proxy_object_path(
         commands.PROC_WATCHES_PATTERN.format(procnum=proc.GetProcessID())
     )
     with commands.STATE.client.batch():

@@ -164,7 +164,7 @@ class PCodeTestBuild(BuildUtil):
                 pcodetest_base_name = self.config.architecture_test
             else:
                 pcodetest_base_name = self.config.architecture
-            pcodetest_test = "{}_{}_EmulatorTest".format(pcodetest_base_name, opt_name)
+            "{}_{}_EmulatorTest".format(pcodetest_base_name, opt_name)
 
             # GNUMake like rule to prevent un-required builds of pcodetests files
             # This does not rebuild if the output directory is newer than the

@@ -615,7 +615,7 @@ def ghidra_trace_putreg(group="all", *, is_mi, **kwargs):
 
     STATE.require_tx()
     frame = util.selected_frame()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         return putreg(frame, util.get_register_descs(frame.architecture(), group))
 
 
@@ -1043,7 +1043,7 @@ def ghidra_trace_put_inferiors(*, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_inferiors()
 
 
@@ -1071,7 +1071,7 @@ def ghidra_trace_put_available(*, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_available()
 
 
@@ -1177,7 +1177,7 @@ def ghidra_trace_put_breakpoints(*, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_breakpoints()
 
 
@@ -1204,7 +1204,7 @@ def ghidra_trace_put_environment(*, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_environment()
 
 
@@ -1227,11 +1227,11 @@ def put_regions(regions=None):
         if start_base != start_addr.space:
             STATE.trace.create_overlay_space(start_base, start_addr.space)
         regobj.set_value("Range", start_addr.extend(r.end - r.start))
-        if r.perms != None:
+        if r.perms is not None:
             regobj.set_value("Permissions", r.perms)
-        regobj.set_value("_readable", r.perms == None or "r" in r.perms)
-        regobj.set_value("_writable", r.perms == None or "w" in r.perms)
-        regobj.set_value("_executable", r.perms == None or "x" in r.perms)
+        regobj.set_value("_readable", r.perms is None or "r" in r.perms)
+        regobj.set_value("_writable", r.perms is None or "w" in r.perms)
+        regobj.set_value("_executable", r.perms is None or "x" in r.perms)
         regobj.set_value("Offset", hex(r.offset))
         regobj.set_value("Object File", r.objfile)
         regobj.set_value("_display", f"{r.objfile} (0x{r.start:x}-0x{r.end:x})")
@@ -1249,7 +1249,7 @@ def ghidra_trace_put_regions(*, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_regions()
 
 
@@ -1301,7 +1301,7 @@ def ghidra_trace_put_modules(*, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_modules()
 
 
@@ -1322,7 +1322,7 @@ def ghidra_trace_put_sections(module_name, *, is_mi, **kwargs):
             raise gdb.GdbError("No module / object named {}".format(module_name))
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_modules(modules, True)
 
 
@@ -1405,7 +1405,7 @@ def ghidra_trace_put_threads(*, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_threads()
 
 
@@ -1448,7 +1448,7 @@ def ghidra_trace_put_frames(*, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_frames()
 
 
@@ -1459,7 +1459,7 @@ def ghidra_trace_put_all(*, is_mi, **kwargs):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         ghidra_trace_putreg(is_mi=is_mi)
         ghidra_trace_putmem("$pc", "1", is_mi=is_mi)
         ghidra_trace_putmem("$sp", "1", is_mi=is_mi)

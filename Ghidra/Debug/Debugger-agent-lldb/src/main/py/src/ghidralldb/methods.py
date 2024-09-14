@@ -377,7 +377,7 @@ def activate_frame(frame: sch.Schema("StackFrame")):
 @REGISTRY.method(action="delete")
 def remove_process(process: sch.Schema("Process")):
     """Remove the process."""
-    proc = find_proc_by_obj(process)
+    find_proc_by_obj(process)
     exec_convert_errors("target delete 0")
 
 
@@ -686,7 +686,7 @@ def write_reg(frame: sch.Schema("StackFrame"), name: str, value: bytes):
     f.select()
     proc = lldb.selected_process()
     mname, mval = frame.trace.register_mapper.map_value_back(proc, name, value)
-    reg = find_reg_by_name(f, mname)
+    find_reg_by_name(f, mname)
     size = int(lldb.parse_and_eval(f"sizeof(${mname})"))
     arr = "{" + ",".join(str(b) for b in mval) + "}"
     exec_convert_errors(f"expr ((unsigned char[{size}])${mname}) = {arr};")

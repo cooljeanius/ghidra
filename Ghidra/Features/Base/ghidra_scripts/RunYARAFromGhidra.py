@@ -107,7 +107,7 @@ def getYaraTargetFromGhidra():
 # where each file offset represents a match for that rule
 def createYaraDictionary(stdout):
     lines = stdout.splitlines()
-    if lines == None:
+    if lines is None:
         println("No YARA matches detected.")
         sys.exit(1)
     yaraDictionary = {}

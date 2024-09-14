@@ -139,7 +139,7 @@ class RegionInfoReader:
         regions = []
         reglist = get_process().GetMemoryRegions()
         for i in range(0, reglist.GetSize()):
-            module = get_target().GetModuleAtIndex(i)
+            get_target().GetModuleAtIndex(i)
             info = lldb.SBMemoryRegionInfo()
             success = reglist.GetMemoryRegionAtIndex(i, info)
             if success:

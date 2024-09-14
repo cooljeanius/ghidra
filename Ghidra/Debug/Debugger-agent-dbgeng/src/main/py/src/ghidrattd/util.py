@@ -48,7 +48,6 @@ class Watchpoint:
 
 
 def _compute_pydbg_ver():
-    blurb = ""  # get_debugger()._control.GetActualProcessorType()
     full = ""
     major = 0
     minor = 0
@@ -130,7 +129,7 @@ def get_eval(expr, type=None):
     ctrl.SetExpressionSyntax(1)
     value = DbgEng._DEBUG_VALUE()
     index = c_ulong()
-    if type == None:
+    if type is None:
         type = DbgEng.DEBUG_VALUE_INT64
     hr = ctrl.Evaluate(
         Expression="{}".format(expr).encode(),

@@ -82,7 +82,7 @@ def load_file(li, neflags, format):
     @return: 0-failure, 1-ok
     """
     global event, element
-    if ida_idp.get_idp_name() == None:
+    if ida_idp.get_idp_name() is None:
         ida_idp.set_processor_type("metapc", ida_idp.SETPROC_LOADER)
     status = 0
     st = idc.set_ida_state(idc.IDA_STATUS_WORK)

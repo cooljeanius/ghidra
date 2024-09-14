@@ -79,7 +79,7 @@ def main() -> None:
     install_dir: Path = Path(args.install_dir)
     venv_dir: Path = install_dir / "build" / "venv"
     pyghidra_dir: Path = install_dir / "Ghidra" / "Features" / "PyGhidra"
-    src_dir: Path = pyghidra_dir / "src" / "main" / "py"
+    pyghidra_dir / "src" / "main" / "py"
     dist_dir: Path = pyghidra_dir / "pypkg" / "dist"
 
     # If headless, force console mode

@@ -82,7 +82,7 @@ class State:
         return self.client
 
     def require_no_client(self):
-        if self.client != None:
+        if self.client is not None:
             raise RuntimeError("Already connected")
 
     def reset_client(self):
@@ -95,7 +95,7 @@ class State:
         return self.trace
 
     def require_no_trace(self):
-        if self.trace != None:
+        if self.trace is not None:
             raise RuntimeError("Trace already started")
 
     def reset_trace(self):
@@ -109,7 +109,7 @@ class State:
         return self.tx
 
     def require_no_tx(self):
-        if self.tx != None:
+        if self.tx is not None:
             raise RuntimeError("Transaction already started")
 
     def reset_tx(self):
@@ -238,7 +238,7 @@ def ghidra_trace_restart(name=None):
     """Restart or start the Trace in Ghidra"""
 
     STATE.require_client()
-    if STATE.trace != None:
+    if STATE.trace is not None:
         STATE.trace.close()
         STATE.reset_trace()
     name = compute_name(name)
@@ -254,7 +254,7 @@ def ghidra_trace_create(
     """
 
     dbg = util.dbg._base
-    if command != None:
+    if command is not None:
         dbg._client.CreateProcess(command, DbgEng.DEBUG_PROCESS)
         if initial_break:
             dbg._control.AddEngineOptions(DbgEng.DEBUG_ENGINITIAL_BREAK)
@@ -279,7 +279,7 @@ def ghidra_trace_create_ext(
     """
 
     dbg = util.dbg._base
-    if command != None:
+    if command is not None:
         if create_flags == "":
             create_flags = 1
         if create_flags_eng == "":
@@ -319,9 +319,9 @@ def ghidra_trace_attach(
     dbg = util.dbg._base
     if initial_break:
         dbg._control.AddEngineOptions(DbgEng.DEBUG_ENGINITIAL_BREAK)
-    if attach_flags == None:
+    if attach_flags is None:
         attach_flags = "0"
-    if pid != None:
+    if pid is not None:
         dbg._client.AttachProcess(int(pid, 0), int(attach_flags, 0))
     if start_trace:
         ghidra_trace_start("pid_" + pid)
@@ -339,7 +339,7 @@ def ghidra_trace_attach_kernel(
     util.set_kernel(True)
     if initial_break:
         dbg._control.AddEngineOptions(DbgEng.DEBUG_ENGINITIAL_BREAK)
-    if command != None:
+    if command is not None:
         dbg._client.AttachKernel(command)
     if start_trace:
         ghidra_trace_start(command)
@@ -352,7 +352,7 @@ def ghidra_trace_connect_server(options=None):
     """
 
     dbg = util.dbg._base
-    if options != None:
+    if options is not None:
         if isinstance(options, str):
             enc_options = options.encode()
         dbg._client.ConnectProcessServer(enc_options)
@@ -487,7 +487,7 @@ def put_bytes(start, end, pages, display_result):
         return {"count": 0}
 
     count = 0
-    if buf != None:
+    if buf is not None:
         base, addr = trace.memory_mapper.map(nproc, start)
         if base != addr.space:
             trace.create_overlay_space(base, addr.space)
@@ -734,7 +734,7 @@ def eval_value(value, schema=None):
         or schema == sch.SHORT
         or schema == sch.INT
         or schema == sch.LONG
-        or schema == None
+        or schema is None
     ):
         value = util.parse_and_eval(value)
         return value, schema
@@ -1022,7 +1022,7 @@ def ghidra_trace_put_processes():
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_processes()
 
 
@@ -1060,7 +1060,7 @@ def ghidra_trace_put_available():
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_available()
 
 
@@ -1074,11 +1074,10 @@ def put_single_breakpoint(bp, ibobj, nproc, ikeys):
     else:
         status = False
     if bp.GetFlags() & DbgEng.DEBUG_BREAKPOINT_DEFERRED:
-        offset = "[Deferred]"
         expr = bp.GetOffsetExpression()
     else:
         address = bp.GetOffset()
-        offset = "%016x" % address
+        "%016x" % address
         expr = util.dbg._base.get_name_by_offset(address)
     try:
         tid = bp.GetMatchThreadId()
@@ -1118,7 +1117,7 @@ def put_single_breakpoint(bp, ibobj, nproc, ikeys):
     brkobj.set_value("Current Pass Count", bp.GetCurrentPassCount())
     brkobj.set_value("Enabled", status)
     brkobj.set_value("Flags", bp.GetFlags())
-    if tid != None:
+    if tid is not None:
         brkobj.set_value("Match TID", tid)
     brkobj.set_value("Command", bp.GetCommand())
     brkobj.insert()
@@ -1140,7 +1139,7 @@ def put_breakpoints():
     #    STATE.trace.proxy_object_path(path).retain_values(keys)
     #    return
 
-    target = util.get_target()
+    util.get_target()
     ibpath = PROC_BREAKS_PATTERN.format(procnum=nproc)
     ibobj = STATE.trace.create_object(ibpath)
     keys = []
@@ -1165,7 +1164,7 @@ def ghidra_trace_put_breakpoints():
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_breakpoints()
 
 
@@ -1186,7 +1185,7 @@ def ghidra_trace_put_environment():
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_environment()
 
 
@@ -1200,7 +1199,6 @@ def put_regions():
     if len(regions) == 0:
         regions = util.full_mem()
 
-    mapper = STATE.trace.memory_mapper
     keys = []
     # r : MEMORY_BASIC_INFORMATION64
     for r in regions:
@@ -1209,9 +1207,9 @@ def put_regions():
         regobj = STATE.trace.create_object(rpath)
         (start_base, start_addr) = map_address(r.BaseAddress)
         regobj.set_value("Range", start_addr.extend(r.RegionSize))
-        regobj.set_value("_readable", r.Protect == None or r.Protect & 0x66 != 0)
-        regobj.set_value("_writable", r.Protect == None or r.Protect & 0xCC != 0)
-        regobj.set_value("_executable", r.Protect == None or r.Protect & 0xF0 != 0)
+        regobj.set_value("_readable", r.Protect is None or r.Protect & 0x66 != 0)
+        regobj.set_value("_writable", r.Protect is None or r.Protect & 0xCC != 0)
+        regobj.set_value("_executable", r.Protect is None or r.Protect & 0xF0 != 0)
         regobj.set_value("AllocationBase", hex(r.AllocationBase))
         regobj.set_value("Protect", hex(r.Protect))
         regobj.set_value("Type", hex(r.Type))
@@ -1229,7 +1227,7 @@ def ghidra_trace_put_regions():
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_regions()
 
 
@@ -1244,7 +1242,7 @@ def put_modules():
         ).retain_values(keys)
         return
 
-    target = util.get_target()
+    util.get_target()
     modules = util.dbg._base.module_list()
     mapper = STATE.trace.memory_mapper
     mod_keys = []
@@ -1254,7 +1252,7 @@ def put_modules():
         base = m[1].Base
         hbase = hex(base)
         size = m[1].Size
-        flags = m[1].Flags
+        m[1].Flags
         mpath = MODULE_PATTERN.format(procnum=nproc, modpath=hbase)
         modobj = STATE.trace.create_object(mpath)
         mod_keys.append(MODULE_KEY_PATTERN.format(modpath=hbase))
@@ -1283,7 +1281,7 @@ def ghidra_trace_put_modules():
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_modules()
 
 
@@ -1347,7 +1345,7 @@ def put_event_thread(nthrd=None):
     # Assumption: Event thread is selected by pydbg upon stopping
     if nthrd is None:
         nthrd = util.selected_thread()
-    if nthrd != None:
+    if nthrd is not None:
         tpath = THREAD_PATTERN.format(procnum=nproc, tnum=nthrd)
         tobj = STATE.trace.proxy_object_path(tpath)
     else:
@@ -1361,7 +1359,7 @@ def ghidra_trace_put_threads():
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_threads()
 
 
@@ -1416,7 +1414,7 @@ def ghidra_trace_put_frames():
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_frames()
 
 
@@ -1488,7 +1486,7 @@ def put_generic(node):
     nproc = util.selected_process()
     if nproc is None:
         return
-    nthrd = util.selected_thread()
+    util.selected_thread()
 
     mo = util.get_object(node.path)
     mapper = STATE.trace.register_mapper
@@ -1574,7 +1572,7 @@ def ghidra_trace_put_generic(node):
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_generic(node)
 
 
@@ -1584,7 +1582,7 @@ def ghidra_trace_put_all():
     """
 
     STATE.require_tx()
-    with STATE.client.batch() as b:
+    with STATE.client.batch():
         put_available()
         put_processes()
         put_environment()

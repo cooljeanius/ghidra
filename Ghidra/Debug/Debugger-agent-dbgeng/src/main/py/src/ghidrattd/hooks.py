@@ -374,7 +374,7 @@ def on_breakpoint_modified(*args):
     if trace is None:
         return
     ibpath = commands.PROC_BREAKS_PATTERN.format(procnum=proc)
-    ibobj = trace.create_object(ibpath)
+    trace.create_object(ibpath)
     bpid = args[0][1]
     try:
         bp = dbg()._control.GetBreakpointById(bpid)

@@ -108,7 +108,7 @@ def test_no_compiler(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
     with pyghidra.open_program(
         strings_exe, analyze=False, language=TEST_LANGUAGE
-    ) as flat_api:
+    ):
         pass
 
 
@@ -116,7 +116,7 @@ def test_no_language_with_compiler(shared_datadir: Path):
     strings_exe = shared_datadir / EXE_NAME
     with pyghidra.open_program(
         strings_exe, analyze=False, compiler=TEST_COMPILER
-    ) as flat_api:
+    ):
         pass
 
 

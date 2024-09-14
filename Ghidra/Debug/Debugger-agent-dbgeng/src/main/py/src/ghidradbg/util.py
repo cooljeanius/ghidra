@@ -409,9 +409,9 @@ class GhidraDbg:
     def get_prompt_text(self):
         # TODO: upstream?
         size = c_ulong()
-        hr = self._base._control._ctrl.GetPromptText(None, 0, byref(size))
+        self._base._control._ctrl.GetPromptText(None, 0, byref(size))
         prompt_buf = create_string_buffer(size.value)
-        hr = self._base._control._ctrl.GetPromptText(prompt_buf, size, None)
+        self._base._control._ctrl.GetPromptText(prompt_buf, size, None)
         return prompt_buf.value.decode()
 
     @check_thread
@@ -518,7 +518,7 @@ def selected_process():
             do = dbg._base._systems.GetCurrentProcessDataOffset()
             id = c_ulong()
             offset = c_ulonglong(do)
-            nproc = dbg._base._systems._sys.GetProcessIdByDataOffset(offset, byref(id))
+            dbg._base._systems._sys.GetProcessIdByDataOffset(offset, byref(id))
             return id.value
         if dbg.use_generics:
             return dbg._base._systems.GetCurrentProcessSystemId()
@@ -601,7 +601,7 @@ def parse_and_eval(expr, type=None):
     ctrl.SetExpressionSyntax(1)
     value = DbgEng._DEBUG_VALUE()
     index = c_ulong()
-    if type == None:
+    if type is None:
         type = DbgEng.DEBUG_VALUE_INT64
     hr = ctrl.Evaluate(
         Expression=expr.encode(),
@@ -705,7 +705,7 @@ def GetExitCode():
     if is_kernel():
         return STILL_ACTIVE
     exit_code = c_ulong()
-    hr = dbg._base._client._cli.GetExitCode(byref(exit_code))
+    dbg._base._client._cli.GetExitCode(byref(exit_code))
     return exit_code.value
 
 
