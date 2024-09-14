@@ -1,0 +1,417 @@
+
+> Configure project :
+Gradle: 8.4
+OS: Mac OS X
+Arch: x86_64 (gradle: x86-64)
+Using platform: mac_x86_64
+
+> Task :tasks
+
+------------------------------------------------------------
+Tasks runnable from root project 'ghidra'
+------------------------------------------------------------
+
+Default tasks: :usage
+
+Build tasks
+-----------
+assemble - Assembles the outputs of this project.
+build - Assembles and tests this project.
+buildDependents - Assembles and tests this project and all projects that depend on it.
+buildNeeded - Assembles and tests this project and all projects it depends on.
+classes - Assembles main classes.
+clean - Deletes the build directory.
+decompileLinux_arm_64Executable - Assembles executable 'decompile:linux_arm_64:executable'.
+decompileLinux_x86_64Executable - Assembles executable 'decompile:linux_x86_64:executable'.
+decompileMac_arm_64Executable - Assembles executable 'decompile:mac_arm_64:executable'.
+decompileMac_x86_64Executable - Assembles executable 'decompile:mac_x86_64:executable'.
+decompileWin_x86_64Executable - Assembles executable 'decompile:win_x86_64:executable'.
+demangler_gnu_v2_24Linux_arm_64Executable - Assembles executable 'demangler_gnu_v2_24:linux_arm_64:executable'.
+demangler_gnu_v2_24Linux_x86_64Executable - Assembles executable 'demangler_gnu_v2_24:linux_x86_64:executable'.
+demangler_gnu_v2_24Mac_arm_64Executable - Assembles executable 'demangler_gnu_v2_24:mac_arm_64:executable'.
+demangler_gnu_v2_24Mac_x86_64Executable - Assembles executable 'demangler_gnu_v2_24:mac_x86_64:executable'.
+demangler_gnu_v2_24Win_x86_64Executable - Assembles executable 'demangler_gnu_v2_24:win_x86_64:executable'.
+demangler_gnu_v2_33_1Linux_arm_64Executable - Assembles executable 'demangler_gnu_v2_33_1:linux_arm_64:executable'.
+demangler_gnu_v2_33_1Linux_x86_64Executable - Assembles executable 'demangler_gnu_v2_33_1:linux_x86_64:executable'.
+demangler_gnu_v2_33_1Mac_arm_64Executable - Assembles executable 'demangler_gnu_v2_33_1:mac_arm_64:executable'.
+demangler_gnu_v2_33_1Mac_x86_64Executable - Assembles executable 'demangler_gnu_v2_33_1:mac_x86_64:executable'.
+demangler_gnu_v2_33_1Win_x86_64Executable - Assembles executable 'demangler_gnu_v2_33_1:win_x86_64:executable'.
+dmgClasses - Assembles dmg classes.
+expCloneExecExecutable - Assembles executable 'expCloneExec:executable'.
+expCloneExitExecutable - Assembles executable 'expCloneExit:executable'.
+expCloneSpinExecutable - Assembles executable 'expCloneSpin:executable'.
+expCreateProcessWin_x86_32Executable - Assembles executable 'expCreateProcess:win_x86_32:executable'.
+expCreateProcessWin_x86_64Executable - Assembles executable 'expCreateProcess:win_x86_64:executable'.
+expCreateThreadExitWin_x86_32Executable - Assembles executable 'expCreateThreadExit:win_x86_32:executable'.
+expCreateThreadExitWin_x86_64Executable - Assembles executable 'expCreateThreadExit:win_x86_64:executable'.
+expCreateThreadSpinWin_x86_32Executable - Assembles executable 'expCreateThreadSpin:win_x86_32:executable'.
+expCreateThreadSpinWin_x86_64Executable - Assembles executable 'expCreateThreadSpin:win_x86_64:executable'.
+expForkExecutable - Assembles executable 'expFork:executable'.
+expPrintLinux_x86_64Executable - Assembles executable 'expPrint:linux_x86_64:executable'.
+expPrintWin_x86_32Executable - Assembles executable 'expPrint:win_x86_32:executable'.
+expPrintWin_x86_64Executable - Assembles executable 'expPrint:win_x86_64:executable'.
+expRegistersLinux_x86_64Executable - Assembles executable 'expRegisters:linux_x86_64:executable'.
+expRegistersWin_x86_32Executable - Assembles executable 'expRegisters:win_x86_32:executable'.
+expRegistersWin_x86_64Executable - Assembles executable 'expRegisters:win_x86_64:executable'.
+expSpinLinux_x86_64Executable - Assembles executable 'expSpin:linux_x86_64:executable'.
+expSpinWin_x86_32Executable - Assembles executable 'expSpin:win_x86_32:executable'.
+expSpinWin_x86_64Executable - Assembles executable 'expSpin:win_x86_64:executable'.
+expStackLinux_x86_64Executable - Assembles executable 'expStack:linux_x86_64:executable'.
+expStackWin_x86_32Executable - Assembles executable 'expStack:win_x86_32:executable'.
+expStackWin_x86_64Executable - Assembles executable 'expStack:win_x86_64:executable'.
+expTraceableSleepExecutable - Assembles executable 'expTraceableSleep:executable'.
+expTypesExecutable - Assembles executable 'expTypes:executable'.
+ghidraClassClasses - Assembles ghidra class classes.
+installDecompileLinux_arm_64Executable - Installs a development image of executable 'decompile:linux_arm_64:executable'
+installDecompileLinux_x86_64Executable - Installs a development image of executable 'decompile:linux_x86_64:executable'
+installDecompileMac_arm_64Executable - Installs a development image of executable 'decompile:mac_arm_64:executable'
+installDecompileMac_x86_64Executable - Installs a development image of executable 'decompile:mac_x86_64:executable'
+installDecompileWin_x86_64Executable - Installs a development image of executable 'decompile:win_x86_64:executable'
+installDemangler_gnu_v2_24Linux_arm_64Executable - Installs a development image of executable 'demangler_gnu_v2_24:linux_arm_64:executable'
+installDemangler_gnu_v2_24Linux_x86_64Executable - Installs a development image of executable 'demangler_gnu_v2_24:linux_x86_64:executable'
+installDemangler_gnu_v2_24Mac_arm_64Executable - Installs a development image of executable 'demangler_gnu_v2_24:mac_arm_64:executable'
+installDemangler_gnu_v2_24Mac_x86_64Executable - Installs a development image of executable 'demangler_gnu_v2_24:mac_x86_64:executable'
+installDemangler_gnu_v2_24Win_x86_64Executable - Installs a development image of executable 'demangler_gnu_v2_24:win_x86_64:executable'
+installDemangler_gnu_v2_33_1Linux_arm_64Executable - Installs a development image of executable 'demangler_gnu_v2_33_1:linux_arm_64:executable'
+installDemangler_gnu_v2_33_1Linux_x86_64Executable - Installs a development image of executable 'demangler_gnu_v2_33_1:linux_x86_64:executable'
+installDemangler_gnu_v2_33_1Mac_arm_64Executable - Installs a development image of executable 'demangler_gnu_v2_33_1:mac_arm_64:executable'
+installDemangler_gnu_v2_33_1Mac_x86_64Executable - Installs a development image of executable 'demangler_gnu_v2_33_1:mac_x86_64:executable'
+installDemangler_gnu_v2_33_1Win_x86_64Executable - Installs a development image of executable 'demangler_gnu_v2_33_1:win_x86_64:executable'
+installExpCloneExecExecutable - Installs a development image of executable 'expCloneExec:executable'
+installExpCloneExitExecutable - Installs a development image of executable 'expCloneExit:executable'
+installExpCloneSpinExecutable - Installs a development image of executable 'expCloneSpin:executable'
+installExpCreateProcessWin_x86_32Executable - Installs a development image of executable 'expCreateProcess:win_x86_32:executable'
+installExpCreateProcessWin_x86_64Executable - Installs a development image of executable 'expCreateProcess:win_x86_64:executable'
+installExpCreateThreadExitWin_x86_32Executable - Installs a development image of executable 'expCreateThreadExit:win_x86_32:executable'
+installExpCreateThreadExitWin_x86_64Executable - Installs a development image of executable 'expCreateThreadExit:win_x86_64:executable'
+installExpCreateThreadSpinWin_x86_32Executable - Installs a development image of executable 'expCreateThreadSpin:win_x86_32:executable'
+installExpCreateThreadSpinWin_x86_64Executable - Installs a development image of executable 'expCreateThreadSpin:win_x86_64:executable'
+installExpForkExecutable - Installs a development image of executable 'expFork:executable'
+installExpPrintLinux_x86_64Executable - Installs a development image of executable 'expPrint:linux_x86_64:executable'
+installExpPrintWin_x86_32Executable - Installs a development image of executable 'expPrint:win_x86_32:executable'
+installExpPrintWin_x86_64Executable - Installs a development image of executable 'expPrint:win_x86_64:executable'
+installExpRegistersLinux_x86_64Executable - Installs a development image of executable 'expRegisters:linux_x86_64:executable'
+installExpRegistersWin_x86_32Executable - Installs a development image of executable 'expRegisters:win_x86_32:executable'
+installExpRegistersWin_x86_64Executable - Installs a development image of executable 'expRegisters:win_x86_64:executable'
+installExpSpinLinux_x86_64Executable - Installs a development image of executable 'expSpin:linux_x86_64:executable'
+installExpSpinWin_x86_32Executable - Installs a development image of executable 'expSpin:win_x86_32:executable'
+installExpSpinWin_x86_64Executable - Installs a development image of executable 'expSpin:win_x86_64:executable'
+installExpStackLinux_x86_64Executable - Installs a development image of executable 'expStack:linux_x86_64:executable'
+installExpStackWin_x86_32Executable - Installs a development image of executable 'expStack:win_x86_32:executable'
+installExpStackWin_x86_64Executable - Installs a development image of executable 'expStack:win_x86_64:executable'
+installExpTraceableSleepExecutable - Installs a development image of executable 'expTraceableSleep:executable'
+installExpTypesExecutable - Installs a development image of executable 'expTypes:executable'
+installSleighLinux_arm_64Executable - Installs a development image of executable 'sleigh:linux_arm_64:executable'
+installSleighLinux_x86_64Executable - Installs a development image of executable 'sleigh:linux_x86_64:executable'
+installSleighMac_arm_64Executable - Installs a development image of executable 'sleigh:mac_arm_64:executable'
+installSleighMac_x86_64Executable - Installs a development image of executable 'sleigh:mac_x86_64:executable'
+installSleighWin_x86_64Executable - Installs a development image of executable 'sleigh:win_x86_64:executable'
+integrationTestClasses - Assembles integration test classes.
+jar - Assembles a jar archive containing the classes of the 'main' feature.
+pcodeTestClasses - Assembles pcode test classes.
+screenShotsClasses - Assembles screen shots classes.
+scripts_jar1Classes - Assembles scripts jar1 classes.
+scripts_jar2Classes - Assembles scripts jar2 classes.
+scripts_lib_userClasses - Assembles scripts lib user classes.
+scripts_libClasses - Assembles scripts lib classes.
+scripts_uses_jar_versionClasses - Assembles scripts uses jar version classes.
+scripts_uses_jarClasses - Assembles scripts uses jar classes.
+scripts_with_activatorClasses - Assembles scripts with activator classes.
+scripts_with_manifestClasses - Assembles scripts with manifest classes.
+scriptsClasses - Assembles scripts classes.
+sleighLinux_arm_64Executable - Assembles executable 'sleigh:linux_arm_64:executable'.
+sleighLinux_x86_64Executable - Assembles executable 'sleigh:linux_x86_64:executable'.
+sleighMac_arm_64Executable - Assembles executable 'sleigh:mac_arm_64:executable'.
+sleighMac_x86_64Executable - Assembles executable 'sleigh:mac_x86_64:executable'.
+sleighWin_x86_64Executable - Assembles executable 'sleigh:win_x86_64:executable'.
+testClasses - Assembles test classes.
+
+Build Dependents tasks
+----------------------
+assembleDependentsDecompile - Assemble dependents of native executable 'decompile'.
+assembleDependentsDecompileLinux_arm_64Executable - Assemble dependents of executable 'decompile:linux_arm_64:executable'.
+assembleDependentsDecompileLinux_x86_64Executable - Assemble dependents of executable 'decompile:linux_x86_64:executable'.
+assembleDependentsDecompileMac_arm_64Executable - Assemble dependents of executable 'decompile:mac_arm_64:executable'.
+assembleDependentsDecompileMac_x86_64Executable - Assemble dependents of executable 'decompile:mac_x86_64:executable'.
+assembleDependentsDecompileWin_x86_64Executable - Assemble dependents of executable 'decompile:win_x86_64:executable'.
+assembleDependentsDemangler_gnu_v2_24 - Assemble dependents of native executable 'demangler_gnu_v2_24'.
+assembleDependentsDemangler_gnu_v2_24Linux_arm_64Executable - Assemble dependents of executable 'demangler_gnu_v2_24:linux_arm_64:executable'.
+assembleDependentsDemangler_gnu_v2_24Linux_x86_64Executable - Assemble dependents of executable 'demangler_gnu_v2_24:linux_x86_64:executable'.
+assembleDependentsDemangler_gnu_v2_24Mac_arm_64Executable - Assemble dependents of executable 'demangler_gnu_v2_24:mac_arm_64:executable'.
+assembleDependentsDemangler_gnu_v2_24Mac_x86_64Executable - Assemble dependents of executable 'demangler_gnu_v2_24:mac_x86_64:executable'.
+assembleDependentsDemangler_gnu_v2_24Win_x86_64Executable - Assemble dependents of executable 'demangler_gnu_v2_24:win_x86_64:executable'.
+assembleDependentsDemangler_gnu_v2_33_1 - Assemble dependents of native executable 'demangler_gnu_v2_33_1'.
+assembleDependentsDemangler_gnu_v2_33_1Linux_arm_64Executable - Assemble dependents of executable 'demangler_gnu_v2_33_1:linux_arm_64:executable'.
+assembleDependentsDemangler_gnu_v2_33_1Linux_x86_64Executable - Assemble dependents of executable 'demangler_gnu_v2_33_1:linux_x86_64:executable'.
+assembleDependentsDemangler_gnu_v2_33_1Mac_arm_64Executable - Assemble dependents of executable 'demangler_gnu_v2_33_1:mac_arm_64:executable'.
+assembleDependentsDemangler_gnu_v2_33_1Mac_x86_64Executable - Assemble dependents of executable 'demangler_gnu_v2_33_1:mac_x86_64:executable'.
+assembleDependentsDemangler_gnu_v2_33_1Win_x86_64Executable - Assemble dependents of executable 'demangler_gnu_v2_33_1:win_x86_64:executable'.
+assembleDependentsExpCloneExec - Assemble dependents of native executable 'expCloneExec'.
+assembleDependentsExpCloneExecExecutable - Assemble dependents of executable 'expCloneExec:executable'.
+assembleDependentsExpCloneExit - Assemble dependents of native executable 'expCloneExit'.
+assembleDependentsExpCloneExitExecutable - Assemble dependents of executable 'expCloneExit:executable'.
+assembleDependentsExpCloneSpin - Assemble dependents of native executable 'expCloneSpin'.
+assembleDependentsExpCloneSpinExecutable - Assemble dependents of executable 'expCloneSpin:executable'.
+assembleDependentsExpCreateProcess - Assemble dependents of native executable 'expCreateProcess'.
+assembleDependentsExpCreateProcessWin_x86_32Executable - Assemble dependents of executable 'expCreateProcess:win_x86_32:executable'.
+assembleDependentsExpCreateProcessWin_x86_64Executable - Assemble dependents of executable 'expCreateProcess:win_x86_64:executable'.
+assembleDependentsExpCreateThreadExit - Assemble dependents of native executable 'expCreateThreadExit'.
+assembleDependentsExpCreateThreadExitWin_x86_32Executable - Assemble dependents of executable 'expCreateThreadExit:win_x86_32:executable'.
+assembleDependentsExpCreateThreadExitWin_x86_64Executable - Assemble dependents of executable 'expCreateThreadExit:win_x86_64:executable'.
+assembleDependentsExpCreateThreadSpin - Assemble dependents of native executable 'expCreateThreadSpin'.
+assembleDependentsExpCreateThreadSpinWin_x86_32Executable - Assemble dependents of executable 'expCreateThreadSpin:win_x86_32:executable'.
+assembleDependentsExpCreateThreadSpinWin_x86_64Executable - Assemble dependents of executable 'expCreateThreadSpin:win_x86_64:executable'.
+assembleDependentsExpFork - Assemble dependents of native executable 'expFork'.
+assembleDependentsExpForkExecutable - Assemble dependents of executable 'expFork:executable'.
+assembleDependentsExpPrint - Assemble dependents of native executable 'expPrint'.
+assembleDependentsExpPrintLinux_x86_64Executable - Assemble dependents of executable 'expPrint:linux_x86_64:executable'.
+assembleDependentsExpPrintWin_x86_32Executable - Assemble dependents of executable 'expPrint:win_x86_32:executable'.
+assembleDependentsExpPrintWin_x86_64Executable - Assemble dependents of executable 'expPrint:win_x86_64:executable'.
+assembleDependentsExpRegisters - Assemble dependents of native executable 'expRegisters'.
+assembleDependentsExpRegistersLinux_x86_64Executable - Assemble dependents of executable 'expRegisters:linux_x86_64:executable'.
+assembleDependentsExpRegistersWin_x86_32Executable - Assemble dependents of executable 'expRegisters:win_x86_32:executable'.
+assembleDependentsExpRegistersWin_x86_64Executable - Assemble dependents of executable 'expRegisters:win_x86_64:executable'.
+assembleDependentsExpSpin - Assemble dependents of native executable 'expSpin'.
+assembleDependentsExpSpinLinux_x86_64Executable - Assemble dependents of executable 'expSpin:linux_x86_64:executable'.
+assembleDependentsExpSpinWin_x86_32Executable - Assemble dependents of executable 'expSpin:win_x86_32:executable'.
+assembleDependentsExpSpinWin_x86_64Executable - Assemble dependents of executable 'expSpin:win_x86_64:executable'.
+assembleDependentsExpStack - Assemble dependents of native executable 'expStack'.
+assembleDependentsExpStackLinux_x86_64Executable - Assemble dependents of executable 'expStack:linux_x86_64:executable'.
+assembleDependentsExpStackWin_x86_32Executable - Assemble dependents of executable 'expStack:win_x86_32:executable'.
+assembleDependentsExpStackWin_x86_64Executable - Assemble dependents of executable 'expStack:win_x86_64:executable'.
+assembleDependentsExpTraceableSleep - Assemble dependents of native executable 'expTraceableSleep'.
+assembleDependentsExpTraceableSleepExecutable - Assemble dependents of executable 'expTraceableSleep:executable'.
+assembleDependentsExpTypes - Assemble dependents of native executable 'expTypes'.
+assembleDependentsExpTypesExecutable - Assemble dependents of executable 'expTypes:executable'.
+assembleDependentsSleigh - Assemble dependents of native executable 'sleigh'.
+assembleDependentsSleighLinux_arm_64Executable - Assemble dependents of executable 'sleigh:linux_arm_64:executable'.
+assembleDependentsSleighLinux_x86_64Executable - Assemble dependents of executable 'sleigh:linux_x86_64:executable'.
+assembleDependentsSleighMac_arm_64Executable - Assemble dependents of executable 'sleigh:mac_arm_64:executable'.
+assembleDependentsSleighMac_x86_64Executable - Assemble dependents of executable 'sleigh:mac_x86_64:executable'.
+assembleDependentsSleighWin_x86_64Executable - Assemble dependents of executable 'sleigh:win_x86_64:executable'.
+buildDependentsDecompile - Build dependents of native executable 'decompile'.
+buildDependentsDecompileLinux_arm_64Executable - Build dependents of executable 'decompile:linux_arm_64:executable'.
+buildDependentsDecompileLinux_x86_64Executable - Build dependents of executable 'decompile:linux_x86_64:executable'.
+buildDependentsDecompileMac_arm_64Executable - Build dependents of executable 'decompile:mac_arm_64:executable'.
+buildDependentsDecompileMac_x86_64Executable - Build dependents of executable 'decompile:mac_x86_64:executable'.
+buildDependentsDecompileWin_x86_64Executable - Build dependents of executable 'decompile:win_x86_64:executable'.
+buildDependentsDemangler_gnu_v2_24 - Build dependents of native executable 'demangler_gnu_v2_24'.
+buildDependentsDemangler_gnu_v2_24Linux_arm_64Executable - Build dependents of executable 'demangler_gnu_v2_24:linux_arm_64:executable'.
+buildDependentsDemangler_gnu_v2_24Linux_x86_64Executable - Build dependents of executable 'demangler_gnu_v2_24:linux_x86_64:executable'.
+buildDependentsDemangler_gnu_v2_24Mac_arm_64Executable - Build dependents of executable 'demangler_gnu_v2_24:mac_arm_64:executable'.
+buildDependentsDemangler_gnu_v2_24Mac_x86_64Executable - Build dependents of executable 'demangler_gnu_v2_24:mac_x86_64:executable'.
+buildDependentsDemangler_gnu_v2_24Win_x86_64Executable - Build dependents of executable 'demangler_gnu_v2_24:win_x86_64:executable'.
+buildDependentsDemangler_gnu_v2_33_1 - Build dependents of native executable 'demangler_gnu_v2_33_1'.
+buildDependentsDemangler_gnu_v2_33_1Linux_arm_64Executable - Build dependents of executable 'demangler_gnu_v2_33_1:linux_arm_64:executable'.
+buildDependentsDemangler_gnu_v2_33_1Linux_x86_64Executable - Build dependents of executable 'demangler_gnu_v2_33_1:linux_x86_64:executable'.
+buildDependentsDemangler_gnu_v2_33_1Mac_arm_64Executable - Build dependents of executable 'demangler_gnu_v2_33_1:mac_arm_64:executable'.
+buildDependentsDemangler_gnu_v2_33_1Mac_x86_64Executable - Build dependents of executable 'demangler_gnu_v2_33_1:mac_x86_64:executable'.
+buildDependentsDemangler_gnu_v2_33_1Win_x86_64Executable - Build dependents of executable 'demangler_gnu_v2_33_1:win_x86_64:executable'.
+buildDependentsExpCloneExec - Build dependents of native executable 'expCloneExec'.
+buildDependentsExpCloneExecExecutable - Build dependents of executable 'expCloneExec:executable'.
+buildDependentsExpCloneExit - Build dependents of native executable 'expCloneExit'.
+buildDependentsExpCloneExitExecutable - Build dependents of executable 'expCloneExit:executable'.
+buildDependentsExpCloneSpin - Build dependents of native executable 'expCloneSpin'.
+buildDependentsExpCloneSpinExecutable - Build dependents of executable 'expCloneSpin:executable'.
+buildDependentsExpCreateProcess - Build dependents of native executable 'expCreateProcess'.
+buildDependentsExpCreateProcessWin_x86_32Executable - Build dependents of executable 'expCreateProcess:win_x86_32:executable'.
+buildDependentsExpCreateProcessWin_x86_64Executable - Build dependents of executable 'expCreateProcess:win_x86_64:executable'.
+buildDependentsExpCreateThreadExit - Build dependents of native executable 'expCreateThreadExit'.
+buildDependentsExpCreateThreadExitWin_x86_32Executable - Build dependents of executable 'expCreateThreadExit:win_x86_32:executable'.
+buildDependentsExpCreateThreadExitWin_x86_64Executable - Build dependents of executable 'expCreateThreadExit:win_x86_64:executable'.
+buildDependentsExpCreateThreadSpin - Build dependents of native executable 'expCreateThreadSpin'.
+buildDependentsExpCreateThreadSpinWin_x86_32Executable - Build dependents of executable 'expCreateThreadSpin:win_x86_32:executable'.
+buildDependentsExpCreateThreadSpinWin_x86_64Executable - Build dependents of executable 'expCreateThreadSpin:win_x86_64:executable'.
+buildDependentsExpFork - Build dependents of native executable 'expFork'.
+buildDependentsExpForkExecutable - Build dependents of executable 'expFork:executable'.
+buildDependentsExpPrint - Build dependents of native executable 'expPrint'.
+buildDependentsExpPrintLinux_x86_64Executable - Build dependents of executable 'expPrint:linux_x86_64:executable'.
+buildDependentsExpPrintWin_x86_32Executable - Build dependents of executable 'expPrint:win_x86_32:executable'.
+buildDependentsExpPrintWin_x86_64Executable - Build dependents of executable 'expPrint:win_x86_64:executable'.
+buildDependentsExpRegisters - Build dependents of native executable 'expRegisters'.
+buildDependentsExpRegistersLinux_x86_64Executable - Build dependents of executable 'expRegisters:linux_x86_64:executable'.
+buildDependentsExpRegistersWin_x86_32Executable - Build dependents of executable 'expRegisters:win_x86_32:executable'.
+buildDependentsExpRegistersWin_x86_64Executable - Build dependents of executable 'expRegisters:win_x86_64:executable'.
+buildDependentsExpSpin - Build dependents of native executable 'expSpin'.
+buildDependentsExpSpinLinux_x86_64Executable - Build dependents of executable 'expSpin:linux_x86_64:executable'.
+buildDependentsExpSpinWin_x86_32Executable - Build dependents of executable 'expSpin:win_x86_32:executable'.
+buildDependentsExpSpinWin_x86_64Executable - Build dependents of executable 'expSpin:win_x86_64:executable'.
+buildDependentsExpStack - Build dependents of native executable 'expStack'.
+buildDependentsExpStackLinux_x86_64Executable - Build dependents of executable 'expStack:linux_x86_64:executable'.
+buildDependentsExpStackWin_x86_32Executable - Build dependents of executable 'expStack:win_x86_32:executable'.
+buildDependentsExpStackWin_x86_64Executable - Build dependents of executable 'expStack:win_x86_64:executable'.
+buildDependentsExpTraceableSleep - Build dependents of native executable 'expTraceableSleep'.
+buildDependentsExpTraceableSleepExecutable - Build dependents of executable 'expTraceableSleep:executable'.
+buildDependentsExpTypes - Build dependents of native executable 'expTypes'.
+buildDependentsExpTypesExecutable - Build dependents of executable 'expTypes:executable'.
+buildDependentsSleigh - Build dependents of native executable 'sleigh'.
+buildDependentsSleighLinux_arm_64Executable - Build dependents of executable 'sleigh:linux_arm_64:executable'.
+buildDependentsSleighLinux_x86_64Executable - Build dependents of executable 'sleigh:linux_x86_64:executable'.
+buildDependentsSleighMac_arm_64Executable - Build dependents of executable 'sleigh:mac_arm_64:executable'.
+buildDependentsSleighMac_x86_64Executable - Build dependents of executable 'sleigh:mac_x86_64:executable'.
+buildDependentsSleighWin_x86_64Executable - Build dependents of executable 'sleigh:win_x86_64:executable'.
+
+Build Setup tasks
+-----------------
+init - Initializes a new Gradle build.
+wrapper - Generates Gradle wrapper files.
+
+Coverage reports tasks
+----------------------
+jacocoReport - Generates an aggregate Jacoco report from all subprojects
+
+Development Preparation tasks
+-----------------------------
+cdtUnpack - Unpack CDT plugin archive for development use
+pyDevUnpack - Unpack PyDev plugin archive for development use
+yajswDevUnpack - Unpack YAJSW archive for development use
+
+Documentation tasks
+-------------------
+createJavadocs - Generate javadocs for all projects
+javadoc - Generates Javadoc API documentation for the 'main' feature.
+
+Help tasks
+----------
+buildEnvironment - Displays all buildscript dependencies declared in root project 'ghidra'.
+dependencies - Displays all dependencies declared in root project 'ghidra'.
+dependencyInsight - Displays the insight into a specific dependency in root project 'ghidra'.
+help - Displays a help message.
+javaToolchains - Displays the detected java toolchains.
+outgoingVariants - Displays the outgoing variants of root project 'ghidra'.
+projects - Displays the sub-projects of root project 'ghidra'.
+properties - Displays the properties of root project 'ghidra'.
+resolvableConfigurations - Displays the configurations that can be resolved in root project 'ghidra'.
+tasks - Displays the tasks runnable from root project 'ghidra' (some of the displayed tasks may belong to subprojects).
+
+IDE tasks
+---------
+cleanEclipse - Cleans all Eclipse files.
+eclipse - Generates all Eclipse files.
+
+PcodeTest tasks
+---------------
+pcodeConsolidatedTestReport
+pcodeTest
+pcodeTestReport
+
+Private tasks
+-------------
+assembleAll - Assembles all targets to one installation directory (does not clean up artifacts) [gradle/root/distribution.gradle]
+assembleDistribution - Copies core files/folders to the distribution location.
+assembleDistribution_linux_arm_64 - Copies the platform-dependent files/folders to the distribution location.
+assembleDistribution_linux_x86_64 - Copies the platform-dependent files/folders to the distribution location.
+assembleDistribution_mac_arm_64 - Copies the platform-dependent files/folders to the distribution location.
+assembleDistribution_mac_x86_64 - Copies the platform-dependent files/folders to the distribution location.
+assembleDistribution_win_x86_32 - Copies the platform-dependent files/folders to the distribution location.
+assembleDistribution_win_x86_64 - Copies the platform-dependent files/folders to the distribution location.
+assembleSource - Copies source zips for all core projects to the distribution folder
+buildCParser -   Compiles the JavaCC files for the C parser
+
+buildCPPParser -   Compiles the JavaCC files for the CPP parser
+
+buildHelpFiles
+createExternalExtensions - Creates directory of extensions that are external to the installation zip (does not clean up artifacts) [gradle/root/distribution.gradle]
+createInstallationZip - Creates local installation zip (does not clean up artifacts) [gradle/root/distribution.gradle]
+createJsondocs - Generate JSON docs for all projects
+findUnusedHelp -       Finds unused help images for this module.  [gradle/helpProject.gradle]
+
+generateExtraHelpFiles -   Creates any extra help files for Base not covered by the standard build help system
+indexHelp - indexes the helps files for this module.  [gradle/helpProject.gradle]
+zipBuildableSource - Collects the source files needed to build this module.
+zipExtensions - Creates a zip file for an extension module.  [gradle/support/extensionCommon.gradle]
+zipJavadocs - Zips javadocs for Ghidra api.  [gradle/root/distribution.gradle]
+zipSourceSubproject - Creates the source zips for java modules
+
+Test tasks
+----------
+combinedTestReport
+integrationTest
+integrationTestReport - Run integration tests and save HTML report.
+parallelCombinedTestReport
+targetedTestReport - Run unit tests against a specific set of projects.
+unitTestReport - Run unit tests and save HTML report.
+
+Verification tasks
+------------------
+check - Runs all checks.
+checkDecompileLinux_arm_64Executable - Check executable 'decompile:linux_arm_64:executable'
+checkDecompileLinux_x86_64Executable - Check executable 'decompile:linux_x86_64:executable'
+checkDecompileMac_arm_64Executable - Check executable 'decompile:mac_arm_64:executable'
+checkDecompileMac_x86_64Executable - Check executable 'decompile:mac_x86_64:executable'
+checkDecompileWin_x86_64Executable - Check executable 'decompile:win_x86_64:executable'
+checkDemangler_gnu_v2_24Linux_arm_64Executable - Check executable 'demangler_gnu_v2_24:linux_arm_64:executable'
+checkDemangler_gnu_v2_24Linux_x86_64Executable - Check executable 'demangler_gnu_v2_24:linux_x86_64:executable'
+checkDemangler_gnu_v2_24Mac_arm_64Executable - Check executable 'demangler_gnu_v2_24:mac_arm_64:executable'
+checkDemangler_gnu_v2_24Mac_x86_64Executable - Check executable 'demangler_gnu_v2_24:mac_x86_64:executable'
+checkDemangler_gnu_v2_24Win_x86_64Executable - Check executable 'demangler_gnu_v2_24:win_x86_64:executable'
+checkDemangler_gnu_v2_33_1Linux_arm_64Executable - Check executable 'demangler_gnu_v2_33_1:linux_arm_64:executable'
+checkDemangler_gnu_v2_33_1Linux_x86_64Executable - Check executable 'demangler_gnu_v2_33_1:linux_x86_64:executable'
+checkDemangler_gnu_v2_33_1Mac_arm_64Executable - Check executable 'demangler_gnu_v2_33_1:mac_arm_64:executable'
+checkDemangler_gnu_v2_33_1Mac_x86_64Executable - Check executable 'demangler_gnu_v2_33_1:mac_x86_64:executable'
+checkDemangler_gnu_v2_33_1Win_x86_64Executable - Check executable 'demangler_gnu_v2_33_1:win_x86_64:executable'
+checkExpCloneExecExecutable - Check executable 'expCloneExec:executable'
+checkExpCloneExitExecutable - Check executable 'expCloneExit:executable'
+checkExpCloneSpinExecutable - Check executable 'expCloneSpin:executable'
+checkExpCreateProcessWin_x86_32Executable - Check executable 'expCreateProcess:win_x86_32:executable'
+checkExpCreateProcessWin_x86_64Executable - Check executable 'expCreateProcess:win_x86_64:executable'
+checkExpCreateThreadExitWin_x86_32Executable - Check executable 'expCreateThreadExit:win_x86_32:executable'
+checkExpCreateThreadExitWin_x86_64Executable - Check executable 'expCreateThreadExit:win_x86_64:executable'
+checkExpCreateThreadSpinWin_x86_32Executable - Check executable 'expCreateThreadSpin:win_x86_32:executable'
+checkExpCreateThreadSpinWin_x86_64Executable - Check executable 'expCreateThreadSpin:win_x86_64:executable'
+checkExpForkExecutable - Check executable 'expFork:executable'
+checkExpPrintLinux_x86_64Executable - Check executable 'expPrint:linux_x86_64:executable'
+checkExpPrintWin_x86_32Executable - Check executable 'expPrint:win_x86_32:executable'
+checkExpPrintWin_x86_64Executable - Check executable 'expPrint:win_x86_64:executable'
+checkExpRegistersLinux_x86_64Executable - Check executable 'expRegisters:linux_x86_64:executable'
+checkExpRegistersWin_x86_32Executable - Check executable 'expRegisters:win_x86_32:executable'
+checkExpRegistersWin_x86_64Executable - Check executable 'expRegisters:win_x86_64:executable'
+checkExpSpinLinux_x86_64Executable - Check executable 'expSpin:linux_x86_64:executable'
+checkExpSpinWin_x86_32Executable - Check executable 'expSpin:win_x86_32:executable'
+checkExpSpinWin_x86_64Executable - Check executable 'expSpin:win_x86_64:executable'
+checkExpStackLinux_x86_64Executable - Check executable 'expStack:linux_x86_64:executable'
+checkExpStackWin_x86_32Executable - Check executable 'expStack:win_x86_32:executable'
+checkExpStackWin_x86_64Executable - Check executable 'expStack:win_x86_64:executable'
+checkExpTraceableSleepExecutable - Check executable 'expTraceableSleep:executable'
+checkExpTypesExecutable - Check executable 'expTypes:executable'
+checkSleighLinux_arm_64Executable - Check executable 'sleigh:linux_arm_64:executable'
+checkSleighLinux_x86_64Executable - Check executable 'sleigh:linux_x86_64:executable'
+checkSleighMac_arm_64Executable - Check executable 'sleigh:mac_arm_64:executable'
+checkSleighMac_x86_64Executable - Check executable 'sleigh:mac_x86_64:executable'
+checkSleighWin_x86_64Executable - Check executable 'sleigh:win_x86_64:executable'
+jacocoTestCoverageVerification - Verifies code coverage metrics based on specified rules for the test task.
+jacocoTestReport - Generates code coverage report for the test task.
+test - Runs the test suite.
+
+Z Ghidra tasks
+--------------
+buildHelp -       Builds the help for this module.  [gradle/helpProject.gradle]
+
+buildJavacc -   Compiles the JavaCC files
+
+cleanSleigh - Removes all the compile sleigh language files (*.sla).   [gradle/processorProject.gradle]
+
+prepDev -         Prepares a fresh clone of Ghidra for developing in eclipse.  [gradle/root/prepDev.gradle]
+
+rasterizeSvg -    Converts .svg files to .png files.  [gradle/root/svg.gradle]
+
+sleighCompile -   Compiles all the sleigh languages.    [gradle/processorProject.gradle]
+
+
+Rules
+-----
+Pattern: clean<TaskName>: Cleans the output files of a task.
+Pattern: build<ConfigurationName>: Assembles the artifacts of a configuration.
+
+To see all tasks and more detail, run gradle tasks --all
+
+To see more detail about a task, run gradle help --task <task>
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.4/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 12s
+1 actionable task: 1 executed
