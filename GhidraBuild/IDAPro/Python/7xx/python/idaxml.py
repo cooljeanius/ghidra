@@ -1021,7 +1021,9 @@ class XmlExporter(IdaXml):
             outbuf = ""
             # TODO: How to handle print_type for function typeinfo cmts
             # outbuf = idaapi.print_type(addr, False)
-            has_typeinfo = demangled is not None or (outbuf is not None and len(outbuf) > 0)
+            has_typeinfo = demangled is not None or (
+                outbuf is not None and len(outbuf) > 0
+            )
             if demangled is not None:
                 self.export_typeinfo_cmt(demangled)
             elif has_typeinfo is True:

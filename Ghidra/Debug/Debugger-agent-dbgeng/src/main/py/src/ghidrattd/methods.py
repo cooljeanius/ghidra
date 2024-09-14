@@ -516,9 +516,7 @@ def delete_breakpoint(breakpoint: sch.Schema("BreakpointSpec")):
 def read_mem(process: sch.Schema("Process"), range: AddressRange):
     """Read memory."""
     nproc = find_proc_by_obj(process)
-    process.trace.memory_mapper.map_back(
-        nproc, Address(range.space, range.min)
-    )
+    process.trace.memory_mapper.map_back(nproc, Address(range.space, range.min))
     with commands.open_tracked_tx("Read Memory"):
         dbg().read_mem(range.min, range.length())
 
