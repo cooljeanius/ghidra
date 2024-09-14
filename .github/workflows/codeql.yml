@@ -1,3 +1,4 @@
+---
 # codeql workflow for ghidra
 # For most projects, this workflow file will not need changing; you simply need
 # to commit it to your repository.
@@ -49,10 +50,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'c-cpp', 'java-kotlin', 'javascript-typescript', 'python' ]
-        # CodeQL supports [ 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift' ]
-        # Use only 'java-kotlin' to analyze code written in Java, Kotlin or both
-        # Use only 'javascript-typescript' to analyze code written in JavaScript, TypeScript or both
+        language: ['c-cpp', 'java-kotlin', 'javascript-typescript', 'python']
+        # CodeQL supports the following languages:
+        # 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript',
+        # 'python', 'ruby', 'swift'
+        # Use 'java-kotlin' to analyze code written in Java, Kotlin, or both
+        # Use 'javascript-typescript' to analyze code written in JavaScript,
+        # TypeScript, or both
         # Learn more about CodeQL language support at:
         # https://aka.ms/codeql-docs/language-support
 
@@ -65,11 +69,13 @@ jobs:
       if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
       with:
         distribution: 'temurin'
-        # The Java version to set up. Takes a whole or semver Java version. See examples of supported syntax in README file
+        # The Java version to set up. Takes a whole or semver Java version.
+        # See examples of supported syntax in README file
         java-version: '17'
         # The package type (jdk, jre, jdk+fx, jre+fx)
         java-package: 'jdk'
-        # Name of the build platform to cache dependencies. It can be "maven", "gradle" or "sbt".
+        # Name of the build platform to cache dependencies.
+        # It can be "maven", "gradle" or "sbt".
         cache: 'gradle'
 
     # Initializes the CodeQL tools for scanning.
@@ -93,12 +99,19 @@ jobs:
       if: matrix.language == 'c-cpp' || matrix.language == 'java-kotlin'
       run: |
         sudo apt-get -qq update
-        sudo apt-get -qq install gradle dh-make libgradle-core-java libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper libgradle-jflex-plugin-java gradle-plugin-protobuf gradle-ice-builder-plugin libgradle-android-plugin-java gradle-apt-plugin liblightvalue-gradle-plugin-java binutils binutils-dev binutils-multiarch-dev default-jre libasprintf-dev libgettextpo-dev ecj libecj-java maven-debian-helper gdb gdbserver mingw-w64 wine wine64 libiberty-dev
+        sudo apt-get -qq install gradle dh-make libgradle-core-java \
+          libgradle-plugins-java gradle-propdeps-plugin gradle-debian-helper \
+          libgradle-jflex-plugin-java gradle-plugin-protobuf \
+          gradle-ice-builder-plugin libgradle-android-plugin-java \
+          gradle-apt-plugin liblightvalue-gradle-plugin-java binutils \
+          binutils-dev binutils-multiarch-dev default-jre libasprintf-dev \
+          libgettextpo-dev ecj libecj-java maven-debian-helper gdb gdbserver \
+          mingw-w64 wine wine64 libiberty-dev
         env | uniq | sort | uniq
         if test -x "$(which ecj)"; then \
           which -a ecj; \
           for myecj in $(which -a ecj); do \
-            stat -t "${myecj}" || echo "figure out how to use ${myecj} yourself"; \
+            stat -t "${myecj}" || echo "figure out use of ${myecj} yourself"; \
           done; \
         else \
           echo "No usable ecj found; skipping..."; \
@@ -111,30 +124,46 @@ jobs:
         if test -x "$(which gradle)" && test -w . && test -w "${HOME}"; then \
           if test -w "${HOME}/work/ghidra/ghidra/.gradle" || (test -n "${GRADLE_HOME}" && test -d "${GRADLE_HOME}" && test -w "${GRADLE_HOME}"); then \
             echo "initializing gradle ($(which gradle))..."; \
-            gradle --quiet --continue wrapper || find . -name '*/gradlew' -print || echo "whoami? $(whoami)"; \
+            gradle --quiet --continue wrapper || \
+              find . -name '*/gradlew' -print || echo "whoami? $(whoami)"; \
             echo "full list of gradles found:"; \
             which -a gradle; \
             echo "version info for each of them:"; \
             for mygradle in $(which -a gradle); do \
               if test -x "${mygradle}" && test -d "$(dirname "${mygradle}")/../share/gradle/bin/.."; then \
-                "${mygradle}" --version || sudo "${mygradle}" --version || stat -t "${mygradle}"; \
+                "${mygradle}" --version || sudo "${mygradle}" --version || \
+                  stat -t "${mygradle}"; \
               else \
                 echo "warning: cannot use ${mygradle}"; \
               fi; \
             done; \
             echo "continuing with gradle initialization..."; \
-            gradle --info -I gradle/support/fetchDependencies.gradle init || (if test -x ./gradlew; then ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || (sudo gradle --quiet --continue -I gradle/support/fetchDependencies.gradle init) | tee gradle_output.log || ls "gradle*" 2>gradle_ls_err.txt || pwd; \
+            gradle --info -I gradle/support/fetchDependencies.gradle init || \
+              (if test -x ./gradlew; then \
+                 ./gradlew --debug -I gradle/support/fetchDependencies.gradle init; \
+               else \
+                 echo "missing or invalid gradle wrapper" >&2 && exit 1; \
+               fi) || \
+              (sudo gradle --quiet --continue -I gradle/support/fetchDependencies.gradle init) | tee gradle_output.log || \
+              ls "gradle*" 2>gradle_ls_err.txt || pwd; \
             echo "one more gradle setup step..."; \
-            gradle --quiet prepdev eclipse buildNatives || (if test -x ./gradlew; then ./gradlew prepdev eclipse buildNatives; else echo "missing or invalid gradle wrapper" >&2 && exit 1; fi) || (echo "gradle files present:" && find . -name '*.gradle' -print); \
+            gradle --quiet prepdev eclipse buildNatives || \
+              (if test -x ./gradlew; then \
+                 ./gradlew prepdev eclipse buildNatives; \
+               else \
+                 echo "missing or invalid gradle wrapper" >&2 && exit 1; \
+               fi) || \
+              (echo "gradle files present:" && find . -name '*.gradle' -print); \
           else \
-            echo "Skipping gradle initialization due to missing or unwritable gradle locations"; \
+            echo "Skipping gradle init due to missing or unwritable gradle locations"; \
           fi; \
         else \
           echo "Conditions are wrong for initializing gradle"; \
         fi
 
-    # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
-    # If this step fails, then you should remove it and run the build manually (see below)
+    # Autobuild attempts to build any compiled languages
+    # (C/C++, C#, Go, Java, or Swift).
+    # If this step fails, then you should remove it and run the build manually
     - name: Autobuild
       if: matrix.language != 'c-cpp' && matrix.language != 'java-kotlin'
       uses: github/codeql-action/autobuild@v3
@@ -147,21 +176,31 @@ jobs:
           cobjfile="$(echo "${cfile}" | sed "s/\.c/.o/g")"; \
           if test ! -e "${cobjfile}"; then \
             echo "gcc -c -w -Wno-error -I. -iquote . \"${cfile}\""; \
-            gcc -c -w -Wno-error -I. -I"$(dirname "${cfile}")" -iquote . -iquote "$(dirname "${cfile}")" "${cfile}" || stat -t "${cfile}" || echo "cfile is ${cfile}"; \
+            gcc -c -w -Wno-error -I. -I"$(dirname "${cfile}")" -iquote . -iquote "$(dirname "${cfile}")" "${cfile}" || \
+              stat -t "${cfile}" || echo "cfile is ${cfile}"; \
           else \
             echo "object file ${cobjfile} already exists for ${cfile}."; \
-            cp -v "${cobjfile}" "$(dirname "${cfile}")" || cp -v "${cobjfile}" . || cp -v "${cobjfile}" .. || (if test -d /tmp && test -w /tmp; then cp -v "${cobjfile}" /tmp; fi) || stat -t "${cobjfile}"; \
+            cp -v "${cobjfile}" "$(dirname "${cfile}")" || \
+              cp -v "${cobjfile}" . || cp -v "${cobjfile}" .. || \
+              (if test -d /tmp && test -w /tmp; then \
+                 cp -v "${cobjfile}" /tmp; fi) || \
+              stat -t "${cobjfile}"; \
           fi; \
         done
         # shellcheck disable=SC2044
         for ccfile in $(find . -name '*.cc' -type f); do \
           echo "One last attempt at compiling ${ccfile}..."; \
-          g++ -c "${ccfile}" || g++ -w -c -I. -iquote . "${ccfile}" || g++ -w -Wno-error -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${ccfile}" || stat -t "${ccfile}"; \
+          g++ -c "${ccfile}" || g++ -w -c -I. -iquote . "${ccfile}" || \
+            g++ -w -Wno-error -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${ccfile}" || \
+            stat -t "${ccfile}"; \
         done
         # shellcheck disable=SC2044
         for cppfile in $(find . -name '*.cpp' -type f); do \
           echo "One last attempt at compiling ${cppfile}..."; \
-          g++ -Wno-write-strings -Wfatal-errors -c "${cppfile}" || g++ -w -Wfatal-errors -c -I. -iquote . "${cppfile}" || g++ -w -Wno-error -Wfatal-errors -fpermissive -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${cppfile}" || stat -t "${cppfile}"; \
+          g++ -Wno-write-strings -Wfatal-errors -c "${cppfile}" || \
+            g++ -w -Wfatal-errors -c -I. -iquote . "${cppfile}" || \
+            g++ -w -Wno-error -Wfatal-errors -fpermissive -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${cppfile}" || \
+            stat -t "${cppfile}"; \
         done
 
     - name: Manual build (Java)
@@ -170,7 +209,8 @@ jobs:
         # shellcheck disable=SC2044
         for javafile in $(find . -maxdepth 6 -name '*.java' -type f); do \
           echo "One last attempt at compiling ${javafile}..."; \
-          javac -nowarn -Xdiags:compact -Xmaxerrs 1 "${javafile}" || stat -t "${javafile}"; \
+          javac -nowarn -Xdiags:compact -Xmaxerrs 1 "${javafile}" || \
+            stat -t "${javafile}"; \
         done; \
         date
 
