@@ -185,7 +185,7 @@ unsigned long parse_int(char *a, char *name,
 	char *e;
 	unsigned long val = strtoul(a, &e, 10);
 	if (*e != 0 || val < min || max < val) {
-		fprintf(stderr, "Invalid %s: %s. Must be an integer between %d and %d.\n",
+		fprintf(stderr, "Invalid %s: %s. Must be an integer between %lu and %lu.\n",
 				name, a, min, max);
 		exit(-1);
 	}
