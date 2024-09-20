@@ -124,16 +124,16 @@ union U1p2 U1p2;
 struct SUp1 SUp1;
 
 int main(int argc, char *argv[]) {
-        printf("len B1: %d\n", sizeof(struct B1));
-        printf("len B2: %d\n", sizeof(struct B2));
-        printf("len B3: %d\n", sizeof(struct B3));
+        printf("len B1: %zu\n", sizeof(struct B1));
+        printf("len B2: %zu\n", sizeof(struct B2));
+        printf("len B3: %zu\n", sizeof(struct B3));
 
-        printf("len Z1: %d\n", sizeof(struct Z1));
-        printf("len Z2: %d\n", sizeof(struct Z2));
-        printf("len Z3: %d\n", sizeof(struct Z3));
-        printf("len Z4: %d\n", sizeof(struct Z4));
-        printf("len Z5: %d\n", sizeof(struct Z5));
-        printf("len Z6: %d\n", sizeof(struct Z6));
+        printf("len Z1: %zu\n", sizeof(struct Z1));
+        printf("len Z2: %zu\n", sizeof(struct Z2));
+        printf("len Z3: %zu\n", sizeof(struct Z3));
+        printf("len Z4: %zu\n", sizeof(struct Z4));
+        printf("len Z5: %zu\n", sizeof(struct Z5));
+        printf("len Z6: %zu\n", sizeof(struct Z6));
 
         printf("len B1p1: %zu\n", sizeof(struct B1p1));
         printf("len B2p1: %zu\n", sizeof(struct B2p1));
