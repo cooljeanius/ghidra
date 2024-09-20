@@ -201,7 +201,7 @@ void parse_height(char *arg) {
 }
 
 void parse_mines(char *arg) {
-	state.mines = parse_int(arg, "MINES", 10, (state.width - 1) * (state.height - 1));
+	state.mines = parse_int(arg, "MINES", 10, (unsigned long)(state.width - 1) * (state.height - 1));
 }
 
 void parse_args(int argc, char **argv) {
