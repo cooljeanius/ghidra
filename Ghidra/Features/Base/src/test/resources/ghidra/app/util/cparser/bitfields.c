@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
         printf("len B1p2: %d\n", sizeof(struct B1p2));
         printf("len B2p2: %d\n", sizeof(struct B2p2));
         printf("len B3p2: %d\n", sizeof(struct B3p2));
-        printf("len B4p2: %d\n", sizeof(struct B4p2));
+        printf("len B4p2: %zu\n", sizeof(struct B4p2));
 
         printf("len Z1p2: %zu\n", sizeof(struct Z1p2));
         printf("len Z1p2x: %zu\n", sizeof(struct Z1p2x));
