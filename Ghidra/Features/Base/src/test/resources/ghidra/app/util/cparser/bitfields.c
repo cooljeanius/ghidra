@@ -150,39 +150,39 @@ int main(int argc, char *argv[]) {
         printf("len B3p2: %d\n", sizeof(struct B3p2));
         printf("len B4p2: %d\n", sizeof(struct B4p2));
 
-        printf("len Z1p2: %d\n", sizeof(struct Z1p2));
-        printf("len Z1p2x: %d\n", sizeof(struct Z1p2x));
-        printf("len Z2p2: %d\n", sizeof(struct Z2p2));
-        printf("len Z3p2: %d\n", sizeof(struct Z3p2));
-        printf("len Z4p2: %d\n", sizeof(struct Z4p2));
-        printf("len Z5p2: %d\n", sizeof(struct Z5p2));
-        printf("len x1p2: %d\n", sizeof(struct x1p2));
-        printf("len x2p2: %d\n", sizeof(struct x2p2));
-        printf("len x3p2: %d\n", sizeof(struct x3p2));
-        printf("len x4p2: %d\n", sizeof(struct x4p2));
+        printf("len Z1p2: %zu\n", sizeof(struct Z1p2));
+        printf("len Z1p2x: %zu\n", sizeof(struct Z1p2x));
+        printf("len Z2p2: %zu\n", sizeof(struct Z2p2));
+        printf("len Z3p2: %zu\n", sizeof(struct Z3p2));
+        printf("len Z4p2: %zu\n", sizeof(struct Z4p2));
+        printf("len Z5p2: %zu\n", sizeof(struct Z5p2));
+        printf("len x1p2: %zu\n", sizeof(struct x1p2));
+        printf("len x2p2: %zu\n", sizeof(struct x2p2));
+        printf("len x3p2: %zu\n", sizeof(struct x3p2));
+        printf("len x4p2: %zu\n", sizeof(struct x4p2));
 
-	printf("len Z5p4: %d\n", sizeof(struct Z5p4));
-	printf("len x1p4: %d\n", sizeof(struct x1p4));
-        printf("len x2p4: %d\n", sizeof(struct x2p4));
-        printf("len x3p4: %d\n", sizeof(struct x3p4));
-        printf("len x4p4: %d\n", sizeof(struct x4p4));
+	printf("len Z5p4: %zu\n", sizeof(struct Z5p4));
+	printf("len x1p4: %zu\n", sizeof(struct x1p4));
+        printf("len x2p4: %zu\n", sizeof(struct x2p4));
+        printf("len x3p4: %zu\n", sizeof(struct x3p4));
+        printf("len x4p4: %zu\n", sizeof(struct x4p4));
 
-        printf("len S1: %d\n", sizeof(struct S1));
+        printf("len S1: %zu\n", sizeof(struct S1));
 
-        printf("len S1p1: %d\n", sizeof(struct S1p1));
-        printf("len S2p1: %d\n", sizeof(struct S2p1));
+        printf("len S1p1: %zu\n", sizeof(struct S1p1));
+        printf("len S2p1: %zu\n", sizeof(struct S2p1));
 
-        printf("len S1p2: %d\n", sizeof(struct S1p2));
-        printf("len S2p2: %d\n", sizeof(struct S2p2));
+        printf("len S1p2: %zu\n", sizeof(struct S1p2));
+        printf("len S2p2: %zu\n", sizeof(struct S2p2));
         
-        printf("len T1: %d\n", sizeof(struct T1));
-        printf("len T2: %d\n", sizeof(struct T2));
+        printf("len T1: %zu\n", sizeof(struct T1));
+        printf("len T2: %zu\n", sizeof(struct T2));
 
-	printf("len U1: %d\n", sizeof(union U1));
-	printf("len U1z: %d\n", sizeof(union U1z));
-	printf("len U1p1: %d\n", sizeof(union U1p1));
-	printf("len U1p1z: %d\n", sizeof(union U1p1z));
-	printf("len U1p2: %d\n", sizeof(union U1p2));
+	printf("len U1: %zu\n", sizeof(union U1));
+	printf("len U1z: %zu\n", sizeof(union U1z));
+	printf("len U1p1: %zu\n", sizeof(union U1p1));
+	printf("len U1p1z: %zu\n", sizeof(union U1p1z));
+	printf("len U1p2: %zu\n", sizeof(union U1p2));
 
-	printf("len SUp1: %d\n", sizeof(struct SUp1));
+	printf("len SUp1: %zu\n", sizeof(struct SUp1));
 }
