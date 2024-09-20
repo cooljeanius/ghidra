@@ -44,7 +44,7 @@ bool RangeHint::isConstAbsorbable(const RangeHint *b) const
     return false;
   intb end = sstart;
   if (highind > 0)
-    end += highind * type->getAlignSize();
+    end += static_cast<intb>(highind) * type->getAlignSize();
   else
     end += size;
   if (b->sstart > end)
