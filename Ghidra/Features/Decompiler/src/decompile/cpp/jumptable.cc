@@ -264,7 +264,7 @@ void JumpValuesRange::truncate(int4 nm)
   rangeSize >>= 3;
   uintb left = range.getMin();
   int4 step = range.getStep();
-  uintb right = (left + step * nm) & range.getMask();
+  uintb right = (left + static_cast<uintb>(step) * nm) & range.getMask();
   range.setRange(left, right, rangeSize, step);
 }
 
