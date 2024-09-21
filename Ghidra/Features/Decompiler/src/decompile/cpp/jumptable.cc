@@ -92,18 +92,18 @@ void LoadTable::collapseTable(vector<LoadTable> &table)
   int4 count = 1;
   iter = table.begin();
   vector<LoadTable>::iterator lastiter = iter;
-  nextaddr = (*iter).addr + (*iter).size * (*iter).num;
+  nextaddr = (*iter).addr + static_cast<int8>((*iter).size) * (*iter).num;
   ++iter;
   for(;iter!=table.end();++iter) {
     if (( (*iter).addr == nextaddr ) && ((*iter).size == (*lastiter).size)) {
       (*lastiter).num += (*iter).num;
-      nextaddr = (*iter).addr + (*iter).size * (*iter).num;
+      nextaddr = (*iter).addr + static_cast<int8>((*iter).size) * (*iter).num;
     }
     else if (( nextaddr < (*iter).addr )|| ((*iter).size != (*lastiter).size)) {
       // Starting a new table
       lastiter++;
       *lastiter = *iter;
-      nextaddr = (*iter).addr + (*iter).size * (*iter).num;
+      nextaddr = (*iter).addr + static_cast<int8>((*iter).size) * (*iter).num;
       count += 1;
     }
   }
