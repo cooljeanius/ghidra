@@ -21,6 +21,7 @@ on:
       - stable
       - additional_codeql_langs
       - dependabot/*
+      - autofix/alert-*
   pull_request:
     # The branches below must be a subset of the branches above
     branches:
@@ -29,6 +30,7 @@ on:
       - stable
       - additional_codeql_langs
       - dependabot/*
+      - autofix/alert-*
   schedule:
     - cron: '43 20 * * 5'
 
@@ -83,9 +85,12 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file.
-        # Prefix the list here with "+" to use these queries and those in the config file.
+        # If you wish to specify custom queries, you can do so here or in a
+        # config file.
+        # By default, queries listed here will override any specified in a
+        # config file.
+        # Prefix the list here with "+" to use these queries and those in the
+        # config file.
 
         # For more details on CodeQL's query packs, refer to:
         # https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
@@ -153,9 +158,9 @@ jobs:
                else \
                  echo "missing or invalid gradle wrapper" >&2 && exit 1; \
                fi) || \
-              (echo "gradle files present:" && find . -name '*.gradle' -print); \
+              (echo "gradle files are:" && find . -name '*.gradle' -print); \
           else \
-            echo "Skipping gradle init due to missing or unwritable gradle locations"; \
+            echo "Skipping gradle init due to missing/unwritable gradle locs"; \
           fi; \
         else \
           echo "Conditions are wrong for initializing gradle"; \
@@ -176,7 +181,8 @@ jobs:
           cobjfile="$(echo "${cfile}" | sed "s/\.c/.o/g")"; \
           if test ! -e "${cobjfile}"; then \
             echo "gcc -c -w -Wno-error -I. -iquote . \"${cfile}\""; \
-            gcc -c -w -Wno-error -I. -I"$(dirname "${cfile}")" -iquote . -iquote "$(dirname "${cfile}")" "${cfile}" || \
+            gcc -c -w -Wno-error -I. -I"$(dirname "${cfile}")" -iquote . \
+              -iquote "$(dirname "${cfile}")" "${cfile}" || \
               stat -t "${cfile}" || echo "cfile is ${cfile}"; \
           else \
             echo "object file ${cobjfile} already exists for ${cfile}."; \
@@ -191,7 +197,9 @@ jobs:
         for ccfile in $(find . -name '*.cc' -type f); do \
           echo "One last attempt at compiling ${ccfile}..."; \
           g++ -c "${ccfile}" || g++ -w -c -I. -iquote . "${ccfile}" || \
-            g++ -w -Wno-error -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${ccfile}" || \
+            g++ -w -Wno-error -c -I. -iquote . -I.. -iquote .. \
+              -I"$(dirname "${cfile}")" \
+              -iquote "$(dirname "${cfile}")" "${ccfile}" || \
             stat -t "${ccfile}"; \
         done
         # shellcheck disable=SC2044
@@ -199,16 +207,22 @@ jobs:
           echo "One last attempt at compiling ${cppfile}..."; \
           g++ -Wno-write-strings -Wfatal-errors -c "${cppfile}" || \
             g++ -w -Wfatal-errors -c -I. -iquote . "${cppfile}" || \
-            g++ -w -Wno-error -Wfatal-errors -fpermissive -c -I. -iquote . -I.. -iquote .. -I"$(dirname "${cfile}")" -iquote "$(dirname "${cfile}")" "${cppfile}" || \
+            g++ -w -Wno-error -Wfatal-errors -fpermissive -c -I. -iquote . \
+              -I.. -iquote .. -I"$(dirname "${cfile}")" \
+              -iquote "$(dirname "${cfile}")" "${cppfile}" || \
             stat -t "${cppfile}"; \
         done
 
     - name: Manual build (Java)
       if: matrix.language == 'java-kotlin'
       run: |
-        # shellcheck disable=SC2044
+        i=0
+        # shellcheck disable=SC2060
+        total=$(find . -maxdepth 6 -name '*.java' -type f | wc -l | tr -d [:blank:])
+        # shellcheck disable=SC2044,SC2060
         for javafile in $(find . -maxdepth 6 -name '*.java' -type f); do \
-          echo "One last attempt at compiling ${javafile}..."; \
+          i=$((i+1)); \
+          echo "One last attempt at compiling ${javafile} (file ${i} of ${total} with path length: '$(echo "${javafile}" | wc -c | tr -d [:blank:])')..."; \
           javac -nowarn -Xdiags:compact -Xmaxerrs 1 "${javafile}" || \
             stat -t "${javafile}"; \
         done; \
