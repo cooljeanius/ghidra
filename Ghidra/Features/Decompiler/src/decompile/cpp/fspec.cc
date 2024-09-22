@@ -468,7 +468,7 @@ Address ParamEntry::getAddrBySlot(int4 &slotnum,int4 sz,int4 typeAlign) const
     }
     else
       index = slotnum;
-    res = Address(spaceid, addressbase + index * alignment);
+    res = Address(spaceid, addressbase + static_cast<uint64_t>(index) * alignment);
     slotnum += slotsused;	// Inform caller of number of slots used
   }
   if (!isLeftJustified())   // Adjust for right justified (big endian)
