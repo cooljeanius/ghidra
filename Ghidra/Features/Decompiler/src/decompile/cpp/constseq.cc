@@ -142,7 +142,7 @@ int4 ArraySequence::formByteArray(int4 sz,int4 slot,uint8 rootOff,bool bigEndian
   if (count < MINIMUM_SEQUENCE_LENGTH)
     return 0;
   if (count != moveOps.size()) {
-    uint8 maxOff = rootOff + count * bigElSize;
+    uint8 maxOff = rootOff + static_cast<uint8>(count) * bigElSize;
     vector<WriteNode> finalOps;
     for(int4 i=0;i<moveOps.size();++i) {
       if (moveOps[i].offset < maxOff)
