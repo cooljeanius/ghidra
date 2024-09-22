@@ -132,7 +132,7 @@ int4 ArraySequence::formByteArray(int4 sz,int4 slot,uint8 rootOff,bool bigEndian
   int4 maxEl = used.size() / bigElSize;
   int4 count;
   for(count=0;count<maxEl;count += 1) {
-    uint1 val = used[ count * bigElSize ];
+    uint1 val = used[ static_cast<uint8>(count) * bigElSize ];
     if (val != 1) {		// Count number of characters not including null terminator
       if (val == 2)
 	count += 1;		// Allow a single null terminator
