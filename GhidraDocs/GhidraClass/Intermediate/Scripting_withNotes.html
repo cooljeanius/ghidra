@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 <meta charset="utf8" http-equiv="X-UA-Compatible" content="IE=Edge">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.4/purify.min.js"></script>
 <title>Ghidra Scripting</title>
 
 <div id="present">
@@ -219,9 +220,9 @@
     }
     if (aEvent.source === this.views.present) {
       if (argv[0] === "NOTES" && argc === 2)
-        $("#notes > #content").innerHTML = this.notes = argv[1];
+        $("#notes > #content").innerHTML = this.notes = DOMPurify.sanitize(argv[1]);
       if (argv[0] === "REGISTERED" && argc === 3)
-        $("#slidecount").innerHTML = argv[2];
+        $("#slidecount").innerHTML = DOMPurify.sanitize(argv[2]);
     }
   }
   
