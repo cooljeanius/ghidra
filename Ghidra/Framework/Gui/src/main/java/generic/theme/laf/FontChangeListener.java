@@ -13,15 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-apply from: "$rootProject.projectDir/gradle/distributableGhidraModule.gradle"
-apply from: "$rootProject.projectDir/gradle/javaProject.gradle"
-apply from: "$rootProject.projectDir/gradle/jacocoProject.gradle"
-apply from: "$rootProject.projectDir/gradle/javaTestProject.gradle"
-apply plugin: 'eclipse'
+package generic.theme.laf;
 
-eclipse.project.name = 'Features MicrosoftCodeAnalyzer'
+import java.awt.Font;
 
-dependencies {
-	api project(":MicrosoftDemangler")
-	api project(":Base")
+/**
+ * A simple interface that signals the client has a font that should be updated when the theme is
+ * updated.
+ */
+public interface FontChangeListener {
+
+	/**
+	 * Called when the client should update its font to the given font.
+	 * @param fontId the theme font id being updated
+	 * @param f the font
+	 */
+	public void fontChanged(String fontId, Font f);
 }
