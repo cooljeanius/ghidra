@@ -223,13 +223,13 @@ def ghidra_trace_listen(address=None, *, is_mi, **kwargs):
     if address is not None:
         parts = address.split(":")
         if len(parts) == 1:
-            host, port = "0.0.0.0", parts[0]
+            raise gdb.GdbError("Host must be specified to avoid binding to all interfaces")
         elif len(parts) == 2:
             host, port = parts
         else:
             raise gdb.GdbError("address must be 'port' or 'host:port'")
     else:
-        host, port = "0.0.0.0", 0
+        raise gdb.GdbError("Host must be specified to avoid binding to all interfaces")
     try:
         s = socket.socket()
         s.bind((host, int(port)))
