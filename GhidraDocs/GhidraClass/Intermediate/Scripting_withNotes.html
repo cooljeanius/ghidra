@@ -210,7 +210,7 @@
         this.postMsg(this.views.present, "GET_NOTES");
         this.idx = ~~cursor[0];
         this.step = ~~cursor[1];
-        $("#slideidx").innerHTML = argv[1];
+        $("#slideidx").innerHTML = DOMPurify.sanitize(argv[1]);
         this.postMsg(this.views.future, "SET_CURSOR", this.idx + "." + (this.step + 1));
         if (this.views.remote)
           this.postMsg(this.views.remote, "SET_CURSOR", argv[1]);
