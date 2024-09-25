@@ -214,7 +214,8 @@
         if (this.views.remote)
           this.postMsg(this.views.remote, "SET_CURSOR", argv[1]);
       } else {
-        $("#nextslideidx").innerHTML = +argv[1] < 0 ? "END" : argv[1];
+        var sanitizedArgv1 = DOMPurify.sanitize(argv[1]);
+        $("#nextslideidx").innerHTML = +sanitizedArgv1 < 0 ? "END" : sanitizedArgv1;
       }
     }
     if (aEvent.source === this.views.present) {
