@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.4/purify.min.js"></script>
 <meta charset="utf8" http-equiv="X-UA-Compatible" content="IE=Edge">
 <title>Introduction to Ghidra Student Guide</title>
 
@@ -214,7 +214,7 @@
         if (this.views.remote)
           this.postMsg(this.views.remote, "SET_CURSOR", argv[1]);
       } else {
-        $("#nextslideidx").innerHTML = +argv[1] < 0 ? "END" : argv[1];
+        $("#nextslideidx").innerHTML = +argv[1] < 0 ? "END" : DOMPurify.sanitize(argv[1]);
       }
     }
     if (aEvent.source === this.views.present) {
