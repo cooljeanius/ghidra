@@ -343,18 +343,18 @@ def ghidra_trace_listen(debugger, command, result, internal_dict):
 
     args = shlex.split(command)
     if len(args) == 0:
-        host, port = "0.0.0.0", 0
+        raise RuntimeError("ADDRESS must be specified as HOST:PORT or PORT")
     elif len(args) == 1:
         address = args[0]
         parts = address.split(":")
         if len(parts) == 1:
-            host, port = "0.0.0.0", parts[0]
+            raise RuntimeError("ADDRESS must be specified as HOST:PORT or PORT")
         elif len(parts) == 2:
             host, port = parts
         else:
             raise RuntimeError("ADDRESS must be PORT or HOST:PORT")
     else:
-        raise RuntimError("Usage: ghidra trace listen [ADDRESS]")
+        raise RuntimeError("Usage: ghidra trace listen [ADDRESS]")
 
     STATE.require_no_client()
     try:
