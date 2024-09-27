@@ -145,7 +145,7 @@ def ghidra_trace_connect(address=None):
         raise RuntimeError("port must be numeric")
 
 
-def ghidra_trace_listen(address="0.0.0.0:0"):
+def ghidra_trace_listen(address="127.0.0.1:0"):
     """
     Listen for Ghidra to connect for tracing
 
@@ -159,7 +159,7 @@ def ghidra_trace_listen(address="0.0.0.0:0"):
     STATE.require_no_client()
     parts = address.split(":")
     if len(parts) == 1:
-        host, port = "0.0.0.0", parts[0]
+        host, port = "127.0.0.1", parts[0]
     elif len(parts) == 2:
         host, port = parts
     else:
