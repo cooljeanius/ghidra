@@ -89,28 +89,24 @@ public class SwiftDemangler implements Demangler {
 	}
 
 	@Override
-	@Deprecated(since = "11.3", forRemoval = true)
-	public DemangledObject demangle(String mangled, DemanglerOptions op) throws DemangledException {
-		SwiftDemanglerOptions options = getSwiftDemanglerOptions(op);
+	public DemangledObject demangle(MangledContext context) throws DemangledException {
+		SwiftDemanglerOptions options = getSwiftDemanglerOptions(context.getOptions());
+		String mangled = context.getMangled();
 		Demangled demangled = getDemangled(mangled, options);
+		DemangledObject demangledObject;
 		if (demangled instanceof DemangledFunction func) {
-			return func;
+			demangledObject = func;
 		}
 		else if (demangled instanceof DemangledLabel label) {
-			return label;
+			demangledObject = label;
 		}
 		else if (demangled instanceof DemangledUnknown unknown) {
-			return new DemangledLabel(mangled, unknown.getOriginalDemangled(),
+			demangledObject = new DemangledLabel(mangled, unknown.getOriginalDemangled(),
 				options.getUnsupportedPrefix() + unknown.getOriginalDemangled());
 		}
-		return null;
-	}
-
-	@Override
-	public DemangledObject demangle(MangledContext context) throws DemangledException {
-		DemanglerOptions op = context.getOptions();
-		String mangled = context.getMangled();
-		DemangledObject demangledObject = demangle(mangled, op);
+		else {
+			return null;
+		}
 		demangledObject.setMangledContext(context);
 		return demangledObject;
 	}
